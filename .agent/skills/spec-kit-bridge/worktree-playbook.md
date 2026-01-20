@@ -23,7 +23,7 @@ This prevents:
 ## Directory Layout
 
 ```text
-D:\lunar-snake\personal-work\plate-projects\
+<parent-directory>/
 ├── fantasim-world/                    # Main worktree (main branch)
 │   ├── .specify/
 │   │   └── memory/
