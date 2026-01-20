@@ -1,6 +1,6 @@
 ---
 name: spec-first
-description: Ensures agents read and understand specifications before implementing any feature or change
+description: Ensures agents read and understand specifications before implementing any feature or change. Always start here.
 ---
 
 # Spec-First Skill
