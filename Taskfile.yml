@@ -1,0 +1,19 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  sync-skills:
+    desc: Sync skill stubs from .agent/skills to tool-specific directories
+    aliases: [skills]
+    cmds:
+      - python scripts/sync_skills.py
+    sources:
+      - .agent/skills/**/SKILL.md
+    generates:
+      - .claude/skills/**/SKILL.md
+      - .windsurf/skills/**/SKILL.md
+      - .cline/skills/**/SKILL.md
