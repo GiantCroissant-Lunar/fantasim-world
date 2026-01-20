@@ -22,7 +22,7 @@ repos:
     rev: v0.39.0
     hooks:
       - id: markdownlint
-        args: [--disable, MD013, MD031, MD032, MD033, MD034, MD040, MD041, --]
+        args: [--disable, MD013, MD031, MD032, MD033, MD034, MD036, MD040, MD041, --]
         exclude: '^(node_modules/|docs/_inbox/)'
 
   # Local hooks

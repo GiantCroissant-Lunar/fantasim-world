@@ -23,6 +23,7 @@ task sync-skills
 
 | Skill | Description | When to Use |
 |-------|-------------|-------------|
+| `@spec-kit-bridge` | Spec-kit workflow orchestration | When starting or progressing a spec |
 | `@spec-first` | Read specs before implementing | Before any implementation work |
 | `@implement-feature` | Incremental feature implementation | When adding new functionality |
 | `@code-review` | Architecture-focused code review | When reviewing PRs or code |
@@ -46,21 +47,55 @@ Use `@skill-name` syntax to explicitly invoke a skill:
 
 ## Skill Dependencies
 
-```
+```text
+@spec-kit-bridge
+        ↓
 @spec-first
-    ↓
+        ↓
 @implement-feature ←→ @topology-first
-    ↓                      ↓
+        ↓                      ↓
 @persistence          @persistence
-    ↓                      ↓
-@code-review ←─────────────┘
+        ↓                      ↓
+@code-review ←─────────────────┘
 ```
 
 **Recommended workflow:**
-1. Always start with `@spec-first`
-2. Use domain skills (`@topology-first`) during implementation
-3. Use `@persistence` when adding storage
+1. Start with `@spec-kit-bridge` for new specs (creates worktree)
+2. Use `@spec-first` during Specify/Clarify phases
+3. Use domain skills (`@topology-first`, `@persistence`) during Plan/Implement
 4. Finish with `@code-review`
+
+## Spec Kit Integration
+
+This project uses **GitHub Spec Kit** for spec-driven development.
+
+### Interfaces
+
+Spec Kit provides two interfaces (both produce the same artifacts):
+
+| Interface | When to Use |
+|-----------|-------------|
+| `specify` CLI | Preferred for local agents, automation |
+| `/speckit.*` slash commands | Chat environments (GitHub Copilot, etc.) |
+
+**Artifacts are the source of truth, not the interface used to create them.**
+
+### Phase → Skill Mapping
+
+| Spec Kit Phase | Primary Skill | Output |
+|----------------|---------------|--------|
+| Constitution | — | `.specify/memory/constitution.md` |
+| Specify / Clarify | `@spec-first` | `specs/<feature>/spec.md` |
+| Plan | `@topology-first`, `@persistence` | `specs/<feature>/plan.md` |
+| Tasks | `@spec-kit-bridge` | `specs/<feature>/tasks.md` |
+| Implement | `@implement-feature` | code + tests |
+| Review | `@code-review` | PR approval |
+
+### Worktree Rule
+
+**One spec = one feature branch = one git worktree**
+
+Spec work is never done directly on `main`. See `.agent/workflows/spec-kit-worktrees.md` for details.
 
 ## Adding New Skills
 
@@ -79,26 +114,33 @@ The skill will automatically be available to all supported tools via the junctio
 
 ## Skill Structure
 
-```
-.agent/skills/               # Shared source of truth
-├── SKILLS-INDEX.md          # This file
-├── spec-first/
-│   ├── SKILL.md
-│   └── checklist.md
-├── implement-feature/
-│   └── SKILL.md
-├── code-review/
-│   ├── SKILL.md
-│   └── checklist.md
-├── persistence/
-│   └── SKILL.md
-└── topology-first/
-    └── SKILL.md
+```text
+.agent/
+├── skills/                      # Shared source of truth
+│   ├── SKILLS-INDEX.md          # This file
+│   ├── spec-kit-bridge/         # Workflow orchestration
+│   │   ├── SKILL.md
+│   │   ├── phase-mapping.md
+│   │   └── worktree-playbook.md
+│   ├── spec-first/
+│   │   ├── SKILL.md
+│   │   └── checklist.md
+│   ├── implement-feature/
+│   │   └── SKILL.md
+│   ├── code-review/
+│   │   ├── SKILL.md
+│   │   └── checklist.md
+│   ├── persistence/
+│   │   └── SKILL.md
+│   └── topology-first/
+│       └── SKILL.md
+└── workflows/                   # Reference docs (not skills)
+    └── spec-kit-worktrees.md
 
-.claude/skills/              # Stub files → .agent/skills
-.windsurf/skills/            # Stub files → .agent/skills
-.cline/skills/               # Stub files → .agent/skills
+.claude/skills/                  # Stub files → .agent/skills
+.windsurf/skills/                # Stub files → .agent/skills
+.cline/skills/                   # Stub files → .agent/skills
 
 scripts/
-└── sync_skills.py           # Cross-platform sync script
+└── sync_skills.py               # Cross-platform sync script
 ```

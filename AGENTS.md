@@ -89,19 +89,12 @@ See `.agent/skills/SKILLS-INDEX.md` for full documentation.
 
 | Skill | Description |
 |-------|-------------|
+| `@spec-kit-bridge` | Spec-kit workflow orchestration |
 | `@spec-first` | Read and understand specs before implementing |
 | `@implement-feature` | Incremental feature implementation with stable contracts |
 | `@code-review` | Architecture-focused code review |
 | `@persistence` | RocksDB + MessagePack patterns |
 | `@topology-first` | Plates domain truth boundary enforcement |
-
-### Recommended Workflow
-
-1. **Start with `@spec-first`** - Always read relevant RFCs/ADRs before coding
-2. **Use domain skills** - Apply `@topology-first` when working on plates code
-3. **Follow `@implement-feature`** - Make incremental, runnable changes
-4. **Apply `@persistence`** - Use correct encoding (MessagePack) and storage (RocksDB)
-5. **Finish with `@code-review`** - Verify architecture compliance
 
 ### Core Expectations
 
@@ -109,3 +102,55 @@ See `.agent/skills/SKILLS-INDEX.md` for full documentation.
 - Keep contracts/IDs/event schemas stable; put algorithms and solvers behind those contracts.
 - Enforce "derived stays derived": sampling/products must never become truth dependencies.
 - Make changes incrementally and keep the repo runnable at each step.
+
+## Spec-Driven Development
+
+This repo uses **GitHub Spec Kit** for spec-driven development.
+
+### Core Invariant
+
+**One spec = one feature branch = one git worktree**
+
+Spec work is never done directly on `main`.
+
+### Interfaces
+
+Agents may use either interface (both produce the same artifacts):
+
+| Interface | When to Use |
+|-----------|-------------|
+| `specify` CLI | Preferred for local agents, automation |
+| `/speckit.*` slash commands | Chat environments (GitHub Copilot, etc.) |
+
+### Quick Start
+
+```bash
+# 1. Create worktree for new spec
+task spec:new -- plate-merger
+
+# 2. Enter worktree
+cd ../fantasim-world--plate-merger
+
+# 3. Run spec phases
+task spec:specify FEATURE=plate-merger   # or /speckit.specify
+task spec:plan FEATURE=plate-merger      # or /speckit.plan
+task spec:tasks FEATURE=plate-merger     # or /speckit.tasks
+
+# 4. Implement tasks, commit with task IDs
+
+# 5. Create PR, merge, cleanup
+task spec:done -- plate-merger
+```
+
+### Phase → Skill Mapping
+
+| Spec Kit Phase | Primary Skill |
+|----------------|---------------|
+| Constitution | (rarely edited) |
+| Specify / Clarify | `@spec-first` |
+| Plan | `@topology-first`, `@persistence` |
+| Tasks | `@spec-kit-bridge` |
+| Implement | `@implement-feature` |
+| Review | `@code-review` |
+
+See `.agent/skills/spec-kit-bridge/` for detailed phase mapping and worktree playbook.

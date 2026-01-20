@@ -1,10 +1,18 @@
 version: "3"
 
+vars:
+  REPO_NAME: fantasim-world
+  WORKTREE_BASE: ..
+
 tasks:
   default:
     desc: Show available tasks
     cmds:
       - task --list
+
+  # =============================================================================
+  # Skills Management
+  # =============================================================================
 
   sync-skills:
     desc: Sync skill stubs from .agent/skills to tool-specific directories
@@ -17,3 +25,140 @@ tasks:
       - .claude/skills/**/SKILL.md
       - .windsurf/skills/**/SKILL.md
       - .cline/skills/**/SKILL.md
+
+  # =============================================================================
+  # Spec Kit Workflow
+  # =============================================================================
+
+  spec:init:
+    desc: Initialize spec-kit in this repository
+    cmds:
+      - echo "Initializing spec-kit..."
+      - specify init . --here --force
+    status:
+      - test -d .specify
+
+  spec:new:
+    desc: Create a new spec with branch + worktree
+    summary: |
+      Creates a feature branch and git worktree for a new spec.
+
+      Usage: task spec:new -- <feature-name>
+      Example: task spec:new -- plate-merger
+
+      This will create:
+        - Branch: spec/<feature-name>
+        - Worktree: ../{{.REPO_NAME}}--<feature-name>
+        - Spec folder: specs/<feature-name>/
+    cmds:
+      - |
+        if [ -z "{{.CLI_ARGS}}" ]; then
+          echo "Error: Feature name required"
+          echo "Usage: task spec:new -- <feature-name>"
+          exit 1
+        fi
+      - git worktree add "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}" -b "spec/{{.CLI_ARGS}}"
+      - mkdir -p "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}/specs/{{.CLI_ARGS}}"
+      - |
+        echo ""
+        echo "Worktree created successfully!"
+        echo ""
+        echo "Next steps:"
+        echo "  cd {{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
+        echo "  task spec:specify FEATURE={{.CLI_ARGS}}"
+        echo ""
+
+  spec:list:
+    desc: List active spec worktrees
+    cmds:
+      - git worktree list
+
+  spec:specify:
+    desc: Run specify phase for a feature
+    summary: |
+      Runs the Specify phase of spec-kit.
+
+      Usage: task spec:specify FEATURE=<feature-name>
+
+      Alternatively, use /speckit.specify in chat environments.
+    cmds:
+      - |
+        if [ -z "{{.FEATURE}}" ]; then
+          echo "Error: FEATURE variable required"
+          echo "Usage: task spec:specify FEATURE=<feature-name>"
+          exit 1
+        fi
+      - SPECIFY_FEATURE={{.FEATURE}} specify specify
+    env:
+      SPECIFY_FEATURE: "{{.FEATURE}}"
+
+  spec:plan:
+    desc: Run plan phase for a feature
+    cmds:
+      - |
+        if [ -z "{{.FEATURE}}" ]; then
+          echo "Error: FEATURE variable required"
+          echo "Usage: task spec:plan FEATURE=<feature-name>"
+          exit 1
+        fi
+      - SPECIFY_FEATURE={{.FEATURE}} specify plan
+    env:
+      SPECIFY_FEATURE: "{{.FEATURE}}"
+
+  spec:tasks:
+    desc: Run tasks phase for a feature
+    cmds:
+      - |
+        if [ -z "{{.FEATURE}}" ]; then
+          echo "Error: FEATURE variable required"
+          echo "Usage: task spec:tasks FEATURE=<feature-name>"
+          exit 1
+        fi
+      - SPECIFY_FEATURE={{.FEATURE}} specify tasks
+    env:
+      SPECIFY_FEATURE: "{{.FEATURE}}"
+
+  spec:implement:
+    desc: Run implement phase for a feature
+    cmds:
+      - |
+        if [ -z "{{.FEATURE}}" ]; then
+          echo "Error: FEATURE variable required"
+          echo "Usage: task spec:implement FEATURE=<feature-name>"
+          exit 1
+        fi
+      - SPECIFY_FEATURE={{.FEATURE}} specify implement
+    env:
+      SPECIFY_FEATURE: "{{.FEATURE}}"
+
+  spec:done:
+    desc: Clean up worktree after spec is merged
+    summary: |
+      Removes a spec worktree after the PR has been merged.
+
+      Usage: task spec:done -- <feature-name>
+
+      Prerequisites:
+        - All changes committed and pushed
+        - PR merged to main
+    cmds:
+      - |
+        if [ -z "{{.CLI_ARGS}}" ]; then
+          echo "Error: Feature name required"
+          echo "Usage: task spec:done -- <feature-name>"
+          exit 1
+        fi
+      - |
+        WORKTREE_PATH="{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
+        if [ ! -d "$WORKTREE_PATH" ]; then
+          echo "Error: Worktree not found: $WORKTREE_PATH"
+          exit 1
+        fi
+      - git worktree remove "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
+      - |
+        echo ""
+        echo "Worktree removed: {{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
+        echo ""
+        echo "To also delete the remote branch:"
+        echo "  git push origin --delete spec/{{.CLI_ARGS}}"
+        echo ""
