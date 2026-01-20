@@ -7,8 +7,9 @@ This directory contains shared skills for the fantasim-world project, compatible
 | Tool | Skills Location | Docs |
 |------|-----------------|------|
 | Claude Code | `.claude/skills/` | [Claude Code Skills](https://docs.anthropic.com/en/docs/claude-code/skills) |
-| Windsurf | `.windsurf/skills/` | [Cascade Skills](https://docs.windsurf.com/windsurf/cascade/skills) |
 | Cline | `.cline/skills/` | [Cline Skills](https://docs.cline.bot/features/skills) |
+| OpenCode | `.opencode/skills/` | [OpenCode Skills](https://opencode.ai/docs/skills/) |
+| Windsurf | `.windsurf/skills/` | [Cascade Skills](https://docs.windsurf.com/windsurf/cascade/skills) |
 
 Each tool has stub SKILL.md files that reference the full definitions in `.agent/skills/`.
 
@@ -138,8 +139,9 @@ The skill will automatically be available to all supported tools via the junctio
     └── spec-kit-worktrees.md
 
 .claude/skills/                  # Stub files → .agent/skills
-.windsurf/skills/                # Stub files → .agent/skills
 .cline/skills/                   # Stub files → .agent/skills
+.opencode/skills/                # Stub files → .agent/skills
+.windsurf/skills/                # Stub files → .agent/skills
 
 scripts/
 └── sync_skills.py               # Cross-platform sync script

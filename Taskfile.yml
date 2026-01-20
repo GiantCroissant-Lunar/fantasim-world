@@ -23,8 +23,9 @@ tasks:
       - .agent/skills/**/SKILL.md
     generates:
       - .claude/skills/**/SKILL.md
-      - .windsurf/skills/**/SKILL.md
       - .cline/skills/**/SKILL.md
+      - .opencode/skills/**/SKILL.md
+      - .windsurf/skills/**/SKILL.md
 
   # =============================================================================
   # Spec Kit Workflow

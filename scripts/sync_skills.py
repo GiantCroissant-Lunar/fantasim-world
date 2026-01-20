@@ -18,8 +18,9 @@ from pathlib import Path
 SOURCE_DIR = Path(".agent/skills")
 TARGET_DIRS = [
     Path(".claude/skills"),
-    Path(".windsurf/skills"),
     Path(".cline/skills"),
+    Path(".opencode/skills"),
+    Path(".windsurf/skills"),
 ]
 
 

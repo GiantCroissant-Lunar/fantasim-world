@@ -59,8 +59,9 @@ Docs:
 This repo uses a shared skills system compatible with multiple AI coding assistants:
 
 - Claude Code: https://docs.anthropic.com/en/docs/claude-code/skills
-- Windsurf Cascade: https://docs.windsurf.com/windsurf/cascade/skills
 - Cline: https://docs.cline.bot/features/skills
+- OpenCode: https://opencode.ai/docs/skills/
+- Windsurf Cascade: https://docs.windsurf.com/windsurf/cascade/skills
 
 ### Skills Architecture
 
@@ -69,8 +70,9 @@ Skills are stored in a shared location with tool-specific stub files:
 ```text
 .agent/skills/          # Source of truth (tracked in git)
 .claude/skills/         # Generated stubs (git-ignored)
-.windsurf/skills/       # Generated stubs (git-ignored)
 .cline/skills/          # Generated stubs (git-ignored)
+.opencode/skills/       # Generated stubs (git-ignored)
+.windsurf/skills/       # Generated stubs (git-ignored)
 ```
 
 **After cloning or pulling**, run:
