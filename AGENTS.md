@@ -102,6 +102,7 @@ See `.agent/skills/SKILLS-INDEX.md` for full documentation.
 - Keep contracts/IDs/event schemas stable; put algorithms and solvers behind those contracts.
 - Enforce "derived stays derived": sampling/products must never become truth dependencies.
 - Make changes incrementally and keep the repo runnable at each step.
+- **Commit often**: Make small, focused commits after each logical change. Don't batch multiple unrelated changes.
 
 ## Spec-Driven Development
 

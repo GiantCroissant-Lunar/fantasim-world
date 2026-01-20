@@ -53,6 +53,38 @@ Each increment must:
 - Pass existing tests
 - Not break other components
 
+### Step 2.5: Commit Often
+
+**Commit after each logical change.** Do not batch unrelated changes.
+
+**When to commit:**
+- After defining a new interface/contract
+- After implementing a single function or method
+- After adding tests for a component
+- After fixing a bug
+- After any change that compiles and passes tests
+
+**Commit message format:**
+```text
+<type>(<scope>): <description>
+
+Task: <task-id>           # If working from spec-kit tasks
+Refs: RFC-V2-XXXX         # If implementing an RFC
+
+<optional body>
+
+Co-Authored-By: <agent>
+```
+
+**Types:** `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
+
+**Why commit often:**
+- Easier to review and understand changes
+- Easier to bisect if bugs are introduced
+- Safer to revert if needed
+- Shows progress to other agents/humans
+- Prevents loss of work
+
 ### Step 3: Respect Truth Boundaries
 
 For the plates domain specifically:
@@ -86,7 +118,9 @@ await db.put(key, JSON.stringify(event)); // NO!
 
 - [ ] Contract/interface defined first
 - [ ] Implementation behind contract, not in it
+- [ ] Committing after each logical change (not batching)
 - [ ] Each commit is runnable
+- [ ] Commit messages reference task IDs (if applicable)
 - [ ] No truth/derived violations
 - [ ] MessagePack for persistence
 - [ ] ModernSatsuma handles not leaked
