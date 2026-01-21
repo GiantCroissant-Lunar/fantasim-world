@@ -6,10 +6,10 @@
     },
     "external_directory": {
       "*": "ask",
-      "D:\\lunar-snake\\personal-work\\plate-projects\\fantasim-hub\\docs\\**": "allow",
-      "D:/lunar-snake/personal-work/plate-projects/fantasim-hub/docs/**": "allow",
-      "D:\\lunar-snake\\personal-work\\plate-projects\\modern-rocksdb\\**": "allow",
-      "D:/lunar-snake/personal-work/plate-projects/modern-rocksdb/**": "allow"
+      "../fantasim-hub/docs/**": "allow",
+      "..\\fantasim-hub\\docs\\**": "allow",
+      "../modern-rocksdb/**": "allow",
+      "..\\modern-rocksdb\\**": "allow"
     }
   },
   "agent": {
@@ -20,6 +20,7 @@
           "ls*": "allow",
           "task sync-skills*": "allow",
           "task sync-commands*": "allow",
+          "task sync-opencode*": "allow",
           "task spec:init*": "allow",
           "task spec:new*": "allow",
           "task spec:list*": "allow",
