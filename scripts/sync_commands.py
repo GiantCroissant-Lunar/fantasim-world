@@ -12,6 +12,11 @@ def main() -> int:
 
     TARGET_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Clear previously generated files to avoid stale commands lingering.
+    for existing in TARGET_DIR.glob("*.md"):
+        if existing.is_file():
+            existing.unlink()
+
     for src in SOURCE_DIR.glob("*.md"):
         dst = TARGET_DIR / src.name
         shutil.copy2(src, dst)
