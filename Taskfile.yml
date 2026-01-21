@@ -27,6 +27,16 @@ tasks:
       - .opencode/skills/**/SKILL.md
       - .windsurf/skills/**/SKILL.md
 
+  sync-commands:
+    desc: Sync command stubs from .agent/commands to .opencode/commands
+    aliases: [commands]
+    cmds:
+      - python scripts/sync_commands.py
+    sources:
+      - .agent/commands/*.md
+    generates:
+      - .opencode/commands/*.md
+
   # =============================================================================
   # Spec Kit Workflow
   # =============================================================================
@@ -35,12 +45,12 @@ tasks:
     desc: Initialize spec-kit in this repository
     cmds:
       - echo "Initializing spec-kit..."
-      - specify init . --here --force
+      - specify init . --here --force --ai opencode --script ps --ignore-agent-tools
     status:
-      - test -d .specify
+      - pwsh -NoProfile -Command 'if (Test-Path -LiteralPath ".specify") { exit 0 } else { exit 1 }'
 
   spec:new:
-    desc: Create a new spec with branch + worktree
+    desc: Create branch + worktree for new spec
     summary: |
       Creates a feature branch and git worktree for a new spec.
 
@@ -48,31 +58,27 @@ tasks:
       Example: task spec:new -- plate-merger
 
       This will create:
-        - Branch: spec/<feature-name>
-        - Worktree: ../{{.REPO_NAME}}--<feature-name>
-        - Spec folder: specs/<feature-name>/
+        - Branch: 001-<feature-name>
+        - Worktree: ../{{.REPO_NAME}}--001-<feature-name>
+        - Spec folder: specs/001-<feature-name>/
     cmds:
-      - |
-        if [ -z "{{.CLI_ARGS}}" ]; then
-          echo "Error: Feature name required"
-          echo "Usage: task spec:new -- <feature-name>"
-          exit 1
-        fi
-      - git worktree add "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}" -b "spec/{{.CLI_ARGS}}"
-      - mkdir -p "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}/specs/{{.CLI_ARGS}}"
-      - |
-        echo ""
-        echo "Worktree created successfully!"
-        echo ""
-        echo "Next steps:"
-        echo "  cd {{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
-        echo "  task spec:specify FEATURE={{.CLI_ARGS}}"
-        echo ""
+      - >-
+        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode new -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
 
   spec:list:
     desc: List active spec worktrees
     cmds:
       - git worktree list
+
+  spec:backfill:
+    desc: Backfill an existing spec worktree with .specify/, .opencode/, and opencode.json if missing
+    summary: |
+      Copies spec-kit + OpenCode config into an existing worktree.
+
+      Usage: task spec:backfill -- <feature-name>
+    cmds:
+      - >-
+        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode backfill -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
 
   spec:specify:
     desc: Run specify phase for a feature
@@ -83,52 +89,32 @@ tasks:
 
       Alternatively, use /speckit.specify in chat environments.
     cmds:
-      - |
-        if [ -z "{{.FEATURE}}" ]; then
-          echo "Error: FEATURE variable required"
-          echo "Usage: task spec:specify FEATURE=<feature-name>"
-          exit 1
-        fi
-      - SPECIFY_FEATURE={{.FEATURE}} specify specify
+      - >-
+        pwsh -NoProfile -Command '& { $feature = "{{.FEATURE}}"; if ([string]::IsNullOrWhiteSpace($feature)) { throw "FEATURE variable required. Usage: task spec:specify FEATURE=<feature-name>" }; $root = (Get-Location).Path; $dir = Join-Path $root ("specs/" + $feature); New-Item -ItemType Directory -Force -Path $dir | Out-Null; $tmpl = Join-Path $root ".specify/templates/spec-template.md"; $out = Join-Path $dir "spec.md"; if (Test-Path -LiteralPath $tmpl) { if (-not (Test-Path -LiteralPath $out)) { Copy-Item -Force $tmpl $out } } else { if (-not (Test-Path -LiteralPath $out)) { New-Item -ItemType File -Force -Path $out | Out-Null } } }'
     env:
       SPECIFY_FEATURE: "{{.FEATURE}}"
 
   spec:plan:
     desc: Run plan phase for a feature
     cmds:
-      - |
-        if [ -z "{{.FEATURE}}" ]; then
-          echo "Error: FEATURE variable required"
-          echo "Usage: task spec:plan FEATURE=<feature-name>"
-          exit 1
-        fi
-      - SPECIFY_FEATURE={{.FEATURE}} specify plan
+      - >-
+        pwsh -NoProfile -Command '& { $feature = "{{.FEATURE}}"; if ([string]::IsNullOrWhiteSpace($feature)) { throw "FEATURE variable required. Usage: task spec:plan FEATURE=<feature-name>" }; $root = (Get-Location).Path; $dir = Join-Path $root ("specs/" + $feature); New-Item -ItemType Directory -Force -Path $dir | Out-Null; $tmpl = Join-Path $root ".specify/templates/plan-template.md"; $out = Join-Path $dir "plan.md"; if (Test-Path -LiteralPath $tmpl) { if (-not (Test-Path -LiteralPath $out)) { Copy-Item -Force $tmpl $out } } else { if (-not (Test-Path -LiteralPath $out)) { New-Item -ItemType File -Force -Path $out | Out-Null } } }'
     env:
       SPECIFY_FEATURE: "{{.FEATURE}}"
 
   spec:tasks:
     desc: Run tasks phase for a feature
     cmds:
-      - |
-        if [ -z "{{.FEATURE}}" ]; then
-          echo "Error: FEATURE variable required"
-          echo "Usage: task spec:tasks FEATURE=<feature-name>"
-          exit 1
-        fi
-      - SPECIFY_FEATURE={{.FEATURE}} specify tasks
+      - >-
+        pwsh -NoProfile -Command '& { $feature = "{{.FEATURE}}"; if ([string]::IsNullOrWhiteSpace($feature)) { throw "FEATURE variable required. Usage: task spec:tasks FEATURE=<feature-name>" }; $root = (Get-Location).Path; $dir = Join-Path $root ("specs/" + $feature); New-Item -ItemType Directory -Force -Path $dir | Out-Null; $tmpl = Join-Path $root ".specify/templates/tasks-template.md"; $out = Join-Path $dir "tasks.md"; if (Test-Path -LiteralPath $tmpl) { if (-not (Test-Path -LiteralPath $out)) { Copy-Item -Force $tmpl $out } } else { if (-not (Test-Path -LiteralPath $out)) { New-Item -ItemType File -Force -Path $out | Out-Null } } }'
     env:
       SPECIFY_FEATURE: "{{.FEATURE}}"
 
   spec:implement:
     desc: Run implement phase for a feature
     cmds:
-      - |
-        if [ -z "{{.FEATURE}}" ]; then
-          echo "Error: FEATURE variable required"
-          echo "Usage: task spec:implement FEATURE=<feature-name>"
-          exit 1
-        fi
-      - SPECIFY_FEATURE={{.FEATURE}} specify implement
+      - >-
+        pwsh -NoProfile -Command '& { $feature = "{{.FEATURE}}"; if ([string]::IsNullOrWhiteSpace($feature)) { throw "FEATURE variable required. Usage: task spec:implement FEATURE=<feature-name>" }; $root = (Get-Location).Path; $dir = Join-Path $root ("specs/" + $feature); New-Item -ItemType Directory -Force -Path $dir | Out-Null; $out = Join-Path $dir "IMPLEMENTATION.md"; if (-not (Test-Path -LiteralPath $out)) { New-Item -ItemType File -Force -Path $out | Out-Null } }'
     env:
       SPECIFY_FEATURE: "{{.FEATURE}}"
 
@@ -143,23 +129,5 @@ tasks:
         - All changes committed and pushed
         - PR merged to main
     cmds:
-      - |
-        if [ -z "{{.CLI_ARGS}}" ]; then
-          echo "Error: Feature name required"
-          echo "Usage: task spec:done -- <feature-name>"
-          exit 1
-        fi
-      - |
-        WORKTREE_PATH="{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
-        if [ ! -d "$WORKTREE_PATH" ]; then
-          echo "Error: Worktree not found: $WORKTREE_PATH"
-          exit 1
-        fi
-      - git worktree remove "{{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
-      - |
-        echo ""
-        echo "Worktree removed: {{.WORKTREE_BASE}}/{{.REPO_NAME}}--{{.CLI_ARGS}}"
-        echo ""
-        echo "To also delete the remote branch:"
-        echo "  git push origin --delete spec/{{.CLI_ARGS}}"
-        echo ""
+      - >-
+        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode done -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
