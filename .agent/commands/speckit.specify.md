@@ -41,7 +41,8 @@ Given that feature description, do this:
 
    a. Create the numbered feature branch + worktree by running `task spec:new -- <short-name>` from repo root.
 
-      - This command fetches remotes (best-effort), picks the next available `###-` number, creates the worktree, and copies `.specify/`, `.opencode/`, and `opencode.json` into the worktree.
+      - This command fetches remotes (best-effort), picks the next available `###-` number, creates the worktree, and copies `.specify/` and `opencode.json` into the worktree.
+      - It then generates `.opencode/` stubs from canonical `.agent/` sources.
       - Example:
 
       ```powershell

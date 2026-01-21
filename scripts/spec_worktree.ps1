@@ -66,6 +66,20 @@ function ConvertTo-CleanBranchName {
     return $Name.ToLower() -replace '[^a-z0-9]', '-' -replace '-{2,}', '-' -replace '^-', '' -replace '-$', ''
 }
 
+function Initialize-OpenCodeGenerated {
+    param(
+        [Parameter(Mandatory = $true)][string]$WorktreePath
+    )
+
+    # Generate .opencode from canonical .agent sources.
+    Push-Location $WorktreePath
+    try {
+        python 'scripts/sync_opencode.py' | Out-Host
+    } finally {
+        Pop-Location
+    }
+}
+
 $root = (Get-Location).Path
 $specsDir = Join-Path $root 'specs'
 New-Item -ItemType Directory -Force -Path $specsDir | Out-Null
@@ -107,12 +121,7 @@ switch ($Mode) {
             }
         }
 
-        if (Test-Path -LiteralPath '.opencode') {
-            $dst = Join-Path $worktreePath '.opencode'
-            if (-not (Test-Path -LiteralPath $dst)) {
-                Copy-Item -Recurse -Force -LiteralPath '.opencode' -Destination $dst
-            }
-        }
+        Initialize-OpenCodeGenerated -WorktreePath $worktreePath
 
         Write-Host ''
         Write-Host 'Worktree created successfully!'
@@ -152,12 +161,7 @@ switch ($Mode) {
             }
         }
 
-        if (Test-Path -LiteralPath '.opencode') {
-            $dst = Join-Path $worktreePath '.opencode'
-            if (-not (Test-Path -LiteralPath $dst)) {
-                Copy-Item -Recurse -Force -LiteralPath '.opencode' -Destination $dst
-            }
-        }
+        Initialize-OpenCodeGenerated -WorktreePath $worktreePath
 
         Write-Host ('Backfill complete: ' + $worktreePath)
     }
