@@ -7,6 +7,7 @@ permission:
     "ls*": allow
     "task sync-skills*": allow
     "task sync-commands*": allow
+    "task sync-opencode*": allow
     "task spec:init*": allow
     "task spec:new*": allow
     "task spec:list*": allow
