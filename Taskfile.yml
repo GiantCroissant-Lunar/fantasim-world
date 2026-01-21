@@ -37,6 +37,11 @@ tasks:
     generates:
       - .opencode/commands/*.md
 
+  sync-opencode:
+    desc: Generate .opencode from .agent (seed files + agents + commands + skills)
+    cmds:
+      - python scripts/sync_opencode.py
+
   # =============================================================================
   # Spec Kit Workflow
   # =============================================================================
