@@ -1,0 +1,105 @@
+using Plate.Topology.Contracts.Entities;
+using Plate.Topology.Contracts.Events;
+using Plate.Topology.Contracts.Geometry;
+using Plate.Topology.Contracts.Identity;
+using Plate.Topology.Materializer;
+
+namespace Plate.Topology.Tests.Integration;
+
+public sealed class MaterializeAtTickTests : IDisposable
+{
+    private const string TestDbPath = "./test_db_materialize_at_tick";
+    private readonly PlateTopologyEventStore _store;
+    private readonly TruthStreamIdentity _stream;
+
+    public MaterializeAtTickTests()
+    {
+        if (Directory.Exists(TestDbPath))
+            Directory.Delete(TestDbPath, true);
+
+        _store = new PlateTopologyEventStore(TestDbPath);
+        _stream = new TruthStreamIdentity(
+            "science",
+            "main",
+            2,
+            Domain.Parse("geo.plates"),
+            "0");
+    }
+
+    public void Dispose()
+    {
+        _store.Dispose();
+        if (Directory.Exists(TestDbPath))
+            Directory.Delete(TestDbPath, true);
+    }
+
+    [Fact]
+    public async Task MaterializeAtTickAsync_ReplaysUpToTickInclusive()
+    {
+        var plateId1 = new PlateId(Guid.NewGuid());
+        var plateId2 = new PlateId(Guid.NewGuid());
+        var boundaryId = new BoundaryId(Guid.NewGuid());
+        var junctionId = new JunctionId(Guid.NewGuid());
+
+        var events = new List<IPlateTopologyEvent>
+        {
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryId,
+                plateId1,
+                plateId2,
+                BoundaryType.Transform,
+                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                DateTimeOffset.UtcNow,
+                2,
+                _stream),
+            new JunctionCreatedEvent(
+                Guid.NewGuid(),
+                junctionId,
+                [boundaryId],
+                new Point2D(0.5, 0.0),
+                DateTimeOffset.UtcNow,
+                3,
+                _stream)
+        };
+
+        await _store.AppendAsync(_stream, events, CancellationToken.None);
+        var materializer = new PlateTopologyMaterializer(_store);
+
+        var stateNeg1 = await materializer.MaterializeAtTickAsync(_stream, -1, CancellationToken.None);
+        Assert.Empty(stateNeg1.Plates);
+        Assert.Equal(-1, stateNeg1.LastEventSequence);
+
+        var state0 = await materializer.MaterializeAtTickAsync(_stream, 0, CancellationToken.None);
+        Assert.Single(state0.Plates);
+        Assert.Empty(state0.Boundaries);
+        Assert.Empty(state0.Junctions);
+        Assert.Equal(0, state0.LastEventSequence);
+
+        var state1 = await materializer.MaterializeAtTickAsync(_stream, 1, CancellationToken.None);
+        Assert.Equal(2, state1.Plates.Count);
+        Assert.Empty(state1.Boundaries);
+        Assert.Empty(state1.Junctions);
+        Assert.Equal(1, state1.LastEventSequence);
+
+        var state2 = await materializer.MaterializeAtTickAsync(_stream, 2, CancellationToken.None);
+        Assert.Equal(2, state2.Plates.Count);
+        Assert.Single(state2.Boundaries);
+        Assert.Empty(state2.Junctions);
+        Assert.Equal(2, state2.LastEventSequence);
+
+        var state3 = await materializer.MaterializeAtTickAsync(_stream, 3, CancellationToken.None);
+        Assert.Equal(2, state3.Plates.Count);
+        Assert.Single(state3.Boundaries);
+        Assert.Single(state3.Junctions);
+        Assert.Equal(3, state3.LastEventSequence);
+
+        var state100 = await materializer.MaterializeAtTickAsync(_stream, 100, CancellationToken.None);
+        Assert.Equal(state3.Plates.Count, state100.Plates.Count);
+        Assert.Equal(state3.Boundaries.Count, state100.Boundaries.Count);
+        Assert.Equal(state3.Junctions.Count, state100.Junctions.Count);
+        Assert.Equal(state3.LastEventSequence, state100.LastEventSequence);
+    }
+}

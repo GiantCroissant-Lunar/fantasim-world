@@ -62,6 +62,30 @@ public sealed class PlateTopologyMaterializer
         return state;
     }
 
+    public async Task<PlateTopologyState> MaterializeAtTickAsync(
+        TruthStreamIdentity stream,
+        long tick,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (tick < -1)
+            throw new ArgumentOutOfRangeException(nameof(tick), "Tick must be >= -1");
+
+        var state = new PlateTopologyState(stream);
+        if (tick < 0)
+            return state;
+
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        {
+            if (evt.Sequence > tick)
+                break;
+
+            ApplyEvent(state, evt);
+        }
+
+        return state;
+    }
+
     /// <summary>
     /// Materializes topology state from a specific sequence onwards.
     ///
