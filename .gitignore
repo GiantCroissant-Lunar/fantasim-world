@@ -56,3 +56,4 @@ logs/
 .nuke/temp/
 build/nuke/.nuke/
 docs/_inbox/
+specs/
