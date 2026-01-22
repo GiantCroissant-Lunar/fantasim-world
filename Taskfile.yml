@@ -11,12 +11,27 @@ tasks:
       - task --list
 
   # =============================================================================
-  # Skills Management
+  # Agent Configuration Sync
   # =============================================================================
 
-  sync-skills:
+  agent:sync:
+    desc: Sync all tool-specific directories from .agent
+    aliases: [sync]
+    cmds:
+      - task: agent:sync-all
+
+  agent:sync-all:
+    desc: Sync all tool-specific directories from .agent
+    cmds:
+      - python scripts/sync_rules.py
+      - python scripts/sync_skills.py
+      - python scripts/sync_workflows.py
+      - python scripts/sync_commands.py
+      - python scripts/sync_opencode.py
+
+  agent:sync-skills:
     desc: Sync skill stubs from .agent/skills to tool-specific directories
-    aliases: [skills]
+    aliases: ["agent:skills"]
     cmds:
       - python scripts/sync_skills.py
     sources:
@@ -24,12 +39,13 @@ tasks:
     generates:
       - .claude/skills/**/SKILL.md
       - .cline/skills/**/SKILL.md
+      - .kilocode/skills/**/SKILL.md
       - .opencode/skills/**/SKILL.md
       - .windsurf/skills/**/SKILL.md
 
-  sync-commands:
+  agent:sync-commands:
     desc: Sync command stubs from .agent/commands to .opencode/commands
-    aliases: [commands]
+    aliases: ["agent:commands"]
     cmds:
       - python scripts/sync_commands.py
     sources:
@@ -37,8 +53,42 @@ tasks:
     generates:
       - .opencode/commands/*.md
 
-  sync-opencode:
+  agent:sync-workflows:
+    desc: Sync workflows from .agent/workflows to tool-specific directories
+    aliases: ["agent:workflows"]
+    cmds:
+      - python scripts/sync_workflows.py
+    sources:
+      - .agent/workflows/*.md
+      - .agent/adapters/*/workflows/*.md
+    generates:
+      - .kilocode/workflows/*.md
+
+  agent:sync-rules:
+    desc: Sync rules from .agent/rules to tool-specific directories and AGENTS.md/CLAUDE.md
+    aliases: ["agent:rules"]
+    cmds:
+      - python scripts/sync_rules.py
+    sources:
+      - .agent/rules/*.md
+      - .agent/adapters/*/rules/*.md
+    generates:
+      - .kilocode/rules/*.md
+      - .windsurf/rules/*.md
+      - .cline/rules/*.md
+      - .cursor/rules/*.mdc
+      - CLAUDE.md
+      - AGENTS.md
+
+  agent:sync-kilocode:
+    desc: Generate .kilocode from .agent (skills + workflows + rules)
+    aliases: ["agent:kilocode"]
+    cmds:
+      - python scripts/sync_kilocode.py
+
+  agent:sync-opencode:
     desc: Generate .opencode from .agent (seed files + agents + commands + skills)
+    aliases: ["agent:opencode"]
     cmds:
       - python scripts/sync_opencode.py
 
