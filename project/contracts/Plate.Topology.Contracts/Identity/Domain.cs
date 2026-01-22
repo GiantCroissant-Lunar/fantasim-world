@@ -79,10 +79,28 @@ public readonly record struct Domain
 
     /// <summary>
     /// Validates that the domain identifier is well-formed.
+    /// Applies the same validation rules as Parse():
+    /// - Non-empty and non-whitespace
+    /// - Contains only alphanumeric characters, dots, and underscores
+    /// - No consecutive dots, leading dots, or trailing dots
     /// </summary>
     public bool IsValid()
     {
-        return !string.IsNullOrWhiteSpace(_value);
+        if (string.IsNullOrWhiteSpace(_value))
+            return false;
+
+        // Check for invalid characters
+        foreach (char c in _value)
+        {
+            if (!char.IsLetterOrDigit(c) && c != '.' && c != '_')
+                return false;
+        }
+
+        // Check for consecutive dots or leading/trailing dots
+        if (_value.Contains("..") || _value.StartsWith('.') || _value.EndsWith('.'))
+            return false;
+
+        return true;
     }
 
     /// <summary>

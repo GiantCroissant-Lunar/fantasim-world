@@ -1,15 +1,14 @@
 using Plate.TimeDete.Determinism.Abstractions;
 
-namespace Plate.Topology.Contracts.Entities;
+namespace Plate.Topology.Contracts.Events;
 
 /// <summary>
-/// Stable identifier representing a boundary junction where three or more boundaries meet per FR-005.
+/// Stable identifier representing an event in the topology stream per FR-006.
 ///
-/// Junctions capture the topological structure of boundary intersections.
-/// Once created, a JunctionId persists through all topology changes and is never reused
-/// even after retirement.
+/// EventIds use UUIDv7 format for sortability. Solvers SHOULD use NewId(ISeededRng)
+/// to ensure deterministic replay per RFC-099 guidance.
 /// </summary>
-public readonly record struct JunctionId
+public readonly record struct EventId
 {
     /// <summary>
     /// Internal UUID representation.
@@ -17,10 +16,10 @@ public readonly record struct JunctionId
     private readonly Guid _value;
 
     /// <summary>
-    /// Initializes a new instance of the JunctionId struct with the specified UUID value.
+    /// Initializes a new instance of the EventId struct with the specified UUID value.
     /// </summary>
     /// <param name="value">The UUID value.</param>
-    public JunctionId(Guid value)
+    public EventId(Guid value)
     {
         _value = value;
     }
@@ -31,15 +30,19 @@ public readonly record struct JunctionId
     public Guid Value => _value;
 
     /// <summary>
-    /// Gets a value indicating whether this JunctionId is empty/invalid.
+    /// Gets a value indicating whether this EventId is empty/invalid.
     /// </summary>
     public bool IsEmpty => _value == Guid.Empty;
 
     /// <summary>
-    /// Creates a new unique JunctionId using a time-sorted UUIDv7.
+    /// Creates a new unique EventId using a time-sorted UUIDv7.
+    ///
+    /// WARNING: This overload uses system time and cryptographic RNG, producing
+    /// non-deterministic IDs. Use NewId(ISeededRng) in solver implementations
+    /// for replay determinism.
     /// </summary>
-    /// <returns>A new unique JunctionId.</returns>
-    public static JunctionId NewId()
+    /// <returns>A new unique EventId.</returns>
+    public static EventId NewId()
     {
         // UUIDv7 layout per RFC 9562:
         // 0-5: 48-bit Unix timestamp in milliseconds (big-endian)
@@ -70,10 +73,7 @@ public readonly record struct JunctionId
         // Set RFC4122 variant (bits 6-7 of byte 8: 0b10xxxxxx)
         rfcBytes[8] = (byte)((rfcBytes[8] & 0x3F) | 0x80);
 
-        // Convert RFC4122 byte order to .NET Guid mixed-endian format:
-        // Guid: Data1 (4, LE) | Data2 (2, LE) | Data3 (2, LE) | Data4 (8, BE)
-        // RFC:  [0-3] (BE)    | [4-5] (BE)    | [6-7] (BE)    | [8-15] (BE)
-
+        // Convert RFC4122 byte order to .NET Guid mixed-endian format
         var guidBytes = new byte[16];
         guidBytes[0] = rfcBytes[3];
         guidBytes[1] = rfcBytes[2];
@@ -85,19 +85,19 @@ public readonly record struct JunctionId
         guidBytes[7] = rfcBytes[6];
         Buffer.BlockCopy(rfcBytes, 8, guidBytes, 8, 8);
 
-        return new JunctionId(new Guid(guidBytes));
+        return new EventId(new Guid(guidBytes));
     }
 
     /// <summary>
-    /// Creates a new unique JunctionId deterministically using a seeded RNG.
-    /// Use this overload in solver implementations to ensure replay determinism.
+    /// Creates a new unique EventId deterministically using a seeded RNG.
+    /// Use this overload in solver implementations to ensure replay determinism per RFC-099.
     /// </summary>
     /// <param name="rng">The seeded RNG instance for deterministic generation.</param>
-    /// <returns>A new deterministic JunctionId.</returns>
-    public static JunctionId NewId(ISeededRng rng)
+    /// <returns>A new deterministic EventId.</returns>
+    public static EventId NewId(ISeededRng rng)
     {
         ArgumentNullException.ThrowIfNull(rng);
-        return new JunctionId(GenerateDeterministicGuid(rng));
+        return new EventId(GenerateDeterministicGuid(rng));
     }
 
     /// <summary>
@@ -152,45 +152,60 @@ public readonly record struct JunctionId
     }
 
     /// <summary>
-    /// Parses a JunctionId from a string representation.
+    /// Creates an EventId from a raw GUID value.
+    /// </summary>
+    public static EventId FromGuid(Guid value) => new(value);
+
+    /// <summary>
+    /// Parses an EventId from a string representation.
     /// </summary>
     /// <param name="value">The string representation of the UUID.</param>
-    /// <returns>A JunctionId instance.</returns>
+    /// <returns>An EventId instance.</returns>
     /// <exception cref="ArgumentException">Thrown when the value is not a valid UUID.</exception>
-    public static JunctionId Parse(string value)
+    public static EventId Parse(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("JunctionId value cannot be null or whitespace.", nameof(value));
+            throw new ArgumentException("EventId value cannot be null or whitespace.", nameof(value));
 
         if (!Guid.TryParse(value, out var guid))
-            throw new ArgumentException($"Invalid JunctionId format: {value}", nameof(value));
+            throw new ArgumentException($"Invalid EventId format: {value}", nameof(value));
 
         if (guid == Guid.Empty)
-            throw new ArgumentException("JunctionId value cannot be Guid.Empty.", nameof(value));
+            throw new ArgumentException("EventId value cannot be Guid.Empty.", nameof(value));
 
-        return new JunctionId(guid);
+        return new EventId(guid);
     }
 
     /// <summary>
-    /// Tries to parse a JunctionId from a string representation.
+    /// Tries to parse an EventId from a string representation.
     /// </summary>
     /// <param name="value">The string representation of the UUID.</param>
-    /// <param name="junctionId">The parsed JunctionId if successful.</param>
+    /// <param name="eventId">The parsed EventId if successful.</param>
     /// <returns>True if parsing succeeded; otherwise, false.</returns>
-    public static bool TryParse(string value, out JunctionId junctionId)
+    public static bool TryParse(string value, out EventId eventId)
     {
         if (!string.IsNullOrWhiteSpace(value) && Guid.TryParse(value, out var guid) && guid != Guid.Empty)
         {
-            junctionId = new JunctionId(guid);
+            eventId = new EventId(guid);
             return true;
         }
 
-        junctionId = default;
+        eventId = default;
         return false;
     }
 
     /// <summary>
-    /// Returns a string representation of the JunctionId.
+    /// Implicit conversion from EventId to Guid for backward compatibility.
+    /// </summary>
+    public static implicit operator Guid(EventId eventId) => eventId._value;
+
+    /// <summary>
+    /// Explicit conversion from Guid to EventId.
+    /// </summary>
+    public static explicit operator EventId(Guid value) => new(value);
+
+    /// <summary>
+    /// Returns a string representation of the EventId.
     /// </summary>
     /// <returns>A formatted UUID string.</returns>
     public override string ToString()

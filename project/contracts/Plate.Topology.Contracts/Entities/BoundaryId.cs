@@ -1,3 +1,5 @@
+using Plate.TimeDete.Determinism.Abstractions;
+
 namespace Plate.Topology.Contracts.Entities;
 
 /// <summary>
@@ -85,6 +87,69 @@ public readonly record struct BoundaryId
         Buffer.BlockCopy(rfcBytes, 8, guidBytes, 8, 8);
 
         return new BoundaryId(new Guid(guidBytes));
+    }
+
+    /// <summary>
+    /// Creates a new unique BoundaryId deterministically using a seeded RNG.
+    /// Use this overload in solver implementations to ensure replay determinism.
+    /// </summary>
+    /// <param name="rng">The seeded RNG instance for deterministic generation.</param>
+    /// <returns>A new deterministic BoundaryId.</returns>
+    public static BoundaryId NewId(ISeededRng rng)
+    {
+        ArgumentNullException.ThrowIfNull(rng);
+        return new BoundaryId(GenerateDeterministicGuid(rng));
+    }
+
+    /// <summary>
+    /// Generates a UUIDv7-style GUID deterministically using the provided RNG.
+    /// Uses RNG for all bits (timestamp + random), maintaining UUIDv7 structure.
+    /// </summary>
+    private static Guid GenerateDeterministicGuid(ISeededRng rng)
+    {
+        var rfcBytes = new byte[16];
+
+        // Use RNG for all bytes (deterministic pseudo-timestamp + random)
+        var highBits = rng.NextUInt64();
+        var lowBits = rng.NextUInt64();
+
+        // Fill bytes from RNG
+        rfcBytes[0] = (byte)((highBits >> 40) & 0xFF);
+        rfcBytes[1] = (byte)((highBits >> 32) & 0xFF);
+        rfcBytes[2] = (byte)((highBits >> 24) & 0xFF);
+        rfcBytes[3] = (byte)((highBits >> 16) & 0xFF);
+        rfcBytes[4] = (byte)((highBits >> 8) & 0xFF);
+        rfcBytes[5] = (byte)(highBits & 0xFF);
+        rfcBytes[6] = (byte)((lowBits >> 56) & 0xFF);
+        rfcBytes[7] = (byte)((lowBits >> 48) & 0xFF);
+        rfcBytes[8] = (byte)((lowBits >> 40) & 0xFF);
+        rfcBytes[9] = (byte)((lowBits >> 32) & 0xFF);
+        rfcBytes[10] = (byte)((lowBits >> 24) & 0xFF);
+        rfcBytes[11] = (byte)((lowBits >> 16) & 0xFF);
+        rfcBytes[12] = (byte)((lowBits >> 8) & 0xFF);
+        rfcBytes[13] = (byte)(lowBits & 0xFF);
+        rfcBytes[14] = (byte)((highBits >> 56) & 0xFF);
+        rfcBytes[15] = (byte)((highBits >> 48) & 0xFF);
+
+        // Set version to 7 (bits 4-7 of byte 6: 0b0111xxxx)
+        rfcBytes[6] = (byte)((rfcBytes[6] & 0x0F) | 0x70);
+
+        // Set RFC4122 variant (bits 6-7 of byte 8: 0b10xxxxxx)
+        rfcBytes[8] = (byte)((rfcBytes[8] & 0x3F) | 0x80);
+
+        // Convert RFC4122 byte order to .NET Guid mixed-endian format
+        var guidBytes = new byte[16];
+        guidBytes[0] = rfcBytes[3];
+        guidBytes[1] = rfcBytes[2];
+        guidBytes[2] = rfcBytes[1];
+        guidBytes[3] = rfcBytes[0];
+        guidBytes[4] = rfcBytes[5];
+        guidBytes[5] = rfcBytes[4];
+        guidBytes[6] = rfcBytes[7];
+        guidBytes[7] = rfcBytes[6];
+        Buffer.BlockCopy(rfcBytes, 8, guidBytes, 8, 8);
+
+        return new Guid(guidBytes);
     }
 
     /// <summary>
