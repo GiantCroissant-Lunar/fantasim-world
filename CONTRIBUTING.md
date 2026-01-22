@@ -1,0 +1,175 @@
+# Contributing to fantasim-world
+
+Thank you for your interest in contributing to fantasim-world! This document provides guidelines and information for contributing to the project.
+
+## Overview
+
+fantasim-world is a C#/.NET project that follows **spec-driven development** using GitHub Spec Kit. All feature work goes through a structured spec workflow before implementation.
+
+## Getting Started
+
+### Prerequisites
+
+- .NET SDK (check project for required version)
+- Git
+- A GitHub account
+
+### Initial Setup
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd fantasim-world
+
+# After cloning, sync the skills system
+task sync-skills
+```
+
+## Spec-Driven Development Workflow
+
+This project uses **GitHub Spec Kit** for all feature development. The core invariant is:
+
+> **One spec = one feature branch = one git worktree**
+
+Spec work is never done directly on `main`.
+
+### Quick Start for New Features
+
+```bash
+# 1. Create worktree for new spec
+task spec:new -- feature-name
+
+# 2. Enter worktree
+cd ../fantasim-world--feature-name
+
+# 3. Run spec phases
+task spec:specify FEATURE=feature-name   # or /speckit.specify
+task spec:plan FEATURE=feature-name      # or /speckit.plan
+task spec:tasks FEATURE=feature-name     # or /speckit.tasks
+
+# 4. Implement tasks, commit with task IDs
+
+# 5. Create PR, merge, cleanup
+task spec:done -- feature-name
+```
+
+### Spec Kit Interfaces
+
+| Interface | When to Use |
+|-----------|-------------|
+| `specify` CLI | Preferred for local agents, automation |
+| `/speckit.*` slash commands | Chat environments (GitHub Copilot, etc.) |
+
+### Spec Kit Phases
+
+| Phase | Primary Skill | Description |
+|-------|---------------|-------------|
+| Constitution | - | Rarely edited |
+| Specify / Clarify | `@spec-first` | Define what to build |
+| Plan | `@topology-first`, `@persistence` | Architecture and design |
+| Tasks | `@spec-kit-bridge` | Break down into actionable tasks |
+| Implement | `@implement-feature` | Write the code |
+| Review | `@code-review` | Architecture-focused review |
+
+## Core Expectations
+
+When contributing to fantasim-world, please follow these core development practices:
+
+1. **Read specs first** - Prefer reading the v2 RFC spine and referenced governance RFCs before implementing
+   - Canonical specs: `../fantasim-hub/docs/rfcs/`
+   - v2 topology-first spine: `../fantasim-hub/docs/rfcs/v2/RFC-INDEX.md`
+   - Prefer v2 RFCs where available; treat v1 RFCs as historical unless explicitly reaffirmed
+
+2. **Keep contracts stable** - Keep contracts, IDs, and event schemas stable. Put algorithms and solvers behind those contracts.
+
+3. **Enforce truth boundaries** - For the plates domain, ensure "derived stays derived": sampling/products must never become truth dependencies.
+
+4. **Make incremental changes** - Make changes incrementally and keep the repo runnable at each step.
+
+5. **Commit often** - Make small, focused commits after each logical change. Don't batch multiple unrelated changes.
+
+## Architecture Guidelines
+
+### Two Vocabularies (Do Not Conflate)
+
+- **Governance / identity axes**: `Variant`, `Branch`, `L`, `R`, `M`
+- **Pipeline layering**: `Topology`, `Sampling`, `View/Product`
+
+See: `../fantasim-hub/docs/TERMINOLOGY.md` → "Governance Axes vs Pipeline Layers"
+
+### Topology-First Doctrine (Plates)
+
+For the plates domain:
+- **Authoritative truth** is **Plate Topology** (boundary graph + events)
+- **Spatial substrates** (Voronoi/DGGS/cell meshes, cell-to-plate assignment) are **derived sampling products**
+
+Docs:
+- ADR: `../fantasim-hub/docs/adrs/ADR-0003-topology-first-truth-policy-plates.md`
+- RFC: `../fantasim-hub/docs/rfcs/v2/plates/RFC-V2-0001-plate-topology-truth-slice.md`
+
+### DB-First Persistence + Canonical Encoding
+
+- **Persistence backend**: RocksDB via `modern-rocksdb`
+- **Canonical event encoding**: MessagePack (DB-first; JSON is export/import only)
+
+Docs:
+- ADR: `../fantasim-hub/docs/adrs/ADR-0005-use-modern-rocksdb-for-db-first-persistence.md`
+- ADR: `../fantasim-hub/docs/adrs/ADR-0006-use-messagepack-for-canonical-event-encoding.md`
+- RFC: `../fantasim-hub/docs/rfcs/v2/persistence/RFC-V2-0004-rocksdb-eventstore-and-snapshots.md`
+- RFC: `../fantasim-hub/docs/rfcs/v2/persistence/RFC-V2-0005-messagepack-canonical-encoding.md`
+
+### In-Memory Graph Engine
+
+- In-memory graph engine for topology materialization: **Plate.ModernSatsuma**
+- This is an implementation detail: do not leak ModernSatsuma node/arc handles into truth events or persisted state
+
+Docs:
+- ADR: `../fantasim-hub/docs/adrs/ADR-0004-use-modern-satsuma-for-topology-graph-engine.md`
+
+## Code Style and Quality
+
+- Follow the `.editorconfig` settings for code formatting
+- Use pre-commit hooks configured in `.pre-commit-config.yaml`
+- Write clear, self-documenting code
+- Include appropriate unit tests for new functionality
+
+## Agent Workflow (Skills)
+
+This repo uses a shared skills system compatible with multiple AI coding assistants. Skills are stored in `.agent/skills/` with tool-specific stubs regenerated by running `task sync-skills`.
+
+Available skills:
+- `@spec-kit-bridge` - Spec-kit workflow orchestration
+- `@spec-first` - Read and understand specs before implementing
+- `@implement-feature` - Incremental feature implementation with stable contracts
+- `@code-review` - Architecture-focused code review
+- `@persistence` - RocksDB + MessagePack patterns
+- `@topology-first` - Plates domain truth boundary enforcement
+
+See `.agent/skills/SKILLS-INDEX.md` for full documentation.
+
+## Pull Request Process
+
+1. Ensure all spec phases are complete for feature work
+2. Create a pull request from your feature worktree
+3. Reference the spec and related RFCs/ADRs in the PR description
+4. Complete the PR checklist
+5. Address review feedback
+6. Ensure CI/CD checks pass
+
+For agent-specific guidance, see `AGENTS.md` in the repository.
+
+## Reporting Issues
+
+Please use the issue templates when reporting bugs or requesting features:
+- Bug reports: Use the "Bug Report" template
+- Feature requests: Use the "Feature Request" template
+
+## Questions?
+
+- For general questions, open a GitHub Discussion
+- For agent-specific guidance, see `AGENTS.md`
+- For spec workflow details, see `.agent/skills/spec-kit-bridge/`
+
+## License
+
+By contributing to fantasim-world, you agree that your contributions will be licensed under the MIT License.
