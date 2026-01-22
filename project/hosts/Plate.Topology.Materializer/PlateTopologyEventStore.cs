@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Serializers;
@@ -22,10 +23,11 @@ namespace Plate.Topology.Materializer;
 /// - Stream isolation by TruthStreamIdentity
 /// - Efficient range queries via lexicographic key ordering
 /// </summary>
-public sealed class PlateTopologyEventStore : ITopologyEventStore, IDisposable
+public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopologySnapshotStore, IDisposable
 {
     private const string EventPrefix = "E:";
     private const string HeadSuffix = "Head";
+    private const string SnapshotPrefix = "Snap:";
     private readonly Db _db;
     private readonly object _lock = new();
 
@@ -248,6 +250,69 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IDisposable
         return Task.FromResult<long?>(value);
     }
 
+    public Task SaveSnapshotAsync(PlateTopologySnapshot snapshot, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        if (!snapshot.Key.Stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {snapshot.Key.Stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
+
+        if (snapshot.Key.Tick < 0)
+            throw new ArgumentOutOfRangeException(nameof(snapshot), "Snapshot tick must be non-negative");
+
+        var prefix = BuildStreamPrefix(snapshot.Key.Stream);
+        var key = BuildSnapshotKey(prefix, snapshot.Key.Tick);
+        var bytes = MessagePackPlateTopologySnapshotSerializer.Serialize(snapshot);
+
+        lock (_lock)
+        {
+            _db.Put(key, bytes);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<PlateTopologySnapshot?> GetSnapshotAsync(PlateTopologyMaterializationKey key, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+
+        if (!key.Stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {key.Stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
+
+        if (key.Tick < 0)
+            return Task.FromResult<PlateTopologySnapshot?>(null);
+
+        var prefix = BuildStreamPrefix(key.Stream);
+        var snapshotKey = BuildSnapshotKey(prefix, key.Tick);
+
+        byte[]? bytes;
+        lock (_lock)
+        {
+            try
+            {
+                bytes = _db.Get(snapshotKey);
+            }
+            catch
+            {
+                bytes = null;
+            }
+        }
+
+        if (bytes == null || bytes.Length == 0)
+            return Task.FromResult<PlateTopologySnapshot?>(null);
+
+        var snapshot = MessagePackPlateTopologySnapshotSerializer.Deserialize(bytes);
+        return Task.FromResult<PlateTopologySnapshot?>(snapshot);
+    }
+
     /// <summary>
     /// Builds the stream prefix key component.
     ///
@@ -378,6 +443,19 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IDisposable
         var key = new byte[prefix.Length + HeadSuffix.Length];
         Buffer.BlockCopy(prefix, 0, key, 0, prefix.Length);
         Encoding.UTF8.GetBytes(HeadSuffix, 0, HeadSuffix.Length, key, prefix.Length);
+        return key;
+    }
+
+    private static byte[] BuildSnapshotKey(byte[] prefix, long tick)
+    {
+        var key = new byte[prefix.Length + SnapshotPrefix.Length + 8];
+
+        Buffer.BlockCopy(prefix, 0, key, 0, prefix.Length);
+        Encoding.UTF8.GetBytes(SnapshotPrefix, 0, SnapshotPrefix.Length, key, prefix.Length);
+
+        var offset = prefix.Length + SnapshotPrefix.Length;
+        BinaryPrimitives.WriteUInt64BigEndian(key.AsSpan(offset), (ulong)tick);
+
         return key;
     }
 
