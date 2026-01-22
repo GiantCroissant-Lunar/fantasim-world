@@ -8,8 +8,12 @@
       "*": "ask",
       "../fantasim-hub/docs/**": "allow",
       "..\\fantasim-hub\\docs\\**": "allow",
+      "*/fantasim-hub/docs/**": "allow",
+      "*\\fantasim-hub\\docs\\**": "allow",
       "../modern-rocksdb/**": "allow",
-      "..\\modern-rocksdb\\**": "allow"
+      "..\\modern-rocksdb\\**": "allow",
+      "*/modern-rocksdb/**": "allow",
+      "*\\modern-rocksdb\\**": "allow"
     }
   },
   "agent": {
@@ -18,6 +22,8 @@
         "bash": {
           "*": "ask",
           "ls*": "allow",
+          "find*": "allow",
+          "head*": "allow",
           "task sync-skills*": "allow",
           "task sync-commands*": "allow",
           "task sync-opencode*": "allow",
@@ -50,7 +56,11 @@
           "git status*": "allow",
           "git worktree list*": "allow"
         },
-        "edit": "ask"
+        "edit": {
+          "*": "ask",
+          "specs/**": "allow",
+          "specs\\**": "allow"
+        }
       }
     },
     "deep-thinker": {
@@ -77,6 +87,7 @@
         "edit": {
           "*": "deny",
           "specs/*/plan.md": "allow",
+          "specs\\*\\plan.md": "allow",
           "*/specs/*/plan.md": "allow",
           "*\\specs\\*\\plan.md": "allow"
         }
@@ -88,6 +99,7 @@
         "edit": {
           "*": "deny",
           "specs/*/plan.md": "allow",
+          "specs\\*\\plan.md": "allow",
           "*/specs/*/plan.md": "allow",
           "*\\specs\\*\\plan.md": "allow"
         }
