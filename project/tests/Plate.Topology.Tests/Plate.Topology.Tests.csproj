@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\contracts\Plate.Topology.Contracts\Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\hosts\Plate.Topology.Materializer\Plate.Topology.Materializer.csproj" />
     <ProjectReference Include="..\..\plugins\Plate.Topology.Serializers\Plate.Topology.Serializers.csproj" />
+    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
   </ItemGroup>
 
 </Project>

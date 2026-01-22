@@ -49,6 +49,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
     /// <exception cref="ArgumentException">
     /// If events don't match stream identity or sequences are not monotonic.
     /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// If stream identity is not valid.
+    /// </exception>
     public Task AppendAsync(
         TruthStreamIdentity stream,
         IEnumerable<IPlateTopologyEvent> events,
@@ -56,6 +59,14 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
     {
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(events);
+
+        // Validate stream identity per RFC-V2-0001 review recommendation
+        if (!stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
 
         var eventsList = events.ToList();
         if (eventsList.Count == 0)
@@ -117,6 +128,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
     /// Uses range scan starting from the first key >= fromSequenceInclusive.
     /// Stream isolation is enforced via key prefix.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// If stream identity is not valid.
+    /// </exception>
     public async IAsyncEnumerable<IPlateTopologyEvent> ReadAsync(
         TruthStreamIdentity stream,
         long fromSequenceInclusive,
@@ -125,6 +139,14 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
         ArgumentNullException.ThrowIfNull(stream);
         if (fromSequenceInclusive < 0)
             throw new ArgumentOutOfRangeException(nameof(fromSequenceInclusive), "Sequence must be non-negative");
+
+        // Validate stream identity per RFC-V2-0001 review recommendation
+        if (!stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
 
         var prefix = BuildStreamPrefix(stream);
         var firstKey = BuildEventKey(prefix, fromSequenceInclusive);
@@ -158,11 +180,22 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
     /// Reads from the Head metadata key which stores the last sequence number
     /// as a big-endian uint64.
     /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// If stream identity is not valid.
+    /// </exception>
     public Task<long?> GetLastSequenceAsync(
         TruthStreamIdentity stream,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(stream);
+
+        // Validate stream identity per RFC-V2-0001 review recommendation
+        if (!stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
 
         var prefix = BuildStreamPrefix(stream);
         var headKey = BuildHeadKey(prefix);
