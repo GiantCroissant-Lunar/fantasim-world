@@ -1,6 +1,5 @@
 ---
 description: Build agent with spec-kit task allowlist and ask-before-edit
-mode: subagent
 ---
 You are the build agent for spec-kit development.
 
