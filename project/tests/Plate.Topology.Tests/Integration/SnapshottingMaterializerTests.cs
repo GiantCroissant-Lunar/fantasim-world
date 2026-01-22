@@ -94,6 +94,12 @@ public sealed class SnapshottingMaterializerTests : IDisposable
             Assert.Contains(plateId1, r2.State.Plates.Keys);
             Assert.Contains(plateId2, r2.State.Plates.Keys);
             Assert.Contains(boundaryId, r2.State.Boundaries.Keys);
+
+            var r3 = await snapshotting.MaterializeAtTickAsync(stream, 100, CancellationToken.None);
+            Assert.True(r3.FromSnapshot);
+            Assert.Equal(r2.State.LastEventSequence, r3.State.LastEventSequence);
+            Assert.Equal(r2.State.Plates.Count, r3.State.Plates.Count);
+            Assert.Equal(r2.State.Boundaries.Count, r3.State.Boundaries.Count);
         }
     }
 

@@ -33,7 +33,11 @@ public sealed class SnapshottingPlateTopologyMaterializer
 
         var key = new PlateTopologyMaterializationKey(stream, tick);
 
-        var snapshot = await _snapshotStore.GetSnapshotAsync(key, cancellationToken);
+        var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);
+        var snapshotTick = head.HasValue && tick >= head.Value ? head.Value : tick;
+        var snapshotKey = new PlateTopologyMaterializationKey(stream, snapshotTick);
+
+        var snapshot = await _snapshotStore.GetSnapshotAsync(snapshotKey, cancellationToken);
         if (snapshot.HasValue)
         {
             var stateFromSnapshot = FromSnapshot(snapshot.Value);
@@ -42,9 +46,9 @@ public sealed class SnapshottingPlateTopologyMaterializer
 
         var state = await _inner.MaterializeAtTickAsync(stream, tick, cancellationToken);
 
-        if (tick >= 0)
+        if (head.HasValue && tick >= head.Value)
         {
-            var toSave = ToSnapshot(key, state);
+            var toSave = ToSnapshot(new PlateTopologyMaterializationKey(stream, head.Value), state);
             await _snapshotStore.SaveSnapshotAsync(toSave, cancellationToken);
         }
 
