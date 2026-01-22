@@ -1,5 +1,3 @@
-# Agent Guide for fantasim-world
-
 ## Project Overview
 
 This repo is a clean restart of **fantasim-world**.

@@ -1,8 +1,10 @@
 # =============================================================================
-# Agent Skills (generated stubs - regenerate with: task sync-skills)
+# Agent Config (generated - regenerate with: task agent:sync)
 # =============================================================================
 .claude/
 .cline/
+.cursor/
+.kilocode/
 .opencode/
 .windsurf/
 
@@ -51,6 +53,6 @@ logs/
 .env.*.local
 
 .task/
-.nuke/
+.nuke/temp/
 build/nuke/.nuke/
 docs/_inbox/
