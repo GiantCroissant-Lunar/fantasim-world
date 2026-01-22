@@ -22,7 +22,7 @@ namespace Plate.Topology.Materializer;
 /// - Stream isolation by TruthStreamIdentity
 /// - Efficient range queries via lexicographic key ordering
 /// </summary>
-public sealed class PlateTopologyEventStore : ITopologyEventStore
+public sealed class PlateTopologyEventStore : ITopologyEventStore, IDisposable
 {
     private const string EventPrefix = "E:";
     private const string HeadSuffix = "Head";
@@ -98,11 +98,20 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
         var prefix = BuildStreamPrefix(stream);
         using var batch = new WriteBatch();
 
+        var previousHash = GetPreviousHashForAppend(prefix);
+
         foreach (var evt in eventsList)
         {
             var eventKey = BuildEventKey(prefix, evt.Sequence);
             var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
-            batch.Put(eventKey, eventBytes);
+
+            var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+            var tick = evt.Sequence;
+            var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
+            var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
+
+            batch.Put(eventKey, recordBytes);
+            previousHash = hash;
         }
 
         // Update last sequence
@@ -151,6 +160,8 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
         var prefix = BuildStreamPrefix(stream);
         var firstKey = BuildEventKey(prefix, fromSequenceInclusive);
 
+        var expectedPreviousHash = GetExpectedPreviousHashForRead(prefix, fromSequenceInclusive);
+
         await Task.Yield(); // Ensure async pattern
 
         var bytesToYield = new List<byte[]>();
@@ -169,7 +180,23 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
         foreach (var eventBytes in bytesToYield)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            yield return MessagePackEventSerializer.Deserialize(eventBytes);
+
+            if (MessagePackEventRecordSerializer.TryDeserializeRecord(eventBytes, out var record))
+            {
+                if (!record.PreviousHash.AsSpan().SequenceEqual(expectedPreviousHash))
+                {
+                    throw new InvalidOperationException("EventRecord previousHash mismatch");
+                }
+
+                var evt = DeserializeAndValidateRecord(record);
+                expectedPreviousHash = record.Hash;
+                yield return evt;
+            }
+            else
+            {
+                expectedPreviousHash = MessagePackEventRecordSerializer.GetZeroHash();
+                yield return MessagePackEventSerializer.Deserialize(eventBytes);
+            }
         }
     }
 
@@ -229,6 +256,93 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore
     private static byte[] BuildStreamPrefix(TruthStreamIdentity stream)
     {
         return Encoding.UTF8.GetBytes($"S:{stream.VariantId}:{stream.BranchId}:L{stream.LLevel}:{stream.Domain}:M{stream.Model}:");
+    }
+
+    private byte[] GetPreviousHashForAppend(byte[] prefix)
+    {
+        var headKey = BuildHeadKey(prefix);
+
+        Span<byte> headBuffer = stackalloc byte[8];
+        int headWritten;
+
+        lock (_lock)
+        {
+            if (!_db.TryGet(headKey, headBuffer, out headWritten))
+            {
+                return MessagePackEventRecordSerializer.GetZeroHash();
+            }
+        }
+
+        if (headWritten != 8)
+        {
+            throw new InvalidOperationException($"Head value must be 8 bytes, got {headWritten}");
+        }
+
+        var lastSequence = BinaryPrimitives.ReadInt64BigEndian(headBuffer);
+        var lastEventKey = BuildEventKey(prefix, lastSequence);
+
+        byte[] lastValue;
+        lock (_lock)
+        {
+            lastValue = _db.Get(lastEventKey);
+        }
+
+        if (MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
+        {
+            return lastRecord.Hash;
+        }
+
+        return MessagePackEventRecordSerializer.GetZeroHash();
+    }
+
+    private byte[] GetExpectedPreviousHashForRead(byte[] prefix, long fromSequenceInclusive)
+    {
+        if (fromSequenceInclusive <= 0)
+        {
+            return MessagePackEventRecordSerializer.GetZeroHash();
+        }
+
+        var previousEventKey = BuildEventKey(prefix, fromSequenceInclusive - 1);
+
+        byte[] previousValue;
+        lock (_lock)
+        {
+            previousValue = _db.Get(previousEventKey);
+        }
+
+        if (MessagePackEventRecordSerializer.TryDeserializeRecord(previousValue, out var previousRecord))
+        {
+            return previousRecord.Hash;
+        }
+
+        return MessagePackEventRecordSerializer.GetZeroHash();
+    }
+
+    private static IPlateTopologyEvent DeserializeAndValidateRecord(MessagePackEventRecordSerializer.EventRecordV1 record)
+    {
+        if (record.SchemaVersion != MessagePackEventRecordSerializer.SchemaVersionV1)
+        {
+            throw new InvalidOperationException($"Unsupported schemaVersion: {record.SchemaVersion}");
+        }
+
+        var expectedHash = MessagePackEventRecordSerializer.ComputeHashV1(
+            record.SchemaVersion,
+            record.Tick,
+            record.PreviousHash,
+            record.EventBytes);
+
+        if (!expectedHash.AsSpan().SequenceEqual(record.Hash))
+        {
+            throw new InvalidOperationException("EventRecord hash mismatch");
+        }
+
+        var evt = MessagePackEventSerializer.Deserialize(record.EventBytes);
+        if (evt.Sequence != record.Tick)
+        {
+            throw new InvalidOperationException("EventRecord tick does not match event payload sequence");
+        }
+
+        return evt;
     }
 
     /// <summary>
