@@ -1,13 +1,14 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contracts", "contracts", "{A73F2606-6D4C-3EEE-1759-0E59DCFEF523}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Contracts", "contracts\Plate.Topology.Contracts\Plate.Topology.Contracts.csproj", "{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hosts", "hosts", "{B84F3707-7E5D-4FFF-2860-1F6AEDEG5634}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Materializer", "hosts\Plate.Topology.Materializer\Plate.Topology.Materializer.csproj", "{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{07D57EEB-2F50-60C4-C011-FE4FA775C9A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Serializers", "plugins\Plate.Topology.Serializers\Plate.Topology.Serializers.csproj", "{FD27E091-8076-4797-A1E9-92F267035C5C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Tests", "tests\Plate.Topology.Tests\Plate.Topology.Tests.csproj", "{14951ACF-AA51-4424-A628-BBCDFC7F3C36}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +16,24 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD27E091-8076-4797-A1E9-92F267035C5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD27E091-8076-4797-A1E9-92F267035C5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD27E091-8076-4797-A1E9-92F267035C5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD27E091-8076-4797-A1E9-92F267035C5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14951ACF-AA51-4424-A628-BBCDFC7F3C36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14951ACF-AA51-4424-A628-BBCDFC7F3C36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14951ACF-AA51-4424-A628-BBCDFC7F3C36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14951ACF-AA51-4424-A628-BBCDFC7F3C36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal

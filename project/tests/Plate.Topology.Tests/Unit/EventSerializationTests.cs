@@ -1,0 +1,521 @@
+using System;
+using System.Text;
+using MessagePack;
+using Plate.Topology.Contracts.Entities;
+using Plate.Topology.Contracts.Events;
+using Plate.Topology.Contracts.Geometry;
+using Plate.Topology.Contracts.Identity;
+using Plate.Topology.Serializers;
+using Xunit;
+
+namespace Plate.Topology.Tests.Unit;
+
+/// <summary>
+/// Unit tests for MessagePack event serialization per FR-012 (canonical encoding).
+///
+/// Tests cover:
+/// - Roundtrip serialization for all 9 event types
+/// - Determinism (same event produces identical bytes)
+/// - No string keys in encoded payload
+/// - Polymorphic deserialization via Deserialize(byte[])
+/// </summary>
+public class EventSerializationTests
+{
+    private static readonly TruthStreamIdentity TestStreamIdentity = new(
+        "test",
+        "main",
+        2,
+        Domain.Parse("geo.plates"),
+        "0"
+    );
+
+    private static readonly DateTimeOffset TestTimestamp = new(2025, 1, 15, 10, 30, 0, TimeSpan.Zero);
+
+    private static readonly Guid TestEventId = Guid.Parse("01912345-6789-4321-9876-123456789012");
+
+    private static PlateId CreateTestPlateId(Guid guid) => new PlateId(guid);
+    private static BoundaryId CreateTestBoundaryId(Guid guid) => new BoundaryId(guid);
+    private static JunctionId CreateTestJunctionId(Guid guid) => new JunctionId(guid);
+
+    #region Roundtrip Tests
+
+    [Fact]
+    public void PlateCreatedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var plateId = CreateTestPlateId(Guid.NewGuid());
+        var originalEvent = new PlateCreatedEvent(
+            TestEventId,
+            plateId,
+            TestTimestamp,
+            1L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<PlateCreatedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.PlateId, deserialized.PlateId);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void PlateRetiredEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var plateId = CreateTestPlateId(Guid.NewGuid());
+        var reason = "Test retirement";
+        var originalEvent = new PlateRetiredEvent(
+            TestEventId,
+            plateId,
+            reason,
+            TestTimestamp,
+            9L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<PlateRetiredEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.PlateId, deserialized.PlateId);
+        Assert.Equal(originalEvent.Reason, deserialized.Reason);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void BoundaryCreatedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var plateIdLeft = CreateTestPlateId(Guid.NewGuid());
+        var plateIdRight = CreateTestPlateId(Guid.NewGuid());
+        var geometry = new LineSegment(0.0, 0.0, 10.0, 10.0);
+        var originalEvent = new BoundaryCreatedEvent(
+            TestEventId,
+            boundaryId,
+            plateIdLeft,
+            plateIdRight,
+            BoundaryType.Divergent,
+            geometry,
+            TestTimestamp,
+            2L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<BoundaryCreatedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
+        Assert.Equal(originalEvent.PlateIdLeft, deserialized.PlateIdLeft);
+        Assert.Equal(originalEvent.PlateIdRight, deserialized.PlateIdRight);
+        Assert.Equal(originalEvent.BoundaryType, deserialized.BoundaryType);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+        Assert.Equal(originalEvent.Geometry.GetType(), deserialized.Geometry.GetType());
+    }
+
+    [Fact]
+    public void BoundaryTypeChangedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var oldType = BoundaryType.Divergent;
+        var newType = BoundaryType.Convergent;
+        var originalEvent = new BoundaryTypeChangedEvent(
+            TestEventId,
+            boundaryId,
+            oldType,
+            newType,
+            TestTimestamp,
+            4L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<BoundaryTypeChangedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
+        Assert.Equal(originalEvent.OldType, deserialized.OldType);
+        Assert.Equal(originalEvent.NewType, deserialized.NewType);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void BoundaryGeometryUpdatedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var points = new[]
+        {
+            new Point2D(0.0, 0.0),
+            new Point2D(10.0, 10.0),
+            new Point2D(20.0, 20.0)
+        };
+        var newGeometry = new Polyline(points);
+        var originalEvent = new BoundaryGeometryUpdatedEvent(
+            TestEventId,
+            boundaryId,
+            newGeometry,
+            TestTimestamp,
+            5L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<BoundaryGeometryUpdatedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
+        Assert.Equal(originalEvent.NewGeometry.GetType(), deserialized.NewGeometry.GetType());
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void BoundaryRetiredEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var reason = "Test retirement";
+        var originalEvent = new BoundaryRetiredEvent(
+            TestEventId,
+            boundaryId,
+            reason,
+            TestTimestamp,
+            6L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<BoundaryRetiredEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
+        Assert.Equal(originalEvent.Reason, deserialized.Reason);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void JunctionCreatedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var junctionId = CreateTestJunctionId(Guid.NewGuid());
+        var boundaryIds = new[]
+        {
+            CreateTestBoundaryId(Guid.NewGuid()),
+            CreateTestBoundaryId(Guid.NewGuid()),
+            CreateTestBoundaryId(Guid.NewGuid())
+        };
+        var location = new Point2D(5.0, 5.0);
+        var originalEvent = new JunctionCreatedEvent(
+            TestEventId,
+            junctionId,
+            boundaryIds,
+            location,
+            TestTimestamp,
+            3L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<JunctionCreatedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
+        Assert.Equal(originalEvent.BoundaryIds.Length, deserialized.BoundaryIds.Length);
+        Assert.Equal(originalEvent.Location.X, deserialized.Location.X);
+        Assert.Equal(originalEvent.Location.Y, deserialized.Location.Y);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void JunctionUpdatedEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var junctionId = CreateTestJunctionId(Guid.NewGuid());
+        var newBoundaryIds = new[]
+        {
+            CreateTestBoundaryId(Guid.NewGuid()),
+            CreateTestBoundaryId(Guid.NewGuid())
+        };
+        var newLocation = new Point2D(6.0, 6.0);
+        var originalEvent = new JunctionUpdatedEvent(
+            TestEventId,
+            junctionId,
+            newBoundaryIds,
+            newLocation,
+            TestTimestamp,
+            7L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<JunctionUpdatedEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
+        Assert.Equal(originalEvent.NewBoundaryIds.Length, deserialized.NewBoundaryIds.Length);
+        Assert.Equal(originalEvent.NewLocation.Value.X, deserialized.NewLocation.Value.X);
+        Assert.Equal(originalEvent.NewLocation.Value.Y, deserialized.NewLocation.Value.Y);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    [Fact]
+    public void JunctionRetiredEvent_Roundtrip_SerializesAndDeserializesCorrectly()
+    {
+        // Arrange
+        var junctionId = CreateTestJunctionId(Guid.NewGuid());
+        var reason = "Test retirement";
+        var originalEvent = new JunctionRetiredEvent(
+            TestEventId,
+            junctionId,
+            reason,
+            TestTimestamp,
+            8L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var serialized = MessagePackEventSerializer.Serialize(originalEvent);
+        var deserialized = MessagePackEventSerializer.Deserialize<JunctionRetiredEvent>(serialized);
+
+        // Assert
+        Assert.Equal(originalEvent.EventId, deserialized.EventId);
+        Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
+        Assert.Equal(originalEvent.Reason, deserialized.Reason);
+        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
+        Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
+    }
+
+    #endregion
+
+    #region Determinism Tests
+
+    [Fact]
+    public void Serialize_SameEventTwice_ProducesIdenticalBytes()
+    {
+        // Arrange
+        var plateId = CreateTestPlateId(Guid.NewGuid());
+        var @event = new PlateCreatedEvent(
+            TestEventId,
+            plateId,
+            TestTimestamp,
+            1L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var bytes1 = MessagePackEventSerializer.Serialize(@event);
+        var bytes2 = MessagePackEventSerializer.Serialize(@event);
+
+        // Assert - determinism
+        Assert.Equal(bytes1.Length, bytes2.Length);
+        Assert.Equal(bytes1, bytes2);
+    }
+
+    [Fact]
+    public void Serialize_WithPolyline_ProducesDeterministicBytes()
+    {
+        // Arrange
+        var points = new[]
+        {
+            new Point2D(0.0, 0.0),
+            new Point2D(10.0, 10.0),
+            new Point2D(20.0, 20.0)
+        };
+        var polyline = new Polyline(points);
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var @event = new BoundaryGeometryUpdatedEvent(
+            TestEventId,
+            boundaryId,
+            polyline,
+            TestTimestamp,
+            5L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var bytes1 = MessagePackEventSerializer.Serialize(@event);
+        var bytes2 = MessagePackEventSerializer.Serialize(@event);
+
+        // Assert - determinism
+        Assert.Equal(bytes1.Length, bytes2.Length);
+        Assert.Equal(bytes1, bytes2);
+    }
+
+    #endregion
+
+    #region Polymorphic Deserialization Tests
+
+    [Fact]
+    public void Deserialize_Polymorphic_AllEventTypes_CorrectlyTypeDiscriminated()
+    {
+        // Test all event types polymorphically
+        var plateCreated = new PlateCreatedEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), TestTimestamp, 1L, TestStreamIdentity);
+        var plateRetired = new PlateRetiredEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), "Test retirement", TestTimestamp, 9L, TestStreamIdentity);
+        var boundaryCreated = new BoundaryCreatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), BoundaryType.Divergent, new LineSegment(0.0, 0.0, 10.0, 10.0), TestTimestamp, 2L, TestStreamIdentity);
+        var boundaryTypeChanged = new BoundaryTypeChangedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), BoundaryType.Divergent, BoundaryType.Convergent, TestTimestamp, 4L, TestStreamIdentity);
+        var boundaryGeometryUpdated = new BoundaryGeometryUpdatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), new LineSegment(0.0, 0.0, 20.0, 20.0), TestTimestamp, 5L, TestStreamIdentity);
+        var boundaryRetired = new BoundaryRetiredEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), "Test retirement", TestTimestamp, 6L, TestStreamIdentity);
+        var junctionCreated = new JunctionCreatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(5.0, 5.0), TestTimestamp, 3L, TestStreamIdentity);
+        var junctionUpdated = new JunctionUpdatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(6.0, 6.0), TestTimestamp, 7L, TestStreamIdentity);
+        var junctionRetired = new JunctionRetiredEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), "Test retirement", TestTimestamp, 8L, TestStreamIdentity);
+
+        // Act - serialize and deserialize polymorphically
+        // Use non-generic call to avoid ambiguity
+        var plateCreatedBytes = MessagePackEventSerializer.Serialize(plateCreated);
+        var plateRetiredBytes = MessagePackEventSerializer.Serialize(plateRetired);
+        var boundaryCreatedBytes = MessagePackEventSerializer.Serialize(boundaryCreated);
+        var boundaryTypeChangedBytes = MessagePackEventSerializer.Serialize(boundaryTypeChanged);
+        var boundaryGeometryUpdatedBytes = MessagePackEventSerializer.Serialize(boundaryGeometryUpdated);
+        var boundaryRetiredBytes = MessagePackEventSerializer.Serialize(boundaryRetired);
+        var junctionCreatedBytes = MessagePackEventSerializer.Serialize(junctionCreated);
+        var junctionUpdatedBytes = MessagePackEventSerializer.Serialize(junctionUpdated);
+        var junctionRetiredBytes = MessagePackEventSerializer.Serialize(junctionRetired);
+
+        var plateCreatedResult = MessagePackEventSerializer.Deserialize(plateCreatedBytes);
+        var plateRetiredResult = MessagePackEventSerializer.Deserialize(plateRetiredBytes);
+        var boundaryCreatedResult = MessagePackEventSerializer.Deserialize(boundaryCreatedBytes);
+        var boundaryTypeChangedResult = MessagePackEventSerializer.Deserialize(boundaryTypeChangedBytes);
+        var boundaryGeometryUpdatedResult = MessagePackEventSerializer.Deserialize(boundaryGeometryUpdatedBytes);
+        var boundaryRetiredResult = MessagePackEventSerializer.Deserialize(boundaryRetiredBytes);
+        var junctionCreatedResult = MessagePackEventSerializer.Deserialize(junctionCreatedBytes);
+        var junctionUpdatedResult = MessagePackEventSerializer.Deserialize(junctionUpdatedBytes);
+        var junctionRetiredResult = MessagePackEventSerializer.Deserialize(junctionRetiredBytes);
+
+        // Assert - correct types
+        Assert.IsType<PlateCreatedEvent>(plateCreatedResult);
+        Assert.IsType<PlateRetiredEvent>(plateRetiredResult);
+        Assert.IsType<BoundaryCreatedEvent>(boundaryCreatedResult);
+        Assert.IsType<BoundaryTypeChangedEvent>(boundaryTypeChangedResult);
+        Assert.IsType<BoundaryGeometryUpdatedEvent>(boundaryGeometryUpdatedResult);
+        Assert.IsType<BoundaryRetiredEvent>(boundaryRetiredResult);
+        Assert.IsType<JunctionCreatedEvent>(junctionCreatedResult);
+        Assert.IsType<JunctionUpdatedEvent>(junctionUpdatedResult);
+        Assert.IsType<JunctionRetiredEvent>(junctionRetiredResult);
+
+        // Assert - values preserved (cast polymorphic result to specific type)
+        Assert.IsType<PlateCreatedEvent>(plateCreatedResult);
+        var casted = (PlateCreatedEvent)plateCreatedResult;
+        Assert.Equal(plateCreated.EventId, casted.EventId);
+        Assert.Equal(plateCreated.PlateId, casted.PlateId);
+    }
+
+    #endregion
+
+    #region String Key Assertions
+
+    [Fact]
+    public void Encoding_ContainsNoStringKeys_Events()
+    {
+        // Arrange
+        var @event = new PlateCreatedEvent(
+            TestEventId,
+            CreateTestPlateId(Guid.NewGuid()),
+            TestTimestamp,
+            1L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var bytes = MessagePackEventSerializer.Serialize(@event);
+        var bytesAsString = Encoding.UTF8.GetString(bytes);
+
+        // Assert - no string keys (eventType string is expected, but not "EventType" map key)
+        Assert.DoesNotContain("PlateId", bytesAsString);
+        Assert.DoesNotContain("Timestamp", bytesAsString);
+        Assert.DoesNotContain("Sequence", bytesAsString);
+        Assert.DoesNotContain("VariantId", bytesAsString);
+        Assert.DoesNotContain("BranchId", bytesAsString);
+        Assert.DoesNotContain("LLevel", bytesAsString);
+        Assert.DoesNotContain("Model", bytesAsString);
+        // Note: We don't check for "EventType" string because it appears as the envelope string
+    }
+
+    [Fact]
+    public void Encoding_ContainsNoStringKeys_Geometry()
+    {
+        // Arrange - test with event containing geometry
+        var points = new[]
+        {
+            new Point2D(0.0, 0.0),
+            new Point2D(10.0, 10.0),
+            new Point2D(20.0, 20.0)
+        };
+        var polyline = new Polyline(points);
+        var @event = new BoundaryGeometryUpdatedEvent(
+            TestEventId,
+            CreateTestBoundaryId(Guid.NewGuid()),
+            polyline,
+            TestTimestamp,
+            1L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var bytes = MessagePackEventSerializer.Serialize(@event);
+        var bytesAsString = Encoding.UTF8.GetString(bytes);
+
+        // Assert - no string keys for geometry (numeric discriminator expected)
+        Assert.DoesNotContain("GeometryType", bytesAsString);
+        Assert.DoesNotContain("Points", bytesAsString);
+    }
+
+    [Fact]
+    public void Encoding_Domain_SerializedAsValue()
+    {
+        // Verify Domain is serialized as plain string (not as numeric)
+        var @event = new PlateCreatedEvent(
+            TestEventId,
+            CreateTestPlateId(Guid.NewGuid()),
+            TestTimestamp,
+            1L,
+            TestStreamIdentity
+        );
+
+        // Act
+        var bytes = MessagePackEventSerializer.Serialize(@event);
+        var bytesAsString = Encoding.UTF8.GetString(bytes);
+
+        // Assert - Domain is plain string value
+        Assert.Contains("geo.plates", bytesAsString);
+        // Not as "Domain" key in a map
+    }
+
+    #endregion
+}
