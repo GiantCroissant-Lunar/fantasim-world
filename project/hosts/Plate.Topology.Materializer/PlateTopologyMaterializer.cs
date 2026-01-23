@@ -254,7 +254,7 @@ public sealed class PlateTopologyMaterializer
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var stream = state.StreamIdentity;
+        var stream = state.Identity;
         var startSeq = state.LastEventSequence + 1;
 
         Trace.WriteLineIf(
