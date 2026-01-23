@@ -7,13 +7,14 @@ using Plate.Topology.Contracts.Identity;
 
 namespace Plate.Topology.Materializer;
 
-public sealed class PlateTopologyState : IPlateTopologyStateView
+public sealed class PlateTopologyState : IPlateTopologyIndexedStateView
 {
     public PlateTopologyState(TruthStreamIdentity identity)
     {
         ArgumentNullException.ThrowIfNull(identity);
         Identity = identity;
         LastEventSequence = -1;
+        Indices = PlateTopologyIndicesBuilder.BuildPlateAdjacency(this);
     }
 
     public TruthStreamIdentity Identity { get; }
@@ -26,11 +27,18 @@ public sealed class PlateTopologyState : IPlateTopologyStateView
 
     public long LastEventSequence { get; private set; }
 
+    public PlateTopologyIndices Indices { get; private set; }
+
     public List<InvariantViolation> Violations { get; } = new();
 
     internal void SetLastEventSequence(long sequence)
     {
         LastEventSequence = sequence;
+    }
+
+    internal void RebuildIndices()
+    {
+        Indices = PlateTopologyIndicesBuilder.BuildPlateAdjacency(this);
     }
 
     TruthStreamIdentity IPlateTopologyStateView.Identity => Identity;

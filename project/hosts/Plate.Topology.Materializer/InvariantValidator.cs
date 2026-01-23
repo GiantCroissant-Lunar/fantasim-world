@@ -111,6 +111,15 @@ public static class InvariantValidator
             if (boundary.IsRetired)
                 continue; // Retired boundaries don't need to satisfy this invariant
 
+            if (boundary.PlateIdLeft == boundary.PlateIdRight)
+            {
+                violations.Add(new InvariantViolation(
+                    "BoundarySeparatesTwoPlates",
+                    $"Boundary {boundary.BoundaryId} has identical left and right plate {boundary.PlateIdLeft}",
+                    state.LastEventSequence
+                ));
+            }
+
             // Check if left plate exists
             if (!state.Plates.ContainsKey(boundary.PlateIdLeft))
             {
@@ -185,6 +194,14 @@ public static class InvariantValidator
 
     private static void ValidateBoundaryCreated(PlateTopologyState state, BoundaryCreatedEvent evt)
     {
+        if (evt.PlateIdLeft == evt.PlateIdRight)
+        {
+            throw new InvalidOperationException(
+                $"Invariant violation: BoundarySeparatesTwoPlates " +
+                $"[Sequence {evt.Sequence}] " +
+                $"Boundary {evt.BoundaryId} creation has identical left and right plate {evt.PlateIdLeft}");
+        }
+
         // Invariant 1: boundary must separate two existing plates
         if (!state.Plates.ContainsKey(evt.PlateIdLeft))
         {

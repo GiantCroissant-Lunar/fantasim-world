@@ -163,6 +163,42 @@ public class InvariantEnforcementTests : IDisposable
         Assert.Contains("Sequence 3", exception.Message);
     }
 
+    [Fact]
+    public async Task BoundaryCreated_WithSameLeftAndRightPlate_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var plateId = new PlateId(Guid.NewGuid());
+        var boundaryId = new BoundaryId(Guid.NewGuid());
+
+        var events = new List<IPlateTopologyEvent>
+        {
+            new PlateCreatedEvent(Guid.NewGuid(), plateId, DateTimeOffset.UtcNow, 0, _stream),
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryId,
+                plateId,
+                plateId,
+                BoundaryType.Transform,
+                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                DateTimeOffset.UtcNow,
+                1,
+                _stream
+            )
+        };
+
+        await _store.AppendAsync(_stream, events, CancellationToken.None);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
+        );
+
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
+        Assert.Contains(boundaryId.ToString(), exception.Message);
+        Assert.Contains("identical left and right plate", exception.Message);
+        Assert.Contains("Sequence 1", exception.Message);
+    }
+
     #endregion
 
     #region NoOrphanJunctions Tests

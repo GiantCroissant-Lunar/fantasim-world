@@ -59,6 +59,8 @@ public sealed class PlateTopologyMaterializer
             ApplyEvent(state, evt);
         }
 
+        state.RebuildIndices();
+
         return state;
     }
 
@@ -82,6 +84,8 @@ public sealed class PlateTopologyMaterializer
 
             ApplyEvent(state, evt);
         }
+
+        state.RebuildIndices();
 
         return state;
     }
@@ -113,6 +117,8 @@ public sealed class PlateTopologyMaterializer
         {
             ApplyEvent(state, evt);
         }
+
+        state.RebuildIndices();
 
         return state;
     }

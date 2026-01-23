@@ -158,6 +158,106 @@ public class DerivedProductTests : IDisposable
     }
 
     [Fact]
+    public async Task GenerateAdjacencyGraph_NeighborsAreOrderedByCanonicalPlateId()
+    {
+        var plateId1 = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000001"));
+        var plateId2 = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000002"));
+        var plateId3 = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000003"));
+
+        var boundaryIdToPlate3 = new BoundaryId(Guid.Parse("00000000-0000-0000-0000-0000000000A3"));
+        var boundaryIdToPlate1 = new BoundaryId(Guid.Parse("00000000-0000-0000-0000-0000000000A1"));
+
+        var events = new List<IPlateTopologyEvent>
+        {
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId3, DateTimeOffset.UtcNow, 2, _stream),
+
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryIdToPlate3,
+                plateId2,
+                plateId3,
+                BoundaryType.Transform,
+                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                DateTimeOffset.UtcNow,
+                3,
+                _stream
+            ),
+
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryIdToPlate1,
+                plateId2,
+                plateId1,
+                BoundaryType.Convergent,
+                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                DateTimeOffset.UtcNow,
+                4,
+                _stream
+            )
+        };
+
+        await _store.AppendAsync(_stream, events, CancellationToken.None);
+        var state = await _materializer.MaterializeAsync(_stream, CancellationToken.None);
+        var graph = _generator.Generate(state);
+
+        var plate2Adjacencies = graph.Adjacencies[plateId2];
+        Assert.Equal(2, plate2Adjacencies.Count);
+
+        Assert.Equal(plateId1, plate2Adjacencies[0].PlateId);
+        Assert.Equal(plateId3, plate2Adjacencies[1].PlateId);
+    }
+
+    [Fact]
+    public async Task MaterializeAsync_ReturnsIndexedState_WithGraphReflectingActiveBoundaries()
+    {
+        var plateId1 = new PlateId(Guid.NewGuid());
+        var plateId2 = new PlateId(Guid.NewGuid());
+        var plateId3 = new PlateId(Guid.NewGuid());
+        var boundaryId1 = new BoundaryId(Guid.NewGuid());
+        var boundaryId2 = new BoundaryId(Guid.NewGuid());
+
+        var events = new List<IPlateTopologyEvent>
+        {
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId3, DateTimeOffset.UtcNow, 2, _stream),
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryId1,
+                plateId1,
+                plateId2,
+                BoundaryType.Transform,
+                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                DateTimeOffset.UtcNow,
+                3,
+                _stream
+            ),
+            new BoundaryCreatedEvent(
+                Guid.NewGuid(),
+                boundaryId2,
+                plateId2,
+                plateId3,
+                BoundaryType.Convergent,
+                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                DateTimeOffset.UtcNow,
+                4,
+                _stream
+            ),
+            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId2, "test", DateTimeOffset.UtcNow, 5, _stream)
+        };
+
+        await _store.AppendAsync(_stream, events, CancellationToken.None);
+
+        var state = await _materializer.MaterializeAsync(_stream, CancellationToken.None);
+        var indexed = Assert.IsAssignableFrom<IPlateTopologyIndexedStateView>(state);
+
+        // 1 Active Boundary (boundaryId1). boundaryId2 is retired.
+        Assert.Equal(1, indexed.Indices.PlateAdjacencyGraph.EdgeCount);
+    }
+
+    [Fact]
     public async Task Recompute_FromSameState_ProducesIdenticalOutput()
     {
         var plateId1 = new PlateId(Guid.NewGuid());

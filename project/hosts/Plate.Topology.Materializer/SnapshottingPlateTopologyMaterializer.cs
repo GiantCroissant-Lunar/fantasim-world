@@ -75,14 +75,16 @@ public sealed class SnapshottingPlateTopologyMaterializer
         }
 
         state.SetLastEventSequence(snapshot.LastEventSequence);
+
+        state.RebuildIndices();
         return state;
     }
 
     private static PlateTopologySnapshot ToSnapshot(PlateTopologyMaterializationKey key, PlateTopologyState state)
     {
-        var plates = state.Plates.Values.OrderBy(p => p.PlateId.Value).ToArray();
-        var boundaries = state.Boundaries.Values.OrderBy(b => b.BoundaryId.Value).ToArray();
-        var junctions = state.Junctions.Values.OrderBy(j => j.JunctionId.Value).ToArray();
+        var plates = state.Plates.Values.OrderBy(p => p.PlateId.Value, GuidOrdering.Rfc4122Comparer).ToArray();
+        var boundaries = state.Boundaries.Values.OrderBy(b => b.BoundaryId.Value, GuidOrdering.Rfc4122Comparer).ToArray();
+        var junctions = state.Junctions.Values.OrderBy(j => j.JunctionId.Value, GuidOrdering.Rfc4122Comparer).ToArray();
 
         return new PlateTopologySnapshot(
             key,
