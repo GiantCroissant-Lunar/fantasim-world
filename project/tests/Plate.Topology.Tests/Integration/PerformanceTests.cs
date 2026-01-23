@@ -9,7 +9,6 @@ namespace Plate.Topology.Tests.Integration;
 
 public class PerformanceTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_performance";
     private const int TargetEventCount = 10000;
     private const int MaxDurationSeconds = 10;
     private readonly PlateTopologyEventStore _store;
@@ -18,10 +17,7 @@ public class PerformanceTests : IDisposable
 
     public PerformanceTests()
     {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
         _stream = new TruthStreamIdentity(
             "science",
             "main",
@@ -35,8 +31,6 @@ public class PerformanceTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     [Fact]

@@ -8,16 +8,12 @@ namespace Plate.Topology.Tests.Integration;
 
 public sealed class MaterializeAtTickTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_materialize_at_tick";
     private readonly PlateTopologyEventStore _store;
     private readonly TruthStreamIdentity _stream;
 
     public MaterializeAtTickTests()
     {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
         _stream = new TruthStreamIdentity(
             "science",
             "main",
@@ -29,8 +25,6 @@ public sealed class MaterializeAtTickTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     [Fact]

@@ -10,18 +10,13 @@ namespace Plate.Topology.Tests.Integration;
 
 public sealed class PlateTopologyIndexAccessTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_index_access";
-
     private readonly PlateTopologyEventStore _store;
     private readonly PlateTopologyMaterializer _materializer;
     private readonly TruthStreamIdentity _stream;
 
     public PlateTopologyIndexAccessTests()
     {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
         _materializer = new PlateTopologyMaterializer(_store);
 
         _stream = new TruthStreamIdentity(
@@ -36,8 +31,6 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     [Fact]

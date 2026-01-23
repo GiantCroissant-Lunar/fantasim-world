@@ -3,13 +3,13 @@ using System.Text;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
+using Plate.Topology.Contracts.Persistence;
 using Plate.Topology.Serializers;
-using RocksDb.Managed;
 
 namespace Plate.Topology.Materializer;
 
 /// <summary>
-/// RocksDB-based implementation of ITopologyEventStore per RFC-V2-0004 and RFC-V2-0005.
+/// Implementation of ITopologyEventStore per RFC-V2-0004 and RFC-V2-0005.
 ///
 /// Key design per persistence RFC:
 /// - Stream prefix: "S:{variant}:{branch}:L{l}:{domain}:M{m}:"
@@ -28,23 +28,23 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     private const string EventPrefix = "E:";
     private const string HeadSuffix = "Head";
     private const string SnapshotPrefix = "Snap:";
-    private readonly Db _db;
+    private readonly IOrderedKeyValueStore _store;
     private readonly object _lock = new();
 
     /// <summary>
-    /// Opens or creates a RocksDB event store at the specified path.
+    /// Opens or creates an event store at the specified path.
     /// </summary>
-    /// <param name="dbPath">Path to the RocksDB database directory.</param>
-    public PlateTopologyEventStore(string dbPath)
+    /// <param name="store">Ordered key-value store implementation.</param>
+    public PlateTopologyEventStore(IOrderedKeyValueStore store)
     {
-        ArgumentNullException.ThrowIfNull(dbPath);
-        _db = Db.Open(dbPath);
+        ArgumentNullException.ThrowIfNull(store);
+        _store = store;
     }
 
     /// <summary>
     /// Appends a batch of events to the specified stream atomically.
     ///
-    /// Uses RocksDB WriteBatch to ensure atomicity: either all events succeed
+    /// Uses WriteBatch to ensure atomicity: either all events succeed
     /// or none are persisted. Validates that all events match the stream identity
     /// and have monotonically increasing Sequence numbers.
     /// </summary>
@@ -98,7 +98,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         // Build batch atomically
         var prefix = BuildStreamPrefix(stream);
-        using var batch = new WriteBatch();
+        using var batch = _store.CreateWriteBatch();
 
         var previousHash = GetPreviousHashForAppend(prefix);
 
@@ -126,7 +126,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         // Write batch atomically
         lock (_lock)
         {
-            _db.Write(batch);
+            _store.Write(batch);
         }
 
         return Task.CompletedTask;
@@ -169,12 +169,12 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var bytesToYield = new List<byte[]>();
         lock (_lock)
         {
-            using var iterator = _db.CreateIterator();
+            using var iterator = _store.CreateIterator();
             iterator.Seek(firstKey);
 
-            while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
+            while (iterator.Valid && HasStreamPrefix(iterator.Key.Span, prefix))
             {
-                bytesToYield.Add(iterator.Value.ToArray());
+                bytesToYield.Add(iterator.Value.Span.ToArray());
                 iterator.Next();
             }
         }
@@ -234,7 +234,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         lock (_lock)
         {
-            if (!_db.TryGet(headKey, buffer, out written))
+            if (!_store.TryGet(headKey, buffer, out written))
             {
                 return Task.FromResult<long?>(null);
             }
@@ -270,7 +270,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         lock (_lock)
         {
-            _db.Put(key, bytes);
+            _store.Put(key, bytes);
         }
 
         return Task.CompletedTask;
@@ -298,7 +298,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         {
             try
             {
-                bytes = _db.Get(snapshotKey);
+                bytes = _store.TryGet(snapshotKey, out var v) ? v : null;
             }
             catch
             {
@@ -332,7 +332,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         lock (_lock)
         {
-            if (!_db.TryGet(headKey, headBuffer, out headWritten))
+            if (!_store.TryGet(headKey, headBuffer, out headWritten))
             {
                 return MessagePackEventRecordSerializer.GetZeroHash();
             }
@@ -349,7 +349,10 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         byte[] lastValue;
         lock (_lock)
         {
-            lastValue = _db.Get(lastEventKey);
+            if (!_store.TryGet(lastEventKey, out lastValue))
+            {
+                lastValue = Array.Empty<byte>();
+            }
         }
 
         if (MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
@@ -372,7 +375,10 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         byte[] previousValue;
         lock (_lock)
         {
-            previousValue = _db.Get(previousEventKey);
+            if (!_store.TryGet(previousEventKey, out previousValue))
+            {
+                previousValue = Array.Empty<byte>();
+            }
         }
 
         if (MessagePackEventRecordSerializer.TryDeserializeRecord(previousValue, out var previousRecord))
@@ -480,10 +486,10 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     }
 
     /// <summary>
-    /// Disposes the RocksDB store and releases resources.
+    /// Disposes the store and releases resources.
     /// </summary>
     public void Dispose()
     {
-        _db.Dispose();
+        _store.Dispose();
     }
 }
