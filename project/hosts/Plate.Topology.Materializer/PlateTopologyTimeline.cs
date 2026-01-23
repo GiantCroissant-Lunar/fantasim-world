@@ -1,4 +1,5 @@
 using Plate.TimeDete.Time.Primitives;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -44,16 +45,18 @@ public sealed class PlateTopologyTimeline
     /// </summary>
     /// <param name="stream">The truth stream identity.</param>
     /// <param name="targetTick">The target simulation tick.</param>
+    /// <param name="mode">Tick materialization mode (default: Auto).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A read-only view of the topology state at the target tick.</returns>
     public async Task<TimelineSlice> GetSliceAtTickAsync(
         TruthStreamIdentity stream,
         CanonicalTick targetTick,
+        TickMaterializationMode mode = TickMaterializationMode.Auto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        var result = await _materializer.MaterializeAtTickAsync(stream, targetTick, cancellationToken);
+        var result = await _materializer.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
         return new TimelineSlice(
             stream,
             targetTick,
@@ -73,7 +76,7 @@ public sealed class PlateTopologyTimeline
         TruthStreamIdentity stream,
         CancellationToken cancellationToken = default)
     {
-        return GetSliceAtTickAsync(stream, CanonicalTick.MaxValue, cancellationToken);
+        return GetSliceAtTickAsync(stream, CanonicalTick.MaxValue, TickMaterializationMode.Auto, cancellationToken);
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Plate.TimeDete.Time.Primitives;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -22,19 +23,39 @@ namespace Plate.Topology.Materializer;
 /// Two cutoff modes are supported:
 /// - Sequence-based: applies events up to a target sequence number (for deterministic replay)
 /// - Tick-based: applies events where event.Tick &lt;= targetTick (for simulation time queries)
+///
+/// Tick-based materialization supports three modes via <see cref="TickMaterializationMode"/>:
+/// - ScanAll: always correct, scans all events
+/// - BreakOnFirstBeyondTick: fast but only safe for tick-monotone streams
+/// - Auto: uses stream capabilities to choose the best mode
 /// </summary>
 public sealed class PlateTopologyMaterializer
 {
     private readonly ITopologyEventStore _store;
+    private readonly ITruthStreamCapabilities? _capabilities;
 
     /// <summary>
     /// Initializes a new instance of PlateTopologyMaterializer.
     /// </summary>
     /// <param name="store">The event store to read events from.</param>
     public PlateTopologyMaterializer(ITopologyEventStore store)
+        : this(store, store as ITruthStreamCapabilities)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of PlateTopologyMaterializer with explicit capabilities.
+    /// </summary>
+    /// <param name="store">The event store to read events from.</param>
+    /// <param name="capabilities">
+    /// Optional stream capabilities provider for tick-based optimization.
+    /// If null, Auto mode behaves like ScanAll.
+    /// </param>
+    public PlateTopologyMaterializer(ITopologyEventStore store, ITruthStreamCapabilities? capabilities)
     {
         ArgumentNullException.ThrowIfNull(store);
         _store = store;
+        _capabilities = capabilities;
     }
 
     /// <summary>
@@ -112,39 +133,77 @@ public sealed class PlateTopologyMaterializer
     /// This is the tick-based cutoff: applies events where event.Tick &lt;= targetTick.
     /// Use this for "what did the world look like at tick X?" queries.
     ///
-    /// IMPORTANT: This method does NOT assume tick monotonicity. It scans all events
-    /// and applies those with tick &lt;= targetTick, regardless of sequence order.
-    /// This ensures correctness even for streams where ticks may not be monotonic
-    /// (e.g., historical streams or streams with TickMonotonicityPolicy.Allow).
+    /// The mode parameter controls iteration behavior:
+    /// - ScanAll: Scans all events (always correct, but slower)
+    /// - BreakOnFirstBeyondTick: Breaks early (fast, but only safe for monotone streams)
+    /// - Auto: Queries stream capabilities and chooses the best mode
+    ///
+    /// When in doubt, use Auto (the default). It will only optimize when safe.
     /// </summary>
     /// <param name="stream">The truth stream identity to materialize.</param>
     /// <param name="targetTick">The maximum tick to include (inclusive).</param>
+    /// <param name="mode">Controls iteration behavior. Default is Auto.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>The materialized topology state containing entities at or before the target tick.</returns>
     public async Task<PlateTopologyState> MaterializeAtTickAsync(
         TruthStreamIdentity stream,
         CanonicalTick targetTick,
+        TickMaterializationMode mode = TickMaterializationMode.Auto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
 
+        // Determine effective mode
+        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken);
+
         var state = new PlateTopologyState(stream);
 
-        // Scan ALL events and apply those with tick <= targetTick.
-        // We do NOT break early because tick may not be monotonic.
-        // Events must still be applied in sequence order (which ReadAsync guarantees).
         await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
         {
-            if (evt.Tick <= targetTick)
+            if (effectiveMode == TickMaterializationMode.BreakOnFirstBeyondTick)
             {
+                // Fast path: break early (only safe for monotone streams)
+                if (evt.Tick > targetTick)
+                    break;
+
                 ApplyEvent(state, evt);
             }
-            // Continue scanning - later events may have earlier ticks
+            else
+            {
+                // Safe path: scan all, filter by tick
+                if (evt.Tick <= targetTick)
+                {
+                    ApplyEvent(state, evt);
+                }
+                // Continue scanning - later events may have earlier ticks
+            }
         }
 
         state.RebuildIndices();
 
         return state;
+    }
+
+    /// <summary>
+    /// Resolves the effective materialization mode based on stream capabilities.
+    /// </summary>
+    private async ValueTask<TickMaterializationMode> ResolveEffectiveModeAsync(
+        TruthStreamIdentity stream,
+        TickMaterializationMode requestedMode,
+        CancellationToken cancellationToken)
+    {
+        // Explicit modes are used as-is
+        if (requestedMode != TickMaterializationMode.Auto)
+            return requestedMode;
+
+        // Auto: check stream capabilities
+        if (_capabilities == null)
+            return TickMaterializationMode.ScanAll;
+
+        var isMonotone = await _capabilities.IsTickMonotoneFromGenesisAsync(stream, cancellationToken);
+        return isMonotone
+            ? TickMaterializationMode.BreakOnFirstBeyondTick
+            : TickMaterializationMode.ScanAll;
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using System.Linq;
 using Plate.TimeDete.Time.Primitives;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
@@ -53,7 +54,7 @@ public sealed class TickCutoffMaterializationTests
         var materializer = new PlateTopologyMaterializer(store);
 
         // Act - Materialize at tick 20
-        var state = await materializer.MaterializeAtTickAsync(_stream, new CanonicalTick(20), CancellationToken.None);
+        var state = await materializer.MaterializeAtTickAsync(_stream, new CanonicalTick(20), cancellationToken: CancellationToken.None);
 
         // Assert - Should have plates 1 and 2 (ticks 10 and 20), but not plate 3 (tick 30)
         Assert.Equal(2, state.Plates.Count);
@@ -91,7 +92,7 @@ public sealed class TickCutoffMaterializationTests
         var materializer = new PlateTopologyMaterializer(store);
 
         // Act - Materialize at tick 20
-        var state = await materializer.MaterializeAtTickAsync(_stream, new CanonicalTick(20), CancellationToken.None);
+        var state = await materializer.MaterializeAtTickAsync(_stream, new CanonicalTick(20), cancellationToken: CancellationToken.None);
 
         // Assert - Should have plates 1 and 3 (ticks 10 and 20)
         // Should NOT have plate 2 (tick 30 > 20)
@@ -200,8 +201,8 @@ public sealed class TickCutoffMaterializationTests
         var timeline = new PlateTopologyTimeline(store, snapshotStore);
 
         // Act
-        var sliceAt15 = await timeline.GetSliceAtTickAsync(_stream, new CanonicalTick(15), CancellationToken.None);
-        var sliceAt25 = await timeline.GetSliceAtTickAsync(_stream, new CanonicalTick(25), CancellationToken.None);
+        var sliceAt15 = await timeline.GetSliceAtTickAsync(_stream, new CanonicalTick(15), cancellationToken: CancellationToken.None);
+        var sliceAt25 = await timeline.GetSliceAtTickAsync(_stream, new CanonicalTick(25), cancellationToken: CancellationToken.None);
 
         // Assert
         Assert.Equal(1, sliceAt15.State.Plates.Count);  // Only plate1 (tick 10)
@@ -210,7 +211,215 @@ public sealed class TickCutoffMaterializationTests
 
     #endregion
 
+    #region TickMaterializationMode Tests
+
+    /// <summary>
+    /// Proves that Auto mode does NOT break early when capabilities returns false.
+    /// This is the safety test: even with non-monotone ticks, we get correct results.
+    /// </summary>
+    [Fact]
+    public async Task Auto_DoesNotBreak_WhenNotMonotone()
+    {
+        // Arrange - Non-monotone ticks: 10, 30, 20
+        var store = new InMemoryTopologyEventStore();
+        var capabilities = new FakeCapabilities(isMonotone: false);
+        var plate1 = new PlateId(Guid.NewGuid());
+        var plate2 = new PlateId(Guid.NewGuid());
+        var plate3 = new PlateId(Guid.NewGuid());
+
+        await store.AppendAsync(
+            _stream,
+            new IPlateTopologyEvent[]
+            {
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate1, new CanonicalTick(10), 0, _stream),
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate2, new CanonicalTick(30), 1, _stream),  // Beyond target
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate3, new CanonicalTick(20), 2, _stream),  // At target (after seq 1!)
+            },
+            CancellationToken.None);
+
+        var materializer = new PlateTopologyMaterializer(store, capabilities);
+
+        // Act - Auto mode should use ScanAll because capabilities.IsTickMonotone == false
+        var state = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(20),
+            TickMaterializationMode.Auto,
+            CancellationToken.None);
+
+        // Assert - Should have plates 1 and 3 (ticks 10 and 20)
+        // Plate3 proves we didn't break early at plate2 (tick 30)
+        Assert.Equal(2, state.Plates.Count);
+        Assert.True(state.Plates.ContainsKey(plate1), "Plate1 (tick 10) should be included");
+        Assert.False(state.Plates.ContainsKey(plate2), "Plate2 (tick 30) should NOT be included");
+        Assert.True(state.Plates.ContainsKey(plate3), "Plate3 (tick 20) should be included - proves ScanAll was used");
+    }
+
+    /// <summary>
+    /// Proves that BreakOnFirstBeyondTick mode stops early when ticks ARE monotone.
+    /// This verifies the optimization works.
+    /// </summary>
+    [Fact]
+    public async Task BreakMode_BreaksEarly_WhenMonotone()
+    {
+        // Arrange - Monotone ticks: 10, 20, 30
+        var store = new CountingEventStore();
+        var plate1 = new PlateId(Guid.NewGuid());
+        var plate2 = new PlateId(Guid.NewGuid());
+        var plate3 = new PlateId(Guid.NewGuid());
+
+        await store.AppendAsync(
+            _stream,
+            new IPlateTopologyEvent[]
+            {
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate1, new CanonicalTick(10), 0, _stream),
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate2, new CanonicalTick(20), 1, _stream),
+                TestEventFactory.PlateCreated(Guid.NewGuid(), plate3, new CanonicalTick(30), 2, _stream),
+            },
+            CancellationToken.None);
+
+        var materializer = new PlateTopologyMaterializer(store, null);
+
+        // Act - Force BreakOnFirstBeyondTick mode
+        store.ResetReadCount();
+        var state = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(20),
+            TickMaterializationMode.BreakOnFirstBeyondTick,
+            CancellationToken.None);
+
+        // Assert - Should have plates 1 and 2
+        Assert.Equal(2, state.Plates.Count);
+        Assert.True(state.Plates.ContainsKey(plate1));
+        Assert.True(state.Plates.ContainsKey(plate2));
+        Assert.False(state.Plates.ContainsKey(plate3));
+
+        // Should have read exactly 3 events (read plate3, saw tick 30 > 20, broke)
+        Assert.Equal(3, store.EventsRead);
+    }
+
+    /// <summary>
+    /// Proves that ScanAll mode reads all events even when ticks are monotone.
+    /// </summary>
+    [Fact]
+    public async Task ScanAll_ReadsAllEvents_EvenWhenMonotone()
+    {
+        // Arrange - Monotone ticks: 10, 20, 30, 40, 50
+        var store = new CountingEventStore();
+        var plates = Enumerable.Range(0, 5).Select(_ => new PlateId(Guid.NewGuid())).ToArray();
+
+        await store.AppendAsync(
+            _stream,
+            plates.Select((p, i) => (IPlateTopologyEvent)TestEventFactory.PlateCreated(
+                Guid.NewGuid(), p, new CanonicalTick((i + 1) * 10), i, _stream)),
+            CancellationToken.None);
+
+        var materializer = new PlateTopologyMaterializer(store, null);
+
+        // Act - Force ScanAll mode
+        store.ResetReadCount();
+        var state = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(20),
+            TickMaterializationMode.ScanAll,
+            CancellationToken.None);
+
+        // Assert - Should have plates 0 and 1 (ticks 10, 20)
+        Assert.Equal(2, state.Plates.Count);
+
+        // Should have read ALL 5 events (ScanAll doesn't break early)
+        Assert.Equal(5, store.EventsRead);
+    }
+
+    /// <summary>
+    /// Proves that Auto mode uses BreakOnFirstBeyondTick when capabilities says monotone.
+    /// </summary>
+    [Fact]
+    public async Task Auto_UsesBreak_WhenCapabilitiesSaysMonotone()
+    {
+        // Arrange - Monotone ticks: 10, 20, 30, 40, 50
+        var store = new CountingEventStore();
+        var capabilities = new FakeCapabilities(isMonotone: true);
+        var plates = Enumerable.Range(0, 5).Select(_ => new PlateId(Guid.NewGuid())).ToArray();
+
+        await store.AppendAsync(
+            _stream,
+            plates.Select((p, i) => (IPlateTopologyEvent)TestEventFactory.PlateCreated(
+                Guid.NewGuid(), p, new CanonicalTick((i + 1) * 10), i, _stream)),
+            CancellationToken.None);
+
+        var materializer = new PlateTopologyMaterializer(store, capabilities);
+
+        // Act - Auto should choose BreakOnFirstBeyondTick
+        store.ResetReadCount();
+        var state = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(20),
+            TickMaterializationMode.Auto,
+            CancellationToken.None);
+
+        // Assert - Should have plates 0 and 1
+        Assert.Equal(2, state.Plates.Count);
+
+        // Should have broken early - read only 3 events (10, 20, then saw 30 and broke)
+        Assert.Equal(3, store.EventsRead);
+    }
+
+    #endregion
+
     #region Test Helpers
+
+    private sealed class FakeCapabilities : ITruthStreamCapabilities
+    {
+        private readonly bool _isMonotone;
+
+        public FakeCapabilities(bool isMonotone) => _isMonotone = isMonotone;
+
+        public ValueTask<bool> IsTickMonotoneFromGenesisAsync(
+            TruthStreamIdentity stream,
+            CancellationToken cancellationToken = default)
+        {
+            return ValueTask.FromResult(_isMonotone);
+        }
+    }
+
+    private sealed class CountingEventStore : ITopologyEventStore
+    {
+        private readonly List<IPlateTopologyEvent> _events = new();
+        public int EventsRead { get; private set; }
+
+        public void ResetReadCount() => EventsRead = 0;
+
+        public Task AppendAsync(TruthStreamIdentity stream, IEnumerable<IPlateTopologyEvent> events, CancellationToken cancellationToken)
+        {
+            _events.AddRange(events);
+            return Task.CompletedTask;
+        }
+
+        public Task AppendAsync(TruthStreamIdentity stream, IEnumerable<IPlateTopologyEvent> events, AppendOptions options, CancellationToken cancellationToken)
+        {
+            return AppendAsync(stream, events, cancellationToken);
+        }
+
+        public async IAsyncEnumerable<IPlateTopologyEvent> ReadAsync(
+            TruthStreamIdentity stream,
+            long fromSequenceInclusive,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            foreach (var e in _events.Where(e => e.StreamIdentity == stream && e.Sequence >= fromSequenceInclusive).OrderBy(e => e.Sequence))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                EventsRead++;
+                yield return e;
+            }
+        }
+
+        public Task<long?> GetLastSequenceAsync(TruthStreamIdentity stream, CancellationToken cancellationToken)
+        {
+            var last = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
+            return Task.FromResult(last);
+        }
+    }
 
     private sealed class InMemoryTopologyEventStore : ITopologyEventStore
     {

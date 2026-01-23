@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Plate.TimeDete.Time.Primitives;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -28,11 +29,13 @@ public sealed class CachedPlateTopologyMaterializer
     /// </summary>
     /// <param name="stream">The truth stream identity.</param>
     /// <param name="targetTick">The target simulation tick.</param>
+    /// <param name="mode">Tick materialization mode (default: Auto).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The materialization result with cache hit indicator.</returns>
     public async Task<MaterializationResult> MaterializeAtTickAsync(
         TruthStreamIdentity stream,
         CanonicalTick targetTick,
+        TickMaterializationMode mode = TickMaterializationMode.Auto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
@@ -43,10 +46,11 @@ public sealed class CachedPlateTopologyMaterializer
             return new MaterializationResult(key, cached, true);
         }
 
-        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, cancellationToken);
+        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
         _cache.TryAdd(key, state);
         return new MaterializationResult(key, state, false);
     }
+
 
     /// <summary>
     /// Materializes topology state at a specific sequence, using cache if available.

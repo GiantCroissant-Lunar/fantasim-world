@@ -1,5 +1,6 @@
 using System.Linq;
 using Plate.TimeDete.Time.Primitives;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
@@ -37,11 +38,13 @@ public sealed class SnapshottingPlateTopologyMaterializer
     /// </summary>
     /// <param name="stream">The truth stream identity.</param>
     /// <param name="targetTick">The target simulation tick.</param>
+    /// <param name="mode">Tick materialization mode (default: Auto).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The materialization result with snapshot hit indicator.</returns>
     public async Task<MaterializationResult> MaterializeAtTickAsync(
         TruthStreamIdentity stream,
         CanonicalTick targetTick,
+        TickMaterializationMode mode = TickMaterializationMode.Auto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
@@ -57,7 +60,7 @@ public sealed class SnapshottingPlateTopologyMaterializer
         }
 
         // No snapshot - do full replay with tick-based cutoff
-        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, cancellationToken);
+        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
 
         // Save snapshot for "latest" queries (when targetTick is at or beyond head)
         var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);

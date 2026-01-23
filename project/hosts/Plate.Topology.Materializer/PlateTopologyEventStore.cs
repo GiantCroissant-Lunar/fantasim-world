@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -15,6 +16,8 @@ namespace Plate.Topology.Materializer;
 /// - Stream prefix: "S:{variant}:{branch}:L{l}:{domain}:M{m}:"
 /// - Event key: "{prefix}E:{seq}" where seq is big-endian uint64 (8 bytes fixed-width)
 /// - Last sequence key: "{prefix}Head"
+/// - Snapshot key: "{prefix}Snap:{tick}" where tick is big-endian uint64
+/// - Capabilities key: "{prefix}Meta:Caps" → 9-byte bitset
 /// - Event value: MessagePack envelope [eventType:string, payload:binary]
 ///
 /// Features:
@@ -22,12 +25,14 @@ namespace Plate.Topology.Materializer;
 /// - Deterministic replay by Sequence ordering
 /// - Stream isolation by TruthStreamIdentity
 /// - Efficient range queries via lexicographic key ordering
+/// - Stream capability tracking for safe optimizations
 /// </summary>
-public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopologySnapshotStore, IDisposable
+public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopologySnapshotStore, ITruthStreamCapabilities, IDisposable
 {
     private const string EventPrefix = "E:";
     private const string HeadSuffix = "Head";
     private const string SnapshotPrefix = "Snap:";
+    private const string MetaCapsKey = "Meta:Caps";
     private readonly IOrderedKeyValueStore _store;
     private readonly object _lock = new();
 
@@ -133,6 +138,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var prefix = BuildStreamPrefix(stream);
         using var batch = _store.CreateWriteBatch();
 
+        // Check if this is a genesis append (brand new stream)
+        var isGenesisAppend = !StreamExists(prefix);
+
         var previousHash = GetPreviousHashForAppend(prefix);
 
         foreach (var evt in eventsList)
@@ -155,6 +163,13 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         Span<byte> headBytes = stackalloc byte[8];
         BinaryPrimitives.WriteInt64BigEndian(headBytes, lastSequence);
         batch.Put(headKey, headBytes);
+
+        // For genesis appends with Reject policy, mark stream as tick-monotone
+        // This is the ONLY safe time to set this flag - at stream creation with strict policy
+        if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+        {
+            SetCapabilitiesInBatch(batch, prefix, StreamCapabilities.GenesisWithRejectPolicy);
+        }
 
         // Write batch atomically
         lock (_lock)
@@ -551,6 +566,101 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         return key[prefix.Length] == (byte)'E' && key[prefix.Length + 1] == (byte)':';
     }
+
+    /// <summary>
+    /// Builds the metadata capabilities key for a stream.
+    ///
+    /// Format: "{prefix}Meta:Caps"
+    /// </summary>
+    private static byte[] BuildMetaCapsKey(byte[] prefix)
+    {
+        var key = new byte[prefix.Length + MetaCapsKey.Length];
+        Buffer.BlockCopy(prefix, 0, key, 0, prefix.Length);
+        Encoding.UTF8.GetBytes(MetaCapsKey, 0, MetaCapsKey.Length, key, prefix.Length);
+        return key;
+    }
+
+    #region ITruthStreamCapabilities
+
+    /// <inheritdoc />
+    public ValueTask<bool> IsTickMonotoneFromGenesisAsync(
+        TruthStreamIdentity stream,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+
+        if (!stream.IsValid())
+            return ValueTask.FromResult(false);
+
+        var prefix = BuildStreamPrefix(stream);
+        var capsKey = BuildMetaCapsKey(prefix);
+
+        byte[]? capsBytes;
+        lock (_lock)
+        {
+            capsBytes = _store.TryGet(capsKey, out var v) ? v : null;
+        }
+
+        if (capsBytes == null || capsBytes.Length < StreamCapabilities.StorageSize)
+            return ValueTask.FromResult(false);
+
+        var caps = StreamCapabilities.FromBytes(capsBytes);
+        return ValueTask.FromResult(caps.IsTickMonotoneFromGenesis);
+    }
+
+    /// <summary>
+    /// Gets the full capabilities for a stream.
+    /// </summary>
+    /// <param name="stream">The truth stream identity.</param>
+    /// <returns>Stream capabilities, or None if not set.</returns>
+    public StreamCapabilities GetCapabilities(TruthStreamIdentity stream)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+
+        if (!stream.IsValid())
+            return StreamCapabilities.None;
+
+        var prefix = BuildStreamPrefix(stream);
+        var capsKey = BuildMetaCapsKey(prefix);
+
+        byte[]? capsBytes;
+        lock (_lock)
+        {
+            capsBytes = _store.TryGet(capsKey, out var v) ? v : null;
+        }
+
+        if (capsBytes == null || capsBytes.Length < StreamCapabilities.StorageSize)
+            return StreamCapabilities.None;
+
+        return StreamCapabilities.FromBytes(capsBytes);
+    }
+
+    /// <summary>
+    /// Sets the capabilities for a stream atomically in a write batch.
+    ///
+    /// This is typically called during the first append to a new stream
+    /// when using TickMonotonicityPolicy.Reject.
+    /// </summary>
+    private void SetCapabilitiesInBatch(IOrderedKeyValueWriteBatch batch, byte[] prefix, StreamCapabilities caps)
+    {
+        var capsKey = BuildMetaCapsKey(prefix);
+        var capsBytes = caps.ToBytes();
+        batch.Put(capsKey, capsBytes);
+    }
+
+    /// <summary>
+    /// Checks if a stream exists (has any events).
+    /// </summary>
+    private bool StreamExists(byte[] prefix)
+    {
+        var headKey = BuildHeadKey(prefix);
+        lock (_lock)
+        {
+            return _store.TryGet(headKey, out _);
+        }
+    }
+
+    #endregion
 
     /// <summary>
     /// Disposes the store and releases resources.

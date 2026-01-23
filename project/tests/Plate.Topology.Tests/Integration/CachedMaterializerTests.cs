@@ -65,11 +65,11 @@ public sealed class CachedMaterializerTests
         var cached = new CachedPlateTopologyMaterializer(store);
 
         // Use tick-based API
-        var r1 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), CancellationToken.None);
+        var r1 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), cancellationToken: CancellationToken.None);
         Assert.False(r1.FromCache);
         Assert.Equal(2, r1.State.Plates.Count);
 
-        var r2 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), CancellationToken.None);
+        var r2 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), cancellationToken: CancellationToken.None);
         Assert.True(r2.FromCache);
         Assert.Equal(2, r2.State.Plates.Count);
     }
