@@ -8,6 +8,7 @@ This directory contains shared skills for the fantasim-world project, compatible
 |------|-----------------|------|
 | Claude Code | `.claude/skills/` | [Claude Code Skills](https://docs.anthropic.com/en/docs/claude-code/skills) |
 | Cline | `.cline/skills/` | [Cline Skills](https://docs.cline.bot/features/skills) |
+| Gemini CLI | `.gemini/skills/` | [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/) |
 | OpenCode | `.opencode/skills/` | [OpenCode Skills](https://opencode.ai/docs/skills/) |
 | Windsurf | `.windsurf/skills/` | [Cascade Skills](https://docs.windsurf.com/windsurf/cascade/skills) |
 
@@ -160,6 +161,8 @@ The skill will automatically be available to all supported tools via the junctio
 
 .claude/skills/                  # Stub files → .agent/skills
 .cline/skills/                   # Stub files → .agent/skills
+.gemini/skills/                  # Stub files → .agent/skills
+.kilocode/skills/                # Stub files → .agent/skills
 .opencode/skills/                # Stub files → .agent/skills
 .windsurf/skills/                # Stub files → .agent/skills
 

@@ -19,6 +19,7 @@ SOURCE_DIR = Path(".agent/skills")
 TARGET_DIRS = [
     Path(".claude/skills"),
     Path(".cline/skills"),
+    Path(".gemini/skills"),
     Path(".kilocode/skills"),
     Path(".opencode/skills"),
     Path(".windsurf/skills"),
