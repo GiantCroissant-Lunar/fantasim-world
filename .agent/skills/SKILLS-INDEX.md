@@ -27,7 +27,9 @@ task sync-skills
 | `@spec-kit-bridge` | Spec-kit workflow orchestration | When starting or progressing a spec |
 | `@spec-first` | Read specs before implementing | Before any implementation work |
 | `@implement-feature` | Incremental feature implementation | When adding new functionality |
+| `@self-critique` | Self-evaluation against specs and doctrine | After implementation, before marking complete |
 | `@code-review` | Architecture-focused code review | When reviewing PRs or code |
+| `@reflect` | Capture learnings after completion | After feature is merged |
 | `@persistence` | RocksDB + MessagePack patterns | When working with storage |
 | `@topology-first` | Plates domain truth boundaries | When working on plates code |
 
@@ -57,14 +59,22 @@ Use `@skill-name` syntax to explicitly invoke a skill:
         ↓                      ↓
 @persistence          @persistence
         ↓                      ↓
-@code-review ←─────────────────┘
+@self-critique ←───────────────┘
+        ↓
+        ↓ (loop until pass)
+        ↓
+@code-review
+        ↓
+@reflect → .agent/memory/reflections/
 ```
 
 **Recommended workflow:**
 1. Start with `@spec-kit-bridge` for new specs (creates worktree)
 2. Use `@spec-first` during Specify/Clarify phases
 3. Use domain skills (`@topology-first`, `@persistence`) during Plan/Implement
-4. Finish with `@code-review`
+4. Run `@self-critique` to self-evaluate before requesting review
+5. Finish with `@code-review`
+6. Capture learnings with `@reflect` after merge
 
 ## Spec Kit Integration
 
@@ -90,7 +100,9 @@ Spec Kit provides two interfaces (both produce the same artifacts):
 | Plan | `@topology-first`, `@persistence` | `specs/<feature>/plan.md` |
 | Tasks | `@spec-kit-bridge` | `specs/<feature>/tasks.md` |
 | Implement | `@implement-feature` | code + tests |
+| Self-Critique | `@self-critique` | critique report (iterates until pass) |
 | Review | `@code-review` | PR approval |
+| Reflect | `@reflect` | `.agent/memory/reflections/<feature>.md` |
 
 ### Worktree Rule
 
@@ -128,13 +140,21 @@ The skill will automatically be available to all supported tools via the junctio
 │   │   └── checklist.md
 │   ├── implement-feature/
 │   │   └── SKILL.md
+│   ├── self-critique/           # Self-evaluation loop
+│   │   ├── SKILL.md
+│   │   └── rubric.yaml          # Configurable evaluation criteria
 │   ├── code-review/
 │   │   ├── SKILL.md
 │   │   └── checklist.md
+│   ├── reflect/                 # Learning capture
+│   │   └── SKILL.md
 │   ├── persistence/
 │   │   └── SKILL.md
 │   └── topology-first/
 │       └── SKILL.md
+├── memory/                      # Agent memory storage
+│   └── reflections/             # Feature learnings
+│       └── index.md             # Auto-maintained index
 └── workflows/                   # Reference docs (not skills)
     └── spec-kit-worktrees.md
 

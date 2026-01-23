@@ -1,0 +1,76 @@
+# Self-Critique Evaluation Rubric
+# Project defaults for fantasim-world
+#
+# Override per-feature by creating specs/<feature>/critique.yaml
+# with `extends: default` and criterion overrides.
+
+version: 1
+
+# Pass when total weighted score >= threshold
+threshold: 0.80
+
+# Maximum fix attempts before escalating to human
+max_iterations: 3
+
+# Evaluation criteria with weights (must sum to 1.0)
+criteria:
+  spec_alignment:
+    weight: 0.30
+    description: "Implementation matches spec requirements and acceptance criteria"
+    checks:
+      - "All spec requirements addressed"
+      - "Acceptance criteria met"
+      - "Edge cases from spec handled"
+
+  truth_boundary:
+    weight: 0.25
+    description: "No derived-as-truth violations per ADR-0003"
+    blocker: true  # Fails entire check if violated
+    checks:
+      - "Derived data never used as truth input"
+      - "Spatial substrates are products, not sources"
+      - "Events don't depend on sampling products"
+      - "Topology is authoritative, not Voronoi/DGGS"
+    references:
+      - "../fantasim-hub/docs/adrs/ADR-0003-topology-first-truth-policy-plates.md"
+      - "../fantasim-hub/docs/rfcs/v2/plates/RFC-V2-0001-plate-topology-truth-slice.md"
+
+  contract_stability:
+    weight: 0.20
+    description: "IDs and schemas stable, algorithms behind contracts"
+    checks:
+      - "IDs are readonly and immutable"
+      - "Event schemas are backwards-compatible"
+      - "Algorithms are behind interfaces, not exposed"
+      - "No breaking changes to existing contracts"
+
+  encoding:
+    weight: 0.15
+    description: "Correct encoding per ADR-0005 and ADR-0006"
+    checks:
+      - "MessagePack for RocksDB storage"
+      - "JSON only for export/import"
+      - "ModernSatsuma handles not leaked externally"
+      - "No graph engine internals in persisted state"
+    references:
+      - "../fantasim-hub/docs/adrs/ADR-0005-use-modern-rocksdb-for-db-first-persistence.md"
+      - "../fantasim-hub/docs/adrs/ADR-0006-use-messagepack-for-canonical-event-encoding.md"
+
+  runnable:
+    weight: 0.10
+    description: "Code compiles and tests pass"
+    blocker: true  # Fails entire check if violated
+    checks:
+      - "TypeScript compiles without errors"
+      - "All existing tests pass"
+      - "No broken imports or dependencies"
+      - "Each commit is independently runnable"
+
+# Scoring guide for each criterion
+scoring:
+  1.0: "Fully meets all checks"
+  0.8: "Meets most checks, minor gaps"
+  0.6: "Partial compliance, notable gaps"
+  0.4: "Significant violations"
+  0.2: "Major violations"
+  0.0: "Complete failure or blocker triggered"
