@@ -149,6 +149,7 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
         {
             ArgumentNullException.ThrowIfNull(target);
 
+            // Binary search for first key >= target
             var lo = 0;
             var hi = _keys.Count;
             while (lo < hi)
@@ -164,10 +165,38 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
             _index = lo;
         }
 
+        public void SeekForPrev(byte[] target)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+
+            // Binary search for last key <= target
+            // First find the first key > target, then back up one
+            var lo = 0;
+            var hi = _keys.Count;
+            while (lo < hi)
+            {
+                var mid = lo + ((hi - lo) / 2);
+                var cmp = _comparer.Compare(_keys[mid], target);
+                if (cmp <= 0)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+
+            // lo is now the first key > target, so lo-1 is the last key <= target
+            _index = lo - 1;
+        }
+
         public void Next()
         {
             if (_index < _keys.Count)
                 _index++;
+        }
+
+        public void Prev()
+        {
+            if (_index >= 0)
+                _index--;
         }
 
         public void Dispose()

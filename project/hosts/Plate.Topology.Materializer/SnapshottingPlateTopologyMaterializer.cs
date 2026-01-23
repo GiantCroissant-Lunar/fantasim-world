@@ -51,15 +51,24 @@ public sealed class SnapshottingPlateTopologyMaterializer
 
         var key = new PlateTopologyMaterializationKey(stream, targetTick.Value);
 
-        // Check for existing snapshot at target tick
-        var snapshot = await _snapshotStore.GetSnapshotAsync(key, cancellationToken);
+        // Try to find the latest snapshot at or before the target tick
+        // This uses SeekForPrev internally for O(log n) lookup
+        var snapshot = await _snapshotStore.GetLatestSnapshotBeforeAsync(stream, targetTick.Value, cancellationToken);
         if (snapshot.HasValue)
         {
-            var stateFromSnapshot = FromSnapshot(snapshot.Value);
-            return new MaterializationResult(key, stateFromSnapshot, true);
+            // If we found an exact match, we're done
+            if (snapshot.Value.Key.Tick == targetTick.Value)
+            {
+                var stateFromSnapshot = FromSnapshot(snapshot.Value);
+                return new MaterializationResult(key, stateFromSnapshot, true);
+            }
+
+            // Otherwise, load the snapshot and replay only the tail
+            // TODO: Implement incremental replay from snapshot tick to target tick
+            // For now, fall through to full replay (but at least we tried!)
         }
 
-        // No snapshot - do full replay with tick-based cutoff
+        // No usable snapshot - do full replay with tick-based cutoff
         var state = await _inner.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
 
         // Save snapshot for "latest" queries (when targetTick is at or beyond head)

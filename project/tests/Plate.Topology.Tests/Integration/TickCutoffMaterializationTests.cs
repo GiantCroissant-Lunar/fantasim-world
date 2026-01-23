@@ -211,6 +211,76 @@ public sealed class TickCutoffMaterializationTests
 
     #endregion
 
+    #region Snapshot Selection Tests (latest <= tick)
+
+    /// <summary>
+    /// Proves that GetLatestSnapshotBeforeAsync returns the largest tick <= target.
+    /// </summary>
+    [Fact]
+    public async Task GetLatestSnapshotBefore_ReturnsLargestTickLessThanOrEqual()
+    {
+        // Arrange - snapshots at ticks 10, 20, 30
+        var snapshotStore = new InMemorySnapshotStore();
+        var state10 = new PlateTopologyState(_stream);
+        var state20 = new PlateTopologyState(_stream);
+        var state30 = new PlateTopologyState(_stream);
+
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(_stream, 10), state10), CancellationToken.None);
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(_stream, 20), state20), CancellationToken.None);
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(_stream, 30), state30), CancellationToken.None);
+
+        // Act & Assert - query at various ticks
+        var at5 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 5, CancellationToken.None);
+        var at10 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 10, CancellationToken.None);
+        var at15 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 15, CancellationToken.None);
+        var at25 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 25, CancellationToken.None);
+        var at100 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 100, CancellationToken.None);
+
+        Assert.Null(at5);  // No snapshot at or before tick 5
+        Assert.NotNull(at10);
+        Assert.Equal(10, at10!.Value.Key.Tick);  // Exact match
+        Assert.NotNull(at15);
+        Assert.Equal(10, at15!.Value.Key.Tick);  // Largest <= 15 is 10
+        Assert.NotNull(at25);
+        Assert.Equal(20, at25!.Value.Key.Tick);  // Largest <= 25 is 20
+        Assert.NotNull(at100);
+        Assert.Equal(30, at100!.Value.Key.Tick); // Largest <= 100 is 30
+    }
+
+    /// <summary>
+    /// Proves that GetLatestSnapshotBeforeAsync respects stream boundaries.
+    /// Snapshots from other streams should not be returned.
+    /// </summary>
+    [Fact]
+    public async Task GetLatestSnapshotBefore_RespectsStreamBoundaries()
+    {
+        // Arrange - two different streams
+        var stream1 = new TruthStreamIdentity("science", "main", 2, Domain.Parse("geo.plates"), "0");
+        var stream2 = new TruthStreamIdentity("science", "main", 2, Domain.Parse("geo.plates"), "1"); // Different model
+
+        var snapshotStore = new InMemorySnapshotStore();
+        var state1 = new PlateTopologyState(stream1);
+        var state2 = new PlateTopologyState(stream2);
+
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(stream1, 10), state1), CancellationToken.None);
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(stream2, 50), state2), CancellationToken.None);
+
+        // Act - query stream1 at tick 100
+        var result = await snapshotStore.GetLatestSnapshotBeforeAsync(stream1, 100, CancellationToken.None);
+
+        // Assert - should get stream1's snapshot at 10, NOT stream2's at 50
+        Assert.NotNull(result);
+        Assert.Equal(10, result!.Value.Key.Tick);
+        Assert.Equal(stream1, result.Value.Key.Stream);
+    }
+
+    #endregion
+
     #region TickMaterializationMode Tests
 
     /// <summary>
@@ -471,6 +541,24 @@ public sealed class TickCutoffMaterializationTests
             if (_snapshots.TryGetValue(key, out var snapshot))
                 return Task.FromResult<PlateTopologySnapshot?>(snapshot);
             return Task.FromResult<PlateTopologySnapshot?>(null);
+        }
+
+        public Task<PlateTopologySnapshot?> GetLatestSnapshotBeforeAsync(
+            TruthStreamIdentity stream,
+            long targetTick,
+            CancellationToken cancellationToken)
+        {
+            // Simple O(n) implementation for tests - find largest tick <= targetTick
+            PlateTopologySnapshot? best = null;
+            foreach (var kvp in _snapshots)
+            {
+                if (kvp.Key.Stream == stream && kvp.Key.Tick <= targetTick)
+                {
+                    if (best == null || kvp.Key.Tick > best.Value.Key.Tick)
+                        best = kvp.Value;
+                }
+            }
+            return Task.FromResult(best);
         }
     }
 

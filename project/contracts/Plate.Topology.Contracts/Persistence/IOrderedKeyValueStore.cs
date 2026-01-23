@@ -30,7 +30,21 @@ public interface IOrderedKeyValueIterator : IDisposable
 
     ReadOnlyMemory<byte> Value { get; }
 
+    /// <summary>
+    /// Positions the iterator at the first key >= target.
+    /// </summary>
     void Seek(byte[] target);
 
+    /// <summary>
+    /// Positions the iterator at the last key &lt;= target.
+    /// This is the reverse of Seek and is useful for "latest before" queries.
+    /// </summary>
+    void SeekForPrev(byte[] target);
+
     void Next();
+
+    /// <summary>
+    /// Moves to the previous key.
+    /// </summary>
+    void Prev();
 }

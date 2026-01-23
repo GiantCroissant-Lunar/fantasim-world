@@ -396,6 +396,55 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         return Task.FromResult<PlateTopologySnapshot?>(snapshot);
     }
 
+    /// <inheritdoc />
+    public Task<PlateTopologySnapshot?> GetLatestSnapshotBeforeAsync(
+        TruthStreamIdentity stream,
+        long targetTick,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+
+        if (!stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
+
+        if (targetTick < 0)
+            return Task.FromResult<PlateTopologySnapshot?>(null);
+
+        var prefix = BuildStreamPrefix(stream);
+        var snapshotPrefix = BuildSnapshotPrefix(prefix);
+        var targetKey = BuildSnapshotKey(prefix, targetTick);
+
+        byte[]? bytes = null;
+
+        lock (_lock)
+        {
+            using var iterator = _store.CreateIterator();
+            iterator.SeekForPrev(targetKey);
+
+            if (!iterator.Valid)
+                return Task.FromResult<PlateTopologySnapshot?>(null);
+
+            var foundKey = iterator.Key.Span;
+
+            // Check if the found key starts with our snapshot prefix
+            // (ensures we don't accidentally read a snapshot from another stream)
+            if (!foundKey.StartsWith(snapshotPrefix))
+                return Task.FromResult<PlateTopologySnapshot?>(null);
+
+            bytes = iterator.Value.ToArray();
+        }
+
+        if (bytes == null || bytes.Length == 0)
+            return Task.FromResult<PlateTopologySnapshot?>(null);
+
+        var snapshot = MessagePackPlateTopologySnapshotSerializer.Deserialize(bytes);
+        return Task.FromResult<PlateTopologySnapshot?>(snapshot);
+    }
+
     /// <summary>
     /// Builds the stream prefix key component.
     ///
@@ -545,6 +594,18 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var offset = prefix.Length + SnapshotPrefix.Length;
         BinaryPrimitives.WriteUInt64BigEndian(key.AsSpan(offset), (ulong)tick);
 
+        return key;
+    }
+
+    /// <summary>
+    /// Builds the snapshot key prefix (without tick suffix).
+    /// Used to verify SeekForPrev results belong to the same stream.
+    /// </summary>
+    private static byte[] BuildSnapshotPrefix(byte[] streamPrefix)
+    {
+        var key = new byte[streamPrefix.Length + SnapshotPrefix.Length];
+        Buffer.BlockCopy(streamPrefix, 0, key, 0, streamPrefix.Length);
+        Encoding.UTF8.GetBytes(SnapshotPrefix, 0, SnapshotPrefix.Length, key, streamPrefix.Length);
         return key;
     }
 
