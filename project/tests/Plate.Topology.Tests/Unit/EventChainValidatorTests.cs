@@ -407,6 +407,7 @@ public class EventChainValidatorTests
     public void GoldenVector_PlateCreatedEvent_ProducesExpectedHash()
     {
         // Arrange - Fixed inputs for deterministic test
+        // These values are FROZEN - do not change without a migration plan
         var eventId = new Guid("12345678-1234-1234-1234-123456789abc");
         var plateId = new PlateId(new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"));
         var tick = new CanonicalTick(1000);
@@ -431,27 +432,71 @@ public class EventChainValidatorTests
         // Act
         var hashHex = Convert.ToHexString(genesisEvent.Hash.Span);
 
+        // Also get preimage for related test
+        var preimageBytes = CanonicalEventSerializer.Instance.SerializeCanonicalForHash(genesisEvent);
+        var preimageHex = Convert.ToHexString(preimageBytes);
+
         // Assert - basic invariants
         Assert.Equal(32, genesisEvent.Hash.Length);
-        Assert.False(string.IsNullOrEmpty(hashHex));
         Assert.Equal(64, hashHex.Length); // 32 bytes = 64 hex chars
 
-        // Golden vector assertion
-        // This hash was computed on 2025-01-XX and frozen.
-        // If this assertion fails, investigate BEFORE updating the expected value.
-        // See doc comment above for preimage structure.
+        // FROZEN GOLDEN VECTOR - computed 2025-01-24
+        // Preimage structure: [Tick=1000, Stream=[science,main,2,geo.plates,0], PrevHash=empty, Payload=[eventId,plateId]]
+        // Hash: SHA256(preimage)
+        // If this fails, the hash algorithm or preimage serialization changed.
+        // DO NOT update this value without:
+        // 1. Understanding why the hash changed
+        // 2. Documenting the breaking change
+        // 3. Providing a migration path for existing data
         //
-        // To capture a new golden value (only if preimage structure intentionally changed):
-        // 1. Run this test in isolation
-        // 2. The actual hash will be in the assertion failure message
-        // 3. Document the reason for the change
-        // 4. Update the expected value below
-        //
-        // NOTE: The expected hash will be captured on first successful CI run.
-        // Until then, this test verifies hash length/format only.
+        // Preimage structure breakdown (MessagePack):
+        // 94                 - fixarray(4)
+        // CD03E8             - uint16(1000) = tick
+        // 95                 - fixarray(5) for stream identity
+        //   A7736369656E6365 - fixstr(7) "science"
+        //   A46D61696E       - fixstr(4) "main"
+        //   02               - fixint(2) LLevel
+        //   AA67656F2E706C61746573 - fixstr(10) "geo.plates"
+        //   A130             - fixstr(1) "0"
+        // C400               - bin8(0) empty previous hash
+        // C44D...            - bin8(77) payload bytes
+        const string ExpectedHashHex = "61E096BA3FC8A6757225B33353C185FE1D338F7D1800106C31C609F47F8F3E66";
+        const string ExpectedPreimageHex = "94CD03E895A7736369656E6365A46D61696E02AA67656F2E706C61746573A130C400C44D92D92431323334353637382D313233342D313233342D313233342D313233343536373839616263D92461616161616161612D626262622D636363632D646464642D656565656565656565656565";
 
-        // TODO: Capture golden hash value and enable assertion
-        // Expected format: Assert.Equal("ABC123...", hashHex);
+        Assert.Equal(ExpectedHashHex, hashHex);
+        Assert.Equal(ExpectedPreimageHex, preimageHex);
+    }
+
+    /// <summary>
+    /// Golden vector for preimage bytes - catches "hash stays same by coincidence" edge cases.
+    /// This verifies the exact bytes being fed to SHA-256.
+    /// </summary>
+    [Fact]
+    public void GoldenVector_PlateCreatedEvent_PreimageIsStable()
+    {
+        // Arrange - Same inputs as GoldenVector_PlateCreatedEvent_ProducesExpectedHash
+        var eventId = new Guid("12345678-1234-1234-1234-123456789abc");
+        var plateId = new PlateId(new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"));
+        var tick = new CanonicalTick(1000);
+        var stream = new TruthStreamIdentity(
+            "science",
+            "main",
+            2,
+            Domain.Parse("geo.plates"),
+            "0"
+        );
+
+        // Act - Get the canonical preimage bytes
+        var evt = TestEventFactory.PlateCreated(eventId, plateId, tick, 0, stream);
+        var serializer = CanonicalEventSerializer.Instance;
+        var preimageBytes = serializer.SerializeCanonicalForHash(evt);
+        var preimageHex = Convert.ToHexString(preimageBytes);
+
+        // Assert - FROZEN preimage hex
+        // See GoldenVector_PlateCreatedEvent_ProducesExpectedHash for structure breakdown
+        const string ExpectedPreimageHex = "94CD03E895A7736369656E6365A46D61696E02AA67656F2E706C61746573A130C400C44D92D92431323334353637382D313233342D313233342D313233342D313233343536373839616263D92461616161616161612D626262622D636363632D646464642D656565656565656565656565";
+
+        Assert.Equal(ExpectedPreimageHex, preimageHex);
     }
 
     /// <summary>

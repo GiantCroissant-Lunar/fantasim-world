@@ -58,7 +58,7 @@ public class EventStoreHashChainTests : IDisposable
         var evt = TestEventFactory.PlateCreated(eventId, plateId, tick, sequence, _stream);
 
         // Act
-        await _store.AppendAsync(_stream, new[] { evt }, CancellationToken.None);
+        await _store.AppendAsync(_stream, new IPlateTopologyEvent[] { evt }, CancellationToken.None);
         var readEvents = await _store.ReadAsync(_stream, 0, CancellationToken.None).ToListAsync();
 
         // Assert
@@ -132,7 +132,7 @@ public class EventStoreHashChainTests : IDisposable
             junkPreviousHash, junkHash);
 
         // Act
-        await _store.AppendAsync(_stream, new[] { evt }, CancellationToken.None);
+        await _store.AppendAsync(_stream, new IPlateTopologyEvent[] { evt }, CancellationToken.None);
         var readEvents = await _store.ReadAsync(_stream, 0, CancellationToken.None).ToListAsync();
 
         // Assert - The store should have computed correct hashes (not used our junk)

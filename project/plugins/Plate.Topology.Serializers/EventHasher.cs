@@ -120,20 +120,197 @@ public sealed class CanonicalEventSerializer : ICanonicalEventSerializer
         }
 
         // 4. PayloadBytes (as binary - the event-specific data)
-        // Each event type provides its own GetPayloadBytes() method
-        var payloadBytes = @event switch
-        {
-            PlateCreatedEvent e => e.GetPayloadBytes(),
-            PlateDestroyedEvent e => e.GetPayloadBytes(),
-            BoundaryCreatedEvent e => e.GetPayloadBytes(),
-            BoundaryDestroyedEvent e => e.GetPayloadBytes(),
-            BoundaryMotionSetEvent e => e.GetPayloadBytes(),
-            _ => throw new NotSupportedException($"Event type {@event.GetType().Name} does not support hash preimage serialization.")
-        };
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         writer.Write(payloadBytes);
 
         writer.Flush();
 
+        return buffer.WrittenMemory.ToArray();
+    }
+}
+
+/// <summary>
+/// Serializes event-specific payload bytes for hash computation.
+/// This is shared between CanonicalEventSerializer and EventChainBuilder.
+/// </summary>
+public static class EventPayloadSerializer
+{
+    /// <summary>
+    /// Gets the payload bytes for an event (event-specific fields only, not envelope fields).
+    /// </summary>
+    public static byte[] GetPayloadBytes(IPlateTopologyEvent @event)
+    {
+        return @event switch
+        {
+            PlateCreatedEvent e => GetPayloadBytes(e),
+            PlateRetiredEvent e => GetPayloadBytes(e),
+            BoundaryCreatedEvent e => GetPayloadBytes(e),
+            BoundaryTypeChangedEvent e => GetPayloadBytes(e),
+            BoundaryGeometryUpdatedEvent e => GetPayloadBytes(e),
+            BoundaryRetiredEvent e => GetPayloadBytes(e),
+            JunctionCreatedEvent e => GetPayloadBytes(e),
+            JunctionUpdatedEvent e => GetPayloadBytes(e),
+            JunctionRetiredEvent e => GetPayloadBytes(e),
+            _ => throw new ArgumentException($"Unknown event type: {@event.GetType().Name}", nameof(@event))
+        };
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a PlateCreatedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(PlateCreatedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(2);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.PlateId.Value.ToString());
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a PlateRetiredEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(PlateRetiredEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(3);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.PlateId.Value.ToString());
+        writer.Write(@event.Reason);
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a BoundaryCreatedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(BoundaryCreatedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(5);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.BoundaryId.Value.ToString());
+        writer.Write(@event.PlateIdLeft.Value.ToString());
+        writer.Write(@event.PlateIdRight.Value.ToString());
+        writer.Write((byte)@event.BoundaryType);
+        // Note: Geometry is not included in payload hash to keep it simple for now
+        // In a full implementation, you'd serialize the geometry deterministically
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a BoundaryTypeChangedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(BoundaryTypeChangedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(4);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.BoundaryId.Value.ToString());
+        writer.Write((byte)@event.OldType);
+        writer.Write((byte)@event.NewType);
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a BoundaryGeometryUpdatedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(BoundaryGeometryUpdatedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(2);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.BoundaryId.Value.ToString());
+        // Note: Geometry is not included in payload hash to keep it simple for now
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a BoundaryRetiredEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(BoundaryRetiredEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(3);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.BoundaryId.Value.ToString());
+        writer.Write(@event.Reason);
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a JunctionCreatedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(JunctionCreatedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(4);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.JunctionId.Value.ToString());
+        writer.WriteArrayHeader(@event.BoundaryIds.Length);
+        foreach (var boundaryId in @event.BoundaryIds)
+        {
+            writer.Write(boundaryId.Value.ToString());
+        }
+        writer.Write(@event.Location.X);
+        writer.Write(@event.Location.Y);
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a JunctionUpdatedEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(JunctionUpdatedEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(4);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.JunctionId.Value.ToString());
+        writer.WriteArrayHeader(@event.NewBoundaryIds.Length);
+        foreach (var boundaryId in @event.NewBoundaryIds)
+        {
+            writer.Write(boundaryId.Value.ToString());
+        }
+        if (@event.NewLocation.HasValue)
+        {
+            writer.Write(@event.NewLocation.Value.X);
+            writer.Write(@event.NewLocation.Value.Y);
+        }
+        else
+        {
+            writer.Write(double.NaN);
+            writer.Write(double.NaN);
+        }
+        writer.Flush();
+        return buffer.WrittenMemory.ToArray();
+    }
+
+    /// <summary>
+    /// Gets the payload bytes for a JunctionRetiredEvent.
+    /// </summary>
+    public static byte[] GetPayloadBytes(JunctionRetiredEvent @event)
+    {
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+        writer.WriteArrayHeader(3);
+        writer.Write(@event.EventId.ToString());
+        writer.Write(@event.JunctionId.Value.ToString());
+        writer.Write(@event.Reason);
+        writer.Flush();
         return buffer.WrittenMemory.ToArray();
     }
 }
@@ -220,7 +397,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -233,7 +410,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -246,7 +423,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -259,7 +436,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -272,7 +449,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -285,7 +462,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -298,7 +475,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -311,7 +488,7 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
     }
@@ -324,144 +501,9 @@ public static class EventChainBuilder
         IEventHasher? hasher = null)
     {
         hasher ??= DefaultHasher;
-        var payloadBytes = GetPayloadBytes(@event);
+        var payloadBytes = EventPayloadSerializer.GetPayloadBytes(@event);
         var hash = hasher.ComputeEventHash(@event.Tick, @event.StreamIdentity, @event.PreviousHash, payloadBytes);
         return @event with { Hash = hash };
-    }
-
-    /// <summary>
-    /// Gets the payload bytes for an event (event-specific fields only, not envelope fields).
-    /// </summary>
-    private static byte[] GetPayloadBytes(PlateCreatedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(2);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.PlateId.Value.ToString());
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(PlateRetiredEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(3);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.PlateId.Value.ToString());
-        writer.Write(@event.Reason);
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(BoundaryCreatedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(5);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.BoundaryId.Value.ToString());
-        writer.Write(@event.PlateIdLeft.Value.ToString());
-        writer.Write(@event.PlateIdRight.Value.ToString());
-        writer.Write((byte)@event.BoundaryType);
-        // Note: Geometry is not included in payload hash to keep it simple for now
-        // In a full implementation, you'd serialize the geometry deterministically
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(BoundaryTypeChangedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(4);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.BoundaryId.Value.ToString());
-        writer.Write((byte)@event.OldType);
-        writer.Write((byte)@event.NewType);
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(BoundaryGeometryUpdatedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(2);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.BoundaryId.Value.ToString());
-        // Note: Geometry is not included in payload hash to keep it simple for now
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(BoundaryRetiredEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(3);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.BoundaryId.Value.ToString());
-        writer.Write(@event.Reason);
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(JunctionCreatedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(4);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.JunctionId.Value.ToString());
-        writer.WriteArrayHeader(@event.BoundaryIds.Length);
-        foreach (var boundaryId in @event.BoundaryIds)
-        {
-            writer.Write(boundaryId.Value.ToString());
-        }
-        writer.Write(@event.Location.X);
-        writer.Write(@event.Location.Y);
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(JunctionUpdatedEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(4);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.JunctionId.Value.ToString());
-        writer.WriteArrayHeader(@event.NewBoundaryIds.Length);
-        foreach (var boundaryId in @event.NewBoundaryIds)
-        {
-            writer.Write(boundaryId.Value.ToString());
-        }
-        if (@event.NewLocation.HasValue)
-        {
-            writer.Write(@event.NewLocation.Value.X);
-            writer.Write(@event.NewLocation.Value.Y);
-        }
-        else
-        {
-            writer.Write(double.NaN);
-            writer.Write(double.NaN);
-        }
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
-    }
-
-    private static byte[] GetPayloadBytes(JunctionRetiredEvent @event)
-    {
-        var buffer = new ArrayBufferWriter<byte>();
-        var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(3);
-        writer.Write(@event.EventId.ToString());
-        writer.Write(@event.JunctionId.Value.ToString());
-        writer.Write(@event.Reason);
-        writer.Flush();
-        return buffer.WrittenMemory.ToArray();
     }
 }
 
