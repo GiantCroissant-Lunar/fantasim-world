@@ -39,6 +39,106 @@ public interface IEventHasher
 }
 
 /// <summary>
+/// Interface for serializing events to canonical bytes.
+/// Separates concerns: ICanonicalEventSerializer handles encoding, IEventHasher handles hashing.
+/// </summary>
+public interface ICanonicalEventSerializer
+{
+    /// <summary>
+    /// Serializes an event to canonical bytes for persistence.
+    /// Includes ALL fields: Tick, Sequence, StreamIdentity, PreviousHash, Hash, and payload.
+    /// </summary>
+    /// <param name="event">The event to serialize.</param>
+    /// <returns>Canonical MessagePack bytes.</returns>
+    byte[] SerializeCanonical(IPlateTopologyEvent @event);
+
+    /// <summary>
+    /// Serializes an event to canonical bytes for hashing.
+    /// EXCLUDES the Hash field (to avoid circular dependency).
+    /// Includes: Tick, StreamIdentity, PreviousHash, and event-specific payload.
+    ///
+    /// Hash preimage structure (MessagePack array):
+    /// [0] Tick (Int64)
+    /// [1] StreamIdentity (array of 5 elements)
+    /// [2] PreviousHash (binary, empty for genesis)
+    /// [3] PayloadBytes (binary, event-specific fields)
+    /// </summary>
+    /// <param name="event">The event to serialize for hashing.</param>
+    /// <returns>Canonical preimage bytes (Hash field NOT included).</returns>
+    byte[] SerializeCanonicalForHash(IPlateTopologyEvent @event);
+}
+
+/// <summary>
+/// Default implementation of ICanonicalEventSerializer.
+/// Uses MessagePack for canonical encoding.
+/// </summary>
+public sealed class CanonicalEventSerializer : ICanonicalEventSerializer
+{
+    /// <summary>
+    /// Shared instance for convenience.
+    /// </summary>
+    public static readonly CanonicalEventSerializer Instance = new();
+
+    /// <inheritdoc/>
+    public byte[] SerializeCanonical(IPlateTopologyEvent @event)
+    {
+        // Use MessagePack to serialize the full event
+        // This delegates to the event's own formatter which includes all fields
+        return MessagePackSerializer.Serialize(@event);
+    }
+
+    /// <inheritdoc/>
+    public byte[] SerializeCanonicalForHash(IPlateTopologyEvent @event)
+    {
+        // Build the preimage: [Tick, StreamIdentity, PreviousHash, PayloadBytes]
+        // NOTE: Hash field is intentionally EXCLUDED to avoid circular dependency
+        var buffer = new ArrayBufferWriter<byte>();
+        var writer = new MessagePackWriter(buffer);
+
+        // Write array header for 4 elements
+        writer.WriteArrayHeader(4);
+
+        // 1. Tick (as raw Int64)
+        writer.Write(@event.Tick.Value);
+
+        // 2. StreamIdentity (as array of 5 elements)
+        writer.WriteArrayHeader(5);
+        writer.Write(@event.StreamIdentity.VariantId);
+        writer.Write(@event.StreamIdentity.BranchId);
+        writer.Write(@event.StreamIdentity.LLevel);
+        writer.Write(@event.StreamIdentity.Domain.Value);
+        writer.Write(@event.StreamIdentity.Model);
+
+        // 3. PreviousHash (as binary)
+        if (@event.PreviousHash.IsEmpty)
+        {
+            writer.Write(ReadOnlySpan<byte>.Empty);
+        }
+        else
+        {
+            writer.Write(@event.PreviousHash.Span);
+        }
+
+        // 4. PayloadBytes (as binary - the event-specific data)
+        // Each event type provides its own GetPayloadBytes() method
+        var payloadBytes = @event switch
+        {
+            PlateCreatedEvent e => e.GetPayloadBytes(),
+            PlateDestroyedEvent e => e.GetPayloadBytes(),
+            BoundaryCreatedEvent e => e.GetPayloadBytes(),
+            BoundaryDestroyedEvent e => e.GetPayloadBytes(),
+            BoundaryMotionSetEvent e => e.GetPayloadBytes(),
+            _ => throw new NotSupportedException($"Event type {@event.GetType().Name} does not support hash preimage serialization.")
+        };
+        writer.Write(payloadBytes);
+
+        writer.Flush();
+
+        return buffer.WrittenMemory.ToArray();
+    }
+}
+
+/// <summary>
 /// SHA-256 implementation of IEventHasher.
 /// Computes hashes using the SHA-256 algorithm (32 bytes output).
 /// </summary>
