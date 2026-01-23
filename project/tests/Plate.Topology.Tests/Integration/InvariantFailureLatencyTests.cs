@@ -10,7 +10,6 @@ namespace Plate.Topology.Tests.Integration;
 
 public sealed class InvariantFailureLatencyTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_invariant_failure_latency";
     private static readonly DateTimeOffset FixedTimestamp = new(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly PlateTopologyEventStore _store;
@@ -18,18 +17,13 @@ public sealed class InvariantFailureLatencyTests : IDisposable
 
     public InvariantFailureLatencyTests()
     {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
         _materializer = new PlateTopologyMaterializer(_store);
     }
 
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     [Fact]

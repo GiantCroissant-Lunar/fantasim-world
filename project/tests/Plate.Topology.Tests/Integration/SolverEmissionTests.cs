@@ -9,23 +9,17 @@ namespace Plate.Topology.Tests.Integration;
 
 public class SolverEmissionTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_solver_emission";
     private static readonly DateTimeOffset FixedTimestamp = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
     private readonly PlateTopologyEventStore _store;
 
     public SolverEmissionTests()
     {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
     }
 
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     #region T0701: Validation Harness Tests

@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Plate.Topology.Contracts\Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\plugins\Plate.Topology.Serializers\Plate.Topology.Serializers.csproj" />
-    <ProjectReference Include="..\..\..\..\modern-rocksdb\dotnet\src\RocksDb.Managed\RocksDb.Managed.csproj" />
     <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.Abstractions\UnifyTopology.Graph.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.InMemory\UnifyTopology.Graph.InMemory.csproj" />
   </ItemGroup>

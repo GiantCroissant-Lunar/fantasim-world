@@ -21,18 +21,13 @@ namespace Plate.Topology.Tests.Integration;
 /// </summary>
 public class EdgeCaseTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_edge_cases";
     private readonly PlateTopologyEventStore _store;
     private readonly TruthStreamIdentity _stream;
     private readonly PlateTopologyMaterializer _materializer;
 
     public EdgeCaseTests()
     {
-        // Clean up any existing test database
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
         _stream = new TruthStreamIdentity(
             "science",
             "main",
@@ -46,8 +41,6 @@ public class EdgeCaseTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     #region Empty Stream and Minimal Topology

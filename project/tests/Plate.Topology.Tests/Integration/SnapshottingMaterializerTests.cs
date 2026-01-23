@@ -6,26 +6,11 @@ using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
-using RocksDb.Managed;
 
 namespace Plate.Topology.Tests.Integration;
 
-public sealed class SnapshottingMaterializerTests : IDisposable
+public sealed class SnapshottingMaterializerTests
 {
-    private const string TestDbPath = "./test_db_snapshotting_materializer";
-
-    public SnapshottingMaterializerTests()
-    {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-    }
-
     [Fact]
     public async Task SnapshottingMaterializer_UsesSnapshot_IfEventLogCorrupted()
     {
@@ -56,12 +41,14 @@ public sealed class SnapshottingMaterializerTests : IDisposable
                 stream)
         };
 
-        using (var store = new PlateTopologyEventStore(TestDbPath))
-        {
-            await store.AppendAsync(stream, events, CancellationToken.None);
+        var (_, kv) = TestStores.CreateEventStoreWithKv();
 
-            var snapshotting = new SnapshottingPlateTopologyMaterializer(store, store);
-            var r1 = await snapshotting.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
+        using (var store1 = new PlateTopologyEventStore(kv))
+        {
+            await store1.AppendAsync(stream, events, CancellationToken.None);
+
+            var snapshotting1 = new SnapshottingPlateTopologyMaterializer(store1, store1);
+            var r1 = await snapshotting1.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
 
             Assert.False(r1.FromSnapshot);
             Assert.Equal(2, r1.State.LastEventSequence);
@@ -69,23 +56,21 @@ public sealed class SnapshottingMaterializerTests : IDisposable
             Assert.Single(r1.State.Boundaries);
         }
 
-        using (var db = Db.Open(TestDbPath))
         {
             var prefix = Encoding.UTF8.GetBytes($"S:{stream.VariantId}:{stream.BranchId}:L{stream.LLevel}:{stream.Domain}:M{stream.Model}:");
             var key = BuildEventKey(prefix, 2);
-            var recordBytes = db.Get(key);
 
-            if (recordBytes == null || recordBytes.Length == 0)
+            if (!kv.TryGet(key, out var recordBytes) || recordBytes.Length == 0)
                 throw new InvalidOperationException("Expected event record bytes to exist for sequence 2");
 
             recordBytes[^1] ^= 0xFF;
-            db.Put(key, recordBytes);
+            kv.Put(key, recordBytes);
         }
 
-        using (var store = new PlateTopologyEventStore(TestDbPath))
+        using (var store2 = new PlateTopologyEventStore(kv))
         {
-            var snapshotting = new SnapshottingPlateTopologyMaterializer(store, store);
-            var r2 = await snapshotting.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
+            var snapshotting2 = new SnapshottingPlateTopologyMaterializer(store2, store2);
+            var r2 = await snapshotting2.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
 
             Assert.True(r2.FromSnapshot);
             Assert.Equal(2, r2.State.LastEventSequence);
@@ -95,13 +80,13 @@ public sealed class SnapshottingMaterializerTests : IDisposable
             Assert.Contains(plateId2, r2.State.Plates.Keys);
             Assert.Contains(boundaryId, r2.State.Boundaries.Keys);
 
-            var r3 = await snapshotting.MaterializeAtTickAsync(stream, 100, CancellationToken.None);
+            var r3 = await snapshotting2.MaterializeAtTickAsync(stream, 100, CancellationToken.None);
             Assert.True(r3.FromSnapshot);
             Assert.Equal(r2.State.LastEventSequence, r3.State.LastEventSequence);
             Assert.Equal(r2.State.Plates.Count, r3.State.Plates.Count);
             Assert.Equal(r2.State.Boundaries.Count, r3.State.Boundaries.Count);
         }
-    }
+     }
 
     private static byte[] BuildEventKey(byte[] prefix, long sequence)
     {

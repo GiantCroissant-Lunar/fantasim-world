@@ -19,18 +19,13 @@ namespace Plate.Topology.Tests.Integration;
 /// </summary>
 public class ReplayDeterminismTests : IDisposable
 {
-    private const string TestDbPath = "./test_db_replay_determinism";
     private readonly PlateTopologyEventStore _store;
     private readonly TruthStreamIdentity _stream1;
     private readonly TruthStreamIdentity _stream2;
 
     public ReplayDeterminismTests()
     {
-        // Clean up any existing test database
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
-
-        _store = new PlateTopologyEventStore(TestDbPath);
+        _store = TestStores.CreateEventStore();
 
         // Create two different stream identities for isolation testing
         _stream1 = new TruthStreamIdentity(
@@ -53,8 +48,6 @@ public class ReplayDeterminismTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        if (Directory.Exists(TestDbPath))
-            Directory.Delete(TestDbPath, true);
     }
 
     [Fact]
