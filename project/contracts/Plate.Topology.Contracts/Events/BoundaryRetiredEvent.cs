@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Identity;
 
@@ -13,14 +14,14 @@ namespace Plate.Topology.Contracts.Events;
 /// <param name="EventId">Unique identifier for this event (UUIDv7).</param>
 /// <param name="BoundaryId">The unique identifier of the retired boundary.</param>
 /// <param name="Reason">Optional reason or cause for the retirement.</param>
-/// <param name="Timestamp">When this event occurred.</param>
+/// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 public readonly record struct BoundaryRetiredEvent(
     Guid EventId,
     BoundaryId BoundaryId,
     string? Reason,
-    DateTimeOffset Timestamp,
+    CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity
 ) : IPlateTopologyEvent

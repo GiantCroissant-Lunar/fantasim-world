@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Identity;
 
@@ -12,13 +13,13 @@ namespace Plate.Topology.Contracts.Events;
 /// </summary>
 /// <param name="EventId">Unique identifier for this event (UUIDv7).</param>
 /// <param name="PlateId">The unique identifier of the newly created plate.</param>
-/// <param name="Timestamp">When this event occurred.</param>
+/// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 public readonly record struct PlateCreatedEvent(
     Guid EventId,
     PlateId PlateId,
-    DateTimeOffset Timestamp,
+    CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity
 ) : IPlateTopologyEvent

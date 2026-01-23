@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
@@ -17,7 +18,7 @@ namespace Plate.Topology.Contracts.Events;
 /// <param name="PlateIdRight">The plate on the right side of this boundary.</param>
 /// <param name="BoundaryType">The type classification of this boundary.</param>
 /// <param name="Geometry">The initial geometric representation of this boundary.</param>
-/// <param name="Timestamp">When this event occurred.</param>
+/// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 public readonly record struct BoundaryCreatedEvent(
@@ -27,7 +28,7 @@ public readonly record struct BoundaryCreatedEvent(
     PlateId PlateIdRight,
     BoundaryType BoundaryType,
     IGeometry Geometry,
-    DateTimeOffset Timestamp,
+    CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity
 ) : IPlateTopologyEvent

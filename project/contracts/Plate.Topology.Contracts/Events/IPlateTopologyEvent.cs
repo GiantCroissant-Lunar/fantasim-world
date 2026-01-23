@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Identity;
 
 namespace Plate.Topology.Contracts.Events;
@@ -12,7 +13,7 @@ namespace Plate.Topology.Contracts.Events;
 /// Event envelope structure:
 /// - EventId: Unique identifier for the event (UUIDv7 for sortability)
 /// - EventType: Discriminator for polymorphic deserialization
-/// - Timestamp: When the event occurred
+/// - Tick: Canonical simulation time (RFC-V2-0010)
 /// - Sequence: Ordering within stream (deterministic replay)
 /// - StreamIdentity: Which truth stream this belongs to
 ///
@@ -47,16 +48,16 @@ public interface IPlateTopologyEvent
     string EventType { get; }
 
     /// <summary>
-    /// Gets the timestamp when this event occurred.
+    /// Gets the canonical simulation tick when this event occurred.
     ///
-    /// Represents the logical time of the event in the simulation or model time.
-    /// This is distinct from the creation time (EventId timestamp) and supports
-    /// temporal queries and debugging.
+    /// Per RFC-V2-0010, all events are indexed by CanonicalTick. This is the
+    /// absolute, monotonic, unitless time coordinate for the simulation.
+    /// Tick 0 is world genesis; negative ticks are invalid.
     ///
-    /// For deterministic replay, the timestamp must be preserved exactly as
-    /// emitted by the solver per FR-012.
+    /// For deterministic replay, the tick must be preserved exactly as
+    /// emitted by the solver.
     /// </summary>
-    DateTimeOffset Timestamp { get; }
+    CanonicalTick Tick { get; }
 
     /// <summary>
     /// Gets the sequence number of this event within its stream.

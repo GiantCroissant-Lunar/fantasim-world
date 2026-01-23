@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -37,8 +38,8 @@ public sealed class MaterializeAtTickTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -46,7 +47,7 @@ public sealed class MaterializeAtTickTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream),
             new JunctionCreatedEvent(
@@ -54,7 +55,7 @@ public sealed class MaterializeAtTickTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(3),
                 3,
                 _stream)
         };

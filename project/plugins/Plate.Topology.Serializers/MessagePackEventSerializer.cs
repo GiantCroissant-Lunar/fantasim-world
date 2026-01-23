@@ -6,6 +6,7 @@ using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Internal;
 using MessagePack.Resolvers;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -55,30 +56,21 @@ internal class DomainFormatter : IMessagePackFormatter<Domain>
 }
 
 /// <summary>
-/// Helper class for lossless DateTimeOffset serialization.
-/// Format: [unixMilliseconds:int64, offsetMinutes:int16]
+/// Helper class for CanonicalTick serialization.
+/// Per RFC-V2-0010 and RFC-V2-0005, CanonicalTick is encoded as raw Int64.
+/// Format: int64 (tick value)
 /// </summary>
-internal static class DateTimeOffsetHelper
+internal static class CanonicalTickHelper
 {
-    public static void Serialize(ref MessagePackWriter writer, DateTimeOffset value)
+    public static void Serialize(ref MessagePackWriter writer, CanonicalTick value)
     {
-        writer.WriteArrayHeader(2);
-        writer.Write(value.ToUnixTimeMilliseconds());
-        writer.Write((short)value.Offset.TotalMinutes);
+        writer.Write(value.Value);
     }
 
-    public static DateTimeOffset Deserialize(ref MessagePackReader reader)
+    public static CanonicalTick Deserialize(ref MessagePackReader reader)
     {
-        var length = reader.ReadArrayHeader();
-        if (length != 2)
-            throw new InvalidOperationException($"DateTimeOffset must have 2 elements, got {length}");
-
-        var unixMs = reader.ReadInt64();
-        var offsetMinutes = reader.ReadInt16();
-
-        // Decode as UTC instant then apply offset without changing instant
-        var utc = DateTimeOffset.FromUnixTimeMilliseconds(unixMs);
-        return utc.ToOffset(TimeSpan.FromMinutes(offsetMinutes));
+        var tickValue = reader.ReadInt64();
+        return new CanonicalTick(tickValue);
     }
 }
 
@@ -281,7 +273,7 @@ internal abstract class EventFormatter<TEvent> : IMessagePackFormatter<TEvent>
 
 /// <summary>
 /// PlateCreatedEvent formatter
-/// Payload format: [EventId, PlateId, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, PlateId, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class PlateCreatedEventFormatter : EventFormatter<PlateCreatedEvent>
 {
@@ -290,7 +282,7 @@ internal class PlateCreatedEventFormatter : EventFormatter<PlateCreatedEvent>
         writer.WriteArrayHeader(5);
         writer.Write(value.EventId.ToString());
         writer.Write(value.PlateId.Value.ToString());
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -303,17 +295,17 @@ internal class PlateCreatedEventFormatter : EventFormatter<PlateCreatedEvent>
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var plateId = new PlateId(Guid.Parse(reader.ReadString()!));
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new PlateCreatedEvent(eventId, plateId, timestamp, sequence, streamIdentity);
+        return new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// PlateRetiredEvent formatter
-/// Payload format: [EventId, PlateId, Reason, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, PlateId, Reason, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class PlateRetiredEventFormatter : EventFormatter<PlateRetiredEvent>
 {
@@ -323,7 +315,7 @@ internal class PlateRetiredEventFormatter : EventFormatter<PlateRetiredEvent>
         writer.Write(value.EventId.ToString());
         writer.Write(value.PlateId.Value.ToString());
         writer.Write(value.Reason);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -337,17 +329,17 @@ internal class PlateRetiredEventFormatter : EventFormatter<PlateRetiredEvent>
         var eventId = Guid.Parse(reader.ReadString()!);
         var plateId = new PlateId(Guid.Parse(reader.ReadString()!));
         var reason = reader.ReadString();
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new PlateRetiredEvent(eventId, plateId, reason, timestamp, sequence, streamIdentity);
+        return new PlateRetiredEvent(eventId, plateId, reason, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// BoundaryCreatedEvent formatter
-/// Payload format: [EventId, BoundaryId, PlateIdLeft, PlateIdRight, BoundaryType, Geometry, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, PlateIdLeft, PlateIdRight, BoundaryType, Geometry, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEvent>
 {
@@ -362,7 +354,7 @@ internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEve
         writer.Write(value.PlateIdRight.Value.ToString());
         writer.Write((byte)value.BoundaryType);
         GeometryFormatter.Serialize(ref writer, value.Geometry, MessagePackSerializerOptions.Standard);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -379,17 +371,17 @@ internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEve
         var plateIdRight = new PlateId(Guid.Parse(reader.ReadString()!));
         var boundaryType = (BoundaryType)reader.ReadByte();
         var geometry = GeometryFormatter.Deserialize(ref reader, MessagePackSerializerOptions.Standard);
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new BoundaryCreatedEvent(eventId, boundaryId, plateIdLeft, plateIdRight, boundaryType, geometry, timestamp, sequence, streamIdentity);
+        return new BoundaryCreatedEvent(eventId, boundaryId, plateIdLeft, plateIdRight, boundaryType, geometry, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// BoundaryTypeChangedEvent formatter
-/// Payload format: [EventId, BoundaryId, OldType, NewType, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, OldType, NewType, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeChangedEvent>
 {
@@ -400,7 +392,7 @@ internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeCh
         writer.Write(value.BoundaryId.Value.ToString());
         writer.Write((byte)value.OldType);
         writer.Write((byte)value.NewType);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -415,17 +407,17 @@ internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeCh
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
         var oldType = (BoundaryType)reader.ReadByte();
         var newType = (BoundaryType)reader.ReadByte();
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new BoundaryTypeChangedEvent(eventId, boundaryId, oldType, newType, timestamp, sequence, streamIdentity);
+        return new BoundaryTypeChangedEvent(eventId, boundaryId, oldType, newType, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// BoundaryGeometryUpdatedEvent formatter
-/// Payload format: [EventId, BoundaryId, NewGeometry, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, NewGeometry, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGeometryUpdatedEvent>
 {
@@ -437,7 +429,7 @@ internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGe
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         GeometryFormatter.Serialize(ref writer, value.NewGeometry, MessagePackSerializerOptions.Standard);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -451,17 +443,17 @@ internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGe
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
         var newGeometry = GeometryFormatter.Deserialize(ref reader, MessagePackSerializerOptions.Standard);
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new BoundaryGeometryUpdatedEvent(eventId, boundaryId, newGeometry, timestamp, sequence, streamIdentity);
+        return new BoundaryGeometryUpdatedEvent(eventId, boundaryId, newGeometry, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// BoundaryRetiredEvent formatter
-/// Payload format: [EventId, BoundaryId, Reason, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, Reason, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class BoundaryRetiredEventFormatter : EventFormatter<BoundaryRetiredEvent>
 {
@@ -471,7 +463,7 @@ internal class BoundaryRetiredEventFormatter : EventFormatter<BoundaryRetiredEve
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         writer.Write(value.Reason);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -485,17 +477,17 @@ internal class BoundaryRetiredEventFormatter : EventFormatter<BoundaryRetiredEve
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
         var reason = reader.ReadString();
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new BoundaryRetiredEvent(eventId, boundaryId, reason, timestamp, sequence, streamIdentity);
+        return new BoundaryRetiredEvent(eventId, boundaryId, reason, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// JunctionCreatedEvent formatter
-/// Payload format: [EventId, JunctionId, BoundaryIdCount, [BoundaryIds], LocationX, LocationY, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, JunctionId, BoundaryIdCount, [BoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity]
 /// Fixed array header count: 8 elements
 /// </summary>
 internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEvent>
@@ -507,7 +499,7 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         // 3: boundaryIds array
         // 4: locationX
         // 5: locationY
-        // 6: timestamp
+        // 6: tick
         // 7: sequence
         // 8: streamIdentity
         writer.WriteArrayHeader(8);
@@ -520,7 +512,7 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         }
         writer.Write(value.Location.X);
         writer.Write(value.Location.Y);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -541,17 +533,17 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         }
         var locationX = reader.ReadDouble();
         var locationY = reader.ReadDouble();
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2D(locationX, locationY), timestamp, sequence, streamIdentity);
+        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2D(locationX, locationY), tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// JunctionUpdatedEvent formatter
-/// Payload format: [EventId, JunctionId, BoundaryIdCount, [NewBoundaryIds], LocationX, LocationY, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, JunctionId, BoundaryIdCount, [NewBoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity]
 /// Location is encoded as NaN, NaN for null.
 /// Fixed array header count: 8 elements
 /// </summary>
@@ -564,7 +556,7 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         // 3: boundaryIds array
         // 4: locationX
         // 5: locationY
-        // 6: timestamp
+        // 6: tick
         // 7: sequence
         // 8: streamIdentity
         writer.WriteArrayHeader(8);
@@ -585,7 +577,7 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
             writer.Write(double.NaN);
             writer.Write(double.NaN);
         }
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -607,17 +599,17 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         var locationX = reader.ReadDouble();
         var locationY = reader.ReadDouble();
         var newLocation = double.IsNaN(locationX) || double.IsNaN(locationY) ? null : new Point2D?(new Point2D(locationX, locationY));
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new JunctionUpdatedEvent(eventId, junctionId, newBoundaryIds, newLocation, timestamp, sequence, streamIdentity);
+        return new JunctionUpdatedEvent(eventId, junctionId, newBoundaryIds, newLocation, tick, sequence, streamIdentity);
     }
 }
 
 /// <summary>
 /// JunctionRetiredEvent formatter
-/// Payload format: [EventId, JunctionId, Reason, Timestamp, Sequence, StreamIdentity]
+/// Payload format: [EventId, JunctionId, Reason, Tick, Sequence, StreamIdentity]
 /// </summary>
 internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEvent>
 {
@@ -627,7 +619,7 @@ internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEve
         writer.Write(value.EventId.ToString());
         writer.Write(value.JunctionId.Value.ToString());
         writer.Write(value.Reason);
-        DateTimeOffsetHelper.Serialize(ref writer, value.Timestamp);
+        CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
     }
@@ -641,11 +633,11 @@ internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEve
         var eventId = Guid.Parse(reader.ReadString()!);
         var junctionId = new JunctionId(Guid.Parse(reader.ReadString()!));
         var reason = reader.ReadString();
-        var timestamp = DateTimeOffsetHelper.Deserialize(ref reader);
+        var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
 
-        return new JunctionRetiredEvent(eventId, junctionId, reason, timestamp, sequence, streamIdentity);
+        return new JunctionRetiredEvent(eventId, junctionId, reason, tick, sequence, streamIdentity);
     }
 }
 
@@ -661,7 +653,7 @@ internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEve
 /// Payload format: numeric arrays only (no string keys/maps)
 /// - Domain is serialized as plain string
 /// - Geometry uses numeric discriminators: Point=[0,x,y], LineSegment=[1,x1,y1,x2,y2], Polyline=[2,x1,y1,x2,y2,...]
-/// - DateTimeOffset is lossless: [unixMs:int64, offsetMinutes:int16]
+/// - CanonicalTick is encoded as raw Int64 per RFC-V2-0010 and RFC-V2-0005
 ///
 /// API:
 /// - Serialize<T>(T event): Writes [eventType, payload<T>]

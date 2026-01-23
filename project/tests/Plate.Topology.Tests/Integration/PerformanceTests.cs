@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -36,7 +37,7 @@ public class PerformanceTests : IDisposable
     [Fact]
     public async Task ReplayAndMaterialize_10000Events_CompletesUnder10Seconds()
     {
-        var fixedTimestamp = new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        var fixedTick = new CanonicalTick(0);
         var plateIdLeft = new PlateId(new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         var plateIdRight = new PlateId(new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
 
@@ -45,7 +46,7 @@ public class PerformanceTests : IDisposable
         events.Add(new PlateCreatedEvent(
             new Guid("00000000-0000-0000-0000-000000000001"),
             plateIdLeft,
-            fixedTimestamp,
+            fixedTick,
             0,
             _stream
         ));
@@ -53,7 +54,7 @@ public class PerformanceTests : IDisposable
         events.Add(new PlateCreatedEvent(
             new Guid("00000000-0000-0000-0000-000000000002"),
             plateIdRight,
-            fixedTimestamp,
+            new CanonicalTick(1),
             1,
             _stream
         ));
@@ -72,7 +73,7 @@ public class PerformanceTests : IDisposable
                 plateIdRight,
                 eventType,
                 new LineSegment(0.0, (double)i, 1.0, (double)i),
-                fixedTimestamp,
+                new CanonicalTick(seq),
                 seq,
                 _stream
             ));
@@ -99,7 +100,7 @@ public class PerformanceTests : IDisposable
     [Fact]
     public async Task ReplayAndMaterialize_MultipleRuns_DeterministicResults()
     {
-        var fixedTimestamp = new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
+        var fixedTick = new CanonicalTick(0);
         var plateIdLeft = new PlateId(new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
         var plateIdRight = new PlateId(new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
 
@@ -108,7 +109,7 @@ public class PerformanceTests : IDisposable
         events.Add(new PlateCreatedEvent(
             new Guid("00000000-0000-0000-0000-000000000001"),
             plateIdLeft,
-            fixedTimestamp,
+            fixedTick,
             0,
             _stream
         ));
@@ -116,7 +117,7 @@ public class PerformanceTests : IDisposable
         events.Add(new PlateCreatedEvent(
             new Guid("00000000-0000-0000-0000-000000000002"),
             plateIdRight,
-            fixedTimestamp,
+            new CanonicalTick(1),
             1,
             _stream
         ));
@@ -135,7 +136,7 @@ public class PerformanceTests : IDisposable
                 plateIdRight,
                 eventType,
                 new LineSegment(0.0, (double)i, 1.0, (double)i),
-                fixedTimestamp,
+                new CanonicalTick(seq),
                 seq,
                 _stream
             ));

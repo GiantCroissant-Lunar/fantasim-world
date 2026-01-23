@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -10,7 +11,7 @@ namespace Plate.Topology.Tests.Integration;
 
 public sealed class InvariantFailureLatencyTests : IDisposable
 {
-    private static readonly DateTimeOffset FixedTimestamp = new(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
+    private static readonly CanonicalTick FixedTick = new(0);
 
     private readonly PlateTopologyEventStore _store;
     private readonly PlateTopologyMaterializer _materializer;
@@ -46,14 +47,14 @@ public sealed class InvariantFailureLatencyTests : IDisposable
             new PlateCreatedEvent(
                 new Guid("00000000-0000-0000-0000-000000000001"),
                 plateIdLeft,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
 
             new PlateCreatedEvent(
                 new Guid("00000000-0000-0000-0000-000000000002"),
                 plateIdRight,
-                FixedTimestamp,
+                new CanonicalTick(1),
                 1,
                 stream),
 
@@ -64,7 +65,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 plateIdRight,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                new CanonicalTick(2),
                 2,
                 stream),
 
@@ -73,7 +74,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                FixedTimestamp,
+                new CanonicalTick(3),
                 3,
                 stream),
 
@@ -81,7 +82,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 new Guid("00000000-0000-0000-0000-000000000005"),
                 boundaryId,
                 "retire-with-active-junction",
-                FixedTimestamp,
+                new CanonicalTick(4),
                 4,
                 stream)
         };
@@ -120,7 +121,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 missingPlateIdRight,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream)
         };

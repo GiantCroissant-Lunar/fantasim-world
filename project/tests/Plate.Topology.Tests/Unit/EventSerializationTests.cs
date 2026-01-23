@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using MessagePack;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -29,7 +30,7 @@ public class EventSerializationTests
         "0"
     );
 
-    private static readonly DateTimeOffset TestTimestamp = new(2025, 1, 15, 10, 30, 0, TimeSpan.Zero);
+    private static readonly CanonicalTick TestTick = new(0);
 
     private static readonly Guid TestEventId = Guid.Parse("01912345-6789-4321-9876-123456789012");
 
@@ -47,7 +48,7 @@ public class EventSerializationTests
         var originalEvent = new PlateCreatedEvent(
             TestEventId,
             plateId,
-            TestTimestamp,
+            TestTick,
             1L,
             TestStreamIdentity
         );
@@ -59,7 +60,7 @@ public class EventSerializationTests
         // Assert
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.PlateId, deserialized.PlateId);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -74,7 +75,7 @@ public class EventSerializationTests
             TestEventId,
             plateId,
             reason,
-            TestTimestamp,
+            TestTick,
             9L,
             TestStreamIdentity
         );
@@ -87,7 +88,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.PlateId, deserialized.PlateId);
         Assert.Equal(originalEvent.Reason, deserialized.Reason);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -107,7 +108,7 @@ public class EventSerializationTests
             plateIdRight,
             BoundaryType.Divergent,
             geometry,
-            TestTimestamp,
+            TestTick,
             2L,
             TestStreamIdentity
         );
@@ -122,7 +123,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.PlateIdLeft, deserialized.PlateIdLeft);
         Assert.Equal(originalEvent.PlateIdRight, deserialized.PlateIdRight);
         Assert.Equal(originalEvent.BoundaryType, deserialized.BoundaryType);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
         Assert.Equal(originalEvent.Geometry.GetType(), deserialized.Geometry.GetType());
@@ -140,7 +141,7 @@ public class EventSerializationTests
             boundaryId,
             oldType,
             newType,
-            TestTimestamp,
+            TestTick,
             4L,
             TestStreamIdentity
         );
@@ -154,7 +155,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
         Assert.Equal(originalEvent.OldType, deserialized.OldType);
         Assert.Equal(originalEvent.NewType, deserialized.NewType);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -175,7 +176,7 @@ public class EventSerializationTests
             TestEventId,
             boundaryId,
             newGeometry,
-            TestTimestamp,
+            TestTick,
             5L,
             TestStreamIdentity
         );
@@ -188,7 +189,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
         Assert.Equal(originalEvent.NewGeometry.GetType(), deserialized.NewGeometry.GetType());
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -203,7 +204,7 @@ public class EventSerializationTests
             TestEventId,
             boundaryId,
             reason,
-            TestTimestamp,
+            TestTick,
             6L,
             TestStreamIdentity
         );
@@ -216,7 +217,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.BoundaryId, deserialized.BoundaryId);
         Assert.Equal(originalEvent.Reason, deserialized.Reason);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -238,7 +239,7 @@ public class EventSerializationTests
             junctionId,
             boundaryIds,
             location,
-            TestTimestamp,
+            TestTick,
             3L,
             TestStreamIdentity
         );
@@ -253,7 +254,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.BoundaryIds.Length, deserialized.BoundaryIds.Length);
         Assert.Equal(originalEvent.Location.X, deserialized.Location.X);
         Assert.Equal(originalEvent.Location.Y, deserialized.Location.Y);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -274,7 +275,7 @@ public class EventSerializationTests
             junctionId,
             newBoundaryIds,
             newLocation,
-            TestTimestamp,
+            TestTick,
             7L,
             TestStreamIdentity
         );
@@ -289,7 +290,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.NewBoundaryIds.Length, deserialized.NewBoundaryIds.Length);
         Assert.Equal(originalEvent.NewLocation.Value.X, deserialized.NewLocation.Value.X);
         Assert.Equal(originalEvent.NewLocation.Value.Y, deserialized.NewLocation.Value.Y);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -304,7 +305,7 @@ public class EventSerializationTests
             TestEventId,
             junctionId,
             reason,
-            TestTimestamp,
+            TestTick,
             8L,
             TestStreamIdentity
         );
@@ -317,7 +318,7 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
         Assert.Equal(originalEvent.Reason, deserialized.Reason);
-        Assert.Equal(originalEvent.Timestamp, deserialized.Timestamp);
+        Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
     }
@@ -334,7 +335,7 @@ public class EventSerializationTests
         var @event = new PlateCreatedEvent(
             TestEventId,
             plateId,
-            TestTimestamp,
+            TestTick,
             1L,
             TestStreamIdentity
         );
@@ -364,7 +365,7 @@ public class EventSerializationTests
             TestEventId,
             boundaryId,
             polyline,
-            TestTimestamp,
+            TestTick,
             5L,
             TestStreamIdentity
         );
@@ -386,15 +387,15 @@ public class EventSerializationTests
     public void Deserialize_Polymorphic_AllEventTypes_CorrectlyTypeDiscriminated()
     {
         // Test all event types polymorphically
-        var plateCreated = new PlateCreatedEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), TestTimestamp, 1L, TestStreamIdentity);
-        var plateRetired = new PlateRetiredEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), "Test retirement", TestTimestamp, 9L, TestStreamIdentity);
-        var boundaryCreated = new BoundaryCreatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), BoundaryType.Divergent, new LineSegment(0.0, 0.0, 10.0, 10.0), TestTimestamp, 2L, TestStreamIdentity);
-        var boundaryTypeChanged = new BoundaryTypeChangedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), BoundaryType.Divergent, BoundaryType.Convergent, TestTimestamp, 4L, TestStreamIdentity);
-        var boundaryGeometryUpdated = new BoundaryGeometryUpdatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), new LineSegment(0.0, 0.0, 20.0, 20.0), TestTimestamp, 5L, TestStreamIdentity);
-        var boundaryRetired = new BoundaryRetiredEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), "Test retirement", TestTimestamp, 6L, TestStreamIdentity);
-        var junctionCreated = new JunctionCreatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(5.0, 5.0), TestTimestamp, 3L, TestStreamIdentity);
-        var junctionUpdated = new JunctionUpdatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(6.0, 6.0), TestTimestamp, 7L, TestStreamIdentity);
-        var junctionRetired = new JunctionRetiredEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), "Test retirement", TestTimestamp, 8L, TestStreamIdentity);
+        var plateCreated = new PlateCreatedEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), TestTick, 1L, TestStreamIdentity);
+        var plateRetired = new PlateRetiredEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), "Test retirement", new CanonicalTick(1), 9L, TestStreamIdentity);
+        var boundaryCreated = new BoundaryCreatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), BoundaryType.Divergent, new LineSegment(0.0, 0.0, 10.0, 10.0), new CanonicalTick(2), 2L, TestStreamIdentity);
+        var boundaryTypeChanged = new BoundaryTypeChangedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), BoundaryType.Divergent, BoundaryType.Convergent, new CanonicalTick(3), 4L, TestStreamIdentity);
+        var boundaryGeometryUpdated = new BoundaryGeometryUpdatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), new LineSegment(0.0, 0.0, 20.0, 20.0), new CanonicalTick(4), 5L, TestStreamIdentity);
+        var boundaryRetired = new BoundaryRetiredEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), "Test retirement", new CanonicalTick(5), 6L, TestStreamIdentity);
+        var junctionCreated = new JunctionCreatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(5.0, 5.0), new CanonicalTick(6), 3L, TestStreamIdentity);
+        var junctionUpdated = new JunctionUpdatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(6.0, 6.0), new CanonicalTick(7), 7L, TestStreamIdentity);
+        var junctionRetired = new JunctionRetiredEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), "Test retirement", new CanonicalTick(8), 8L, TestStreamIdentity);
 
         // Act - serialize and deserialize polymorphically
         // Use non-generic call to avoid ambiguity
@@ -447,7 +448,7 @@ public class EventSerializationTests
         var @event = new PlateCreatedEvent(
             TestEventId,
             CreateTestPlateId(Guid.NewGuid()),
-            TestTimestamp,
+            TestTick,
             1L,
             TestStreamIdentity
         );
@@ -458,7 +459,7 @@ public class EventSerializationTests
 
         // Assert - no string keys (eventType string is expected, but not "EventType" map key)
         Assert.DoesNotContain("PlateId", bytesAsString);
-        Assert.DoesNotContain("Timestamp", bytesAsString);
+        Assert.DoesNotContain("Tick", bytesAsString);
         Assert.DoesNotContain("Sequence", bytesAsString);
         Assert.DoesNotContain("VariantId", bytesAsString);
         Assert.DoesNotContain("BranchId", bytesAsString);
@@ -482,7 +483,7 @@ public class EventSerializationTests
             TestEventId,
             CreateTestBoundaryId(Guid.NewGuid()),
             polyline,
-            TestTimestamp,
+            TestTick,
             1L,
             TestStreamIdentity
         );
@@ -503,7 +504,7 @@ public class EventSerializationTests
         var @event = new PlateCreatedEvent(
             TestEventId,
             CreateTestPlateId(Guid.NewGuid()),
-            TestTimestamp,
+            TestTick,
             1L,
             TestStreamIdentity
         );

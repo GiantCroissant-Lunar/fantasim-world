@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Linq;
 using System.Text;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -22,8 +23,8 @@ public sealed class EventRecordHashChainTests
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), DateTimeOffset.UtcNow, 0, stream),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), DateTimeOffset.UtcNow, 1, stream)
+            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream),
+            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, stream)
         };
 
         var (store, kv) = TestStores.CreateEventStoreWithKv();

@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -34,11 +35,11 @@ public class EventSchemaTests
     }
 
     /// <summary>
-    /// Creates a valid event timestamp for testing.
+    /// Creates a valid event tick for testing (per RFC-V2-0010).
     /// </summary>
-    private static DateTimeOffset CreateValidTimestamp()
+    private static CanonicalTick CreateValidTick()
     {
-        return DateTimeOffset.UtcNow;
+        return new CanonicalTick(0);
     }
 
     #endregion
@@ -52,7 +53,7 @@ public class EventSchemaTests
         var @event = new PlateCreatedEvent(
             Guid.NewGuid(),
             PlateId.NewId(),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -67,17 +68,17 @@ public class EventSchemaTests
         // Arrange
         var eventId = Guid.NewGuid();
         var plateId = PlateId.NewId();
-        var timestamp = CreateValidTimestamp();
+        var tick = CreateValidTick();
         var sequence = 0L;
         var streamIdentity = CreateValidStreamIdentity();
 
         // Act
-        var @event = new PlateCreatedEvent(eventId, plateId, timestamp, sequence, streamIdentity);
+        var @event = new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
 
         // Assert - All required fields should be valid
         Assert.NotEqual(Guid.Empty, @event.EventId);
         Assert.False(@event.PlateId.IsEmpty);
-        Assert.True(@event.Timestamp != default);
+        Assert.True(@event.Tick.Value >= 0);
         Assert.True(@event.StreamIdentity.IsValid());
     }
 
@@ -88,7 +89,7 @@ public class EventSchemaTests
         var @event = new PlateCreatedEvent(
             Guid.NewGuid(),
             PlateId.NewId(),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -103,17 +104,17 @@ public class EventSchemaTests
         // Arrange
         var eventId = Guid.Parse("12345678-1234-1234-1234-123456789abc");
         var plateId = PlateId.Parse("87654321-4321-4321-4321-cba987654321");
-        var timestamp = new DateTimeOffset(2026, 1, 22, 12, 0, 0, TimeSpan.Zero);
+        var tick = new CanonicalTick(100);
         var sequence = 5L;
         var streamIdentity = CreateValidStreamIdentity();
 
         // Act
-        var @event = new PlateCreatedEvent(eventId, plateId, timestamp, sequence, streamIdentity);
+        var @event = new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
 
         // Assert
         Assert.Equal(eventId, @event.EventId);
         Assert.Equal(plateId, @event.PlateId);
-        Assert.Equal(timestamp, @event.Timestamp);
+        Assert.Equal(tick, @event.Tick);
         Assert.Equal(sequence, @event.Sequence);
         Assert.Equal(streamIdentity, @event.StreamIdentity);
     }
@@ -133,7 +134,7 @@ public class EventSchemaTests
             PlateId.NewId(),
             BoundaryType.Divergent,
             new LineSegment(0, 0, 1, 1),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -160,7 +161,7 @@ public class EventSchemaTests
             plateIdRight,
             boundaryType,
             geometry,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -185,7 +186,7 @@ public class EventSchemaTests
             PlateId.NewId(),
             BoundaryType.Transform,
             new LineSegment(0, 0, 1, 1),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -210,7 +211,7 @@ public class EventSchemaTests
                 PlateId.NewId(),
                 boundaryType,
                 new LineSegment(0, 0, 1, 1),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(0),
                 0L,
                 CreateValidStreamIdentity()
             );
@@ -233,7 +234,7 @@ public class EventSchemaTests
             PlateId.NewId(),
             BoundaryType.Divergent,
             geometry,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -258,7 +259,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId(), BoundaryId.NewId() },
             new Point2D(5, 5),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -281,7 +282,7 @@ public class EventSchemaTests
             junctionId,
             boundaryIds,
             location,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -304,7 +305,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
             new Point2D(0, 0),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -330,7 +331,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             boundaryIds,
             new Point2D(0, 0),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -354,7 +355,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
             location,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -377,7 +378,7 @@ public class EventSchemaTests
             BoundaryId.NewId(),
             BoundaryType.Divergent,
             BoundaryType.Convergent,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -400,7 +401,7 @@ public class EventSchemaTests
             boundaryId,
             oldType,
             newType,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -420,7 +421,7 @@ public class EventSchemaTests
             BoundaryId.NewId(),
             BoundaryType.Convergent,
             BoundaryType.Transform,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -442,7 +443,7 @@ public class EventSchemaTests
             BoundaryId.NewId(),
             oldType,
             newType,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -465,7 +466,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             Polyline.FromCoordinates(0, 0, 1, 1, 2, 0),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -486,7 +487,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             boundaryId,
             newGeometry,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -506,7 +507,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             new LineSegment(0, 0, 1, 1),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -526,7 +527,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             newGeometry,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -548,7 +549,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             "Plate merger",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -568,7 +569,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             boundaryId,
             "Plate merger",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -587,7 +588,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             "Plate merger",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -604,7 +605,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -624,7 +625,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             BoundaryId.NewId(),
             reason,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -646,7 +647,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
             new Point2D(10, 20),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -668,7 +669,7 @@ public class EventSchemaTests
             junctionId,
             newBoundaryIds,
             new Point2D(15, 25),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -690,7 +691,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -716,7 +717,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             newBoundaryIds,
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -734,7 +735,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -755,7 +756,7 @@ public class EventSchemaTests
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
             newLocation,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -778,7 +779,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             "Junction merged into another",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -798,7 +799,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             junctionId,
             "Junction retired",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -817,7 +818,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             "Junction removed",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -834,7 +835,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -854,7 +855,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             reason,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -875,7 +876,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             PlateId.NewId(),
             "Plate subducted completely",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -895,7 +896,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             plateId,
             "Plate retired",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -914,7 +915,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             PlateId.NewId(),
             "Plate removed",
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -931,7 +932,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             PlateId.NewId(),
             null,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -951,7 +952,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             PlateId.NewId(),
             reason,
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
@@ -969,7 +970,7 @@ public class EventSchemaTests
     {
         // Arrange - Create instances of all event types
         var streamIdentity = CreateValidStreamIdentity();
-        var timestamp = DateTimeOffset.UtcNow;
+        var timestamp = new CanonicalTick(0);
         var sequence = 0L;
         var eventId = Guid.NewGuid();
 
@@ -1000,7 +1001,7 @@ public class EventSchemaTests
     {
         // Arrange
         var streamIdentity = CreateValidStreamIdentity();
-        var timestamp = DateTimeOffset.UtcNow;
+        var timestamp = new CanonicalTick(0);
         var sequence = 0L;
         var eventId = Guid.NewGuid();
 
@@ -1036,7 +1037,7 @@ public class EventSchemaTests
         var @event = new PlateCreatedEvent(
             Guid.NewGuid(),
             PlateId.NewId(),
-            DateTimeOffset.UtcNow,
+            new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );

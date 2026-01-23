@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Linq;
 using System.Text;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -27,8 +28,8 @@ public sealed class SnapshottingMaterializerTests
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -36,7 +37,7 @@ public sealed class SnapshottingMaterializerTests
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 stream)
         };

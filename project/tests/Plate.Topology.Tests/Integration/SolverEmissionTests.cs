@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -9,7 +10,7 @@ namespace Plate.Topology.Tests.Integration;
 
 public class SolverEmissionTests : IDisposable
 {
-    private static readonly DateTimeOffset FixedTimestamp = DateTimeOffset.Parse("2026-01-01T00:00:00Z");
+    private static readonly CanonicalTick FixedTick = new CanonicalTick(0);
     private readonly PlateTopologyEventStore _store;
 
     public SolverEmissionTests()
@@ -78,7 +79,7 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 plateId,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream)
         };
@@ -120,13 +121,13 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-000000000002"),
                 plateId,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-000000000003"),
                 plateId2,
-                FixedTimestamp,
+                FixedTick,
                 2,
                 stream),
             new BoundaryCreatedEvent(
@@ -136,7 +137,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 3,
                 stream),
             new JunctionCreatedEvent(
@@ -144,7 +145,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 4,
                 stream)
         };
@@ -245,14 +246,14 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff01"),
                 plateId1,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
 
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff02"),
                 plateId2,
-                FixedTimestamp,
+                FixedTick,
                 1,
                 stream),
 
@@ -263,7 +264,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 2,
                 stream),
 
@@ -272,7 +273,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 3,
                 stream),
 
@@ -280,7 +281,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("30000000-0000-0000-0000-00000000ff03"),
                 boundaryId,
                 "premature retirement",
-                FixedTimestamp,
+                FixedTick,
                 4,
                 stream)
         };
@@ -299,14 +300,14 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff11"),
                 plateId1,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
 
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff12"),
                 plateId2,
-                FixedTimestamp,
+                FixedTick,
                 1,
                 stream),
 
@@ -317,7 +318,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 2,
                 stream),
 
@@ -326,7 +327,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 3,
                 stream),
 
@@ -334,7 +335,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-00000000ff13"),
                 junctionId,
                 "junction removed",
-                FixedTimestamp,
+                FixedTick,
                 4,
                 stream),
 
@@ -342,7 +343,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("30000000-0000-0000-0000-00000000ff13"),
                 boundaryId,
                 "boundary retired",
-                FixedTimestamp,
+                FixedTick,
                 5,
                 stream)
         };
@@ -363,21 +364,21 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff21"),
                 plateId1,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
 
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff22"),
                 plateId2,
-                FixedTimestamp,
+                FixedTick,
                 1,
                 stream),
 
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff23"),
                 plateId3,
-                FixedTimestamp,
+                FixedTick,
                 2,
                 stream),
 
@@ -388,7 +389,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 3,
                 stream),
 
@@ -399,7 +400,7 @@ public class SolverEmissionTests : IDisposable
                 plateId3,
                 BoundaryType.Transform,
                 new LineSegment(1.0, 0.0, 2.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 4,
                 stream),
 
@@ -408,7 +409,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId1, boundaryId2],
                 new Point2D(1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 5,
                 stream),
 
@@ -417,7 +418,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId2],
                 null,
-                FixedTimestamp,
+                FixedTick,
                 6,
                 stream),
 
@@ -425,7 +426,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("30000000-0000-0000-0000-00000000ff23"),
                 boundaryId1,
                 "boundary retired",
-                FixedTimestamp,
+                FixedTick,
                 7,
                 stream)
         };
@@ -457,14 +458,14 @@ public class SolverEmissionTests : IDisposable
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 plateId1,
-                FixedTimestamp,
+                FixedTick,
                 0,
                 stream),
 
             new PlateCreatedEvent(
                 Guid.Parse("20000000-0000-0000-0000-000000000002"),
                 plateId2,
-                FixedTimestamp,
+                FixedTick,
                 1,
                 stream),
 
@@ -475,7 +476,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 2,
                 stream),
 
@@ -484,7 +485,7 @@ public class SolverEmissionTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                FixedTimestamp,
+                FixedTick,
                 3,
                 stream)
         };

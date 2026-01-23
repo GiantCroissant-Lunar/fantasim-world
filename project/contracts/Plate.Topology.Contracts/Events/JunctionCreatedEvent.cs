@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
@@ -15,7 +16,7 @@ namespace Plate.Topology.Contracts.Events;
 /// <param name="JunctionId">The unique identifier of the newly created junction.</param>
 /// <param name="BoundaryIds">The list of boundaries meeting at this junction.</param>
 /// <param name="Location">The point geometry location of this junction.</param>
-/// <param name="Timestamp">When this event occurred.</param>
+/// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 public readonly record struct JunctionCreatedEvent(
@@ -23,7 +24,7 @@ public readonly record struct JunctionCreatedEvent(
     JunctionId JunctionId,
     BoundaryId[] BoundaryIds,
     Point2D Location,
-    DateTimeOffset Timestamp,
+    CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity
 ) : IPlateTopologyEvent

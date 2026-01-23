@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Geometry;
@@ -67,7 +68,7 @@ public class EdgeCaseTests : IDisposable
         var plateId = new PlateId(Guid.NewGuid());
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, DateTimeOffset.UtcNow, 0, _stream)
+            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -99,8 +100,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -108,7 +109,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             )
@@ -138,8 +139,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -147,11 +148,11 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", DateTimeOffset.UtcNow, 3, _stream)
+            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -188,10 +189,10 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, DateTimeOffset.UtcNow, 2, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId4, DateTimeOffset.UtcNow, 3, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId4, new CanonicalTick(3), 3, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId1,
@@ -199,7 +200,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(4),
                 4,
                 _stream
             ),
@@ -210,7 +211,7 @@ public class EdgeCaseTests : IDisposable
                 plateId3,
                 BoundaryType.Transform,
                 new LineSegment(1.0, 0.0, 2.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(5),
                 5,
                 _stream
             ),
@@ -221,7 +222,7 @@ public class EdgeCaseTests : IDisposable
                 plateId4,
                 BoundaryType.Transform,
                 new LineSegment(2.0, 0.0, 3.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(6),
                 6,
                 _stream
             ),
@@ -230,7 +231,7 @@ public class EdgeCaseTests : IDisposable
                 junctionId,
                 [boundaryId1, boundaryId2, boundaryId3],
                 new Point2D(1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(7),
                 7,
                 _stream
             )
@@ -267,8 +268,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -276,7 +277,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
@@ -285,7 +286,7 @@ public class EdgeCaseTests : IDisposable
                 junctionId1,
                 [boundaryId],
                 new Point2D(0.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(3),
                 3,
                 _stream
             ),
@@ -294,7 +295,7 @@ public class EdgeCaseTests : IDisposable
                 junctionId2,
                 [boundaryId],
                 new Point2D(1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(4),
                 4,
                 _stream
             )
@@ -337,8 +338,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -346,11 +347,11 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", DateTimeOffset.UtcNow, 3, _stream)
+            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -386,8 +387,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -395,11 +396,11 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", DateTimeOffset.UtcNow, 3, _stream)
+            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -433,8 +434,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -442,7 +443,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
@@ -451,7 +452,7 @@ public class EdgeCaseTests : IDisposable
                 junctionId,
                 [boundaryId],
                 new Point2D(0.5, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(3),
                 3,
                 _stream
             ),
@@ -461,7 +462,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 boundaryId,
                 "test retirement",
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(4),
                 4,
                 _stream
             )
@@ -487,8 +488,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, DateTimeOffset.UtcNow, 1, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId1,
@@ -496,7 +497,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(2),
                 2,
                 _stream
             ),
@@ -505,7 +506,7 @@ public class EdgeCaseTests : IDisposable
                 junctionId,
                 [boundaryId1, boundaryId2], // boundaryId2 doesn't exist
                 new Point2D(0.5, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(3),
                 3,
                 _stream
             )
@@ -538,7 +539,7 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, DateTimeOffset.UtcNow, 0, _stream),
+            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
             new BoundaryCreatedEvent(
                 Guid.NewGuid(),
                 boundaryId,
@@ -546,7 +547,7 @@ public class EdgeCaseTests : IDisposable
                 new PlateId(Guid.NewGuid()), // Non-existent right plate
                 BoundaryType.Transform,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
-                DateTimeOffset.UtcNow,
+                new CanonicalTick(1),
                 1,
                 _stream
             )

@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Identity;
 
@@ -13,7 +14,7 @@ namespace Plate.Topology.Contracts.Events;
 /// <param name="BoundaryId">The unique identifier of the boundary whose type changed.</param>
 /// <param name="OldType">The previous boundary type before this change.</param>
 /// <param name="NewType">The new boundary type after this change.</param>
-/// <param name="Timestamp">When this event occurred.</param>
+/// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 public readonly record struct BoundaryTypeChangedEvent(
@@ -21,7 +22,7 @@ public readonly record struct BoundaryTypeChangedEvent(
     BoundaryId BoundaryId,
     BoundaryType OldType,
     BoundaryType NewType,
-    DateTimeOffset Timestamp,
+    CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity
 ) : IPlateTopologyEvent

@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
 using Xunit;
@@ -10,7 +11,7 @@ namespace Plate.Topology.Tests.Contract;
 /// Tests verify that the event envelope structure satisfies requirements for:
 /// - Event identification and uniqueness
 /// - Polymorphic deserialization support
-/// - Timestamp preservation
+/// - Canonical tick preservation (RFC-V2-0010)
 /// - Deterministic replay ordering
 /// - Stream identity isolation
 /// </summary>
@@ -25,21 +26,21 @@ public class EventInterfaceTests
     {
         public Guid EventId { get; }
         public string EventType { get; }
-        public DateTimeOffset Timestamp { get; }
+        public CanonicalTick Tick { get; }
         public long Sequence { get; }
         public TruthStreamIdentity StreamIdentity { get; }
 
         public MockPlateTopologyEvent(
             Guid eventId,
             string eventType,
-            DateTimeOffset timestamp,
+            CanonicalTick tick,
             long sequence,
             TruthStreamIdentity streamIdentity
         )
         {
             EventId = eventId;
             EventType = eventType;
-            Timestamp = timestamp;
+            Tick = tick;
             Sequence = sequence;
             StreamIdentity = streamIdentity;
         }
@@ -50,7 +51,7 @@ public class EventInterfaceTests
         public static MockPlateTopologyEvent CreateValid(
             Guid? eventId = null,
             string? eventType = null,
-            DateTimeOffset? timestamp = null,
+            CanonicalTick? tick = null,
             long? sequence = null,
             TruthStreamIdentity? streamIdentity = null
         )
@@ -58,7 +59,7 @@ public class EventInterfaceTests
             return new MockPlateTopologyEvent(
                 eventId ?? Guid.NewGuid(),
                 eventType ?? "MockEvent",
-                timestamp ?? DateTimeOffset.UtcNow,
+                tick ?? new CanonicalTick(0),
                 sequence ?? 0L,
                 streamIdentity ?? CreateValidStreamIdentity()
             );
@@ -198,69 +199,62 @@ public class EventInterfaceTests
 
     #endregion
 
-    #region Timestamp Tests
+    #region Tick Tests
 
     [Fact]
-    public void Event_Interface_HasTimestampProperty()
+    public void Event_Interface_HasTickProperty()
     {
         // Arrange & Act
-        var timestamp = DateTimeOffset.UtcNow;
-        var @event = MockPlateTopologyEvent.CreateValid(timestamp: timestamp);
+        var tick = new CanonicalTick(100);
+        var @event = MockPlateTopologyEvent.CreateValid(tick: tick);
 
-        // Assert - Timestamp should be accessible and match the provided value
-        Assert.Equal(timestamp, @event.Timestamp);
+        // Assert - Tick should be accessible and match the provided value
+        Assert.Equal(tick, @event.Tick);
     }
 
     [Fact]
-    public void Event_Timestamp_IsDateTimeOffset()
+    public void Event_Tick_IsCanonicalTick()
     {
         // Arrange & Act
         var @event = MockPlateTopologyEvent.CreateValid();
 
-        // Assert - Timestamp should be DateTimeOffset type
-        Assert.IsType<DateTimeOffset>(@event.Timestamp);
+        // Assert - Tick should be CanonicalTick type
+        Assert.IsType<CanonicalTick>(@event.Tick);
     }
 
     [Fact]
-    public void Event_Timestamp_SupportsDifferentTimes()
+    public void Event_Tick_SupportsDifferentValues()
     {
-        // Arrange
-        var time1 = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
-        var time2 = new DateTimeOffset(2026, 1, 2, 12, 0, 0, TimeSpan.Zero);
-        var time3 = new DateTimeOffset(2026, 1, 3, 12, 0, 0, TimeSpan.Zero);
+        // Arrange - per RFC-V2-0010, tick is Int64-based
+        var tick1 = new CanonicalTick(0);
+        var tick2 = new CanonicalTick(1000);
+        var tick3 = new CanonicalTick(2000);
 
         // Act
-        var event1 = MockPlateTopologyEvent.CreateValid(timestamp: time1);
-        var event2 = MockPlateTopologyEvent.CreateValid(timestamp: time2);
-        var event3 = MockPlateTopologyEvent.CreateValid(timestamp: time3);
+        var event1 = MockPlateTopologyEvent.CreateValid(tick: tick1);
+        var event2 = MockPlateTopologyEvent.CreateValid(tick: tick2);
+        var event3 = MockPlateTopologyEvent.CreateValid(tick: tick3);
 
-        // Assert - Each event can have a distinct timestamp
-        Assert.Equal(time1, event1.Timestamp);
-        Assert.Equal(time2, event2.Timestamp);
-        Assert.Equal(time3, event3.Timestamp);
-        Assert.True(event1.Timestamp < event2.Timestamp);
-        Assert.True(event2.Timestamp < event3.Timestamp);
+        // Assert - Each event can have a distinct tick
+        Assert.Equal(tick1, event1.Tick);
+        Assert.Equal(tick2, event2.Tick);
+        Assert.Equal(tick3, event3.Tick);
+        Assert.True(event1.Tick.Value < event2.Tick.Value);
+        Assert.True(event2.Tick.Value < event3.Tick.Value);
     }
 
     [Fact]
-    public void Event_Timestamp_PreservesExactTime()
+    public void Event_Tick_PreservesExactValue()
     {
-        // Arrange
-        var exactTimestamp = new DateTimeOffset(2026, 1, 22, 15, 30, 45, 123, TimeSpan.FromHours(-5));
+        // Arrange - per RFC-V2-0010, tick is stored as raw Int64
+        var exactTick = new CanonicalTick(1234567890L);
 
         // Act
-        var @event = MockPlateTopologyEvent.CreateValid(timestamp: exactTimestamp);
+        var @event = MockPlateTopologyEvent.CreateValid(tick: exactTick);
 
-        // Assert - Timestamp should be preserved exactly (per FR-012 for replay determinism)
-        Assert.Equal(exactTimestamp, @event.Timestamp);
-        Assert.Equal(2026, @event.Timestamp.Year);
-        Assert.Equal(1, @event.Timestamp.Month);
-        Assert.Equal(22, @event.Timestamp.Day);
-        Assert.Equal(15, @event.Timestamp.Hour);
-        Assert.Equal(30, @event.Timestamp.Minute);
-        Assert.Equal(45, @event.Timestamp.Second);
-        Assert.Equal(123, @event.Timestamp.Millisecond);
-        Assert.Equal(TimeSpan.FromHours(-5), @event.Timestamp.Offset);
+        // Assert - Tick should be preserved exactly (per FR-012 for replay determinism)
+        Assert.Equal(exactTick, @event.Tick);
+        Assert.Equal(1234567890L, @event.Tick.Value);
     }
 
     #endregion
@@ -486,17 +480,17 @@ public class EventInterfaceTests
         // Arrange
         var eventId = Guid.NewGuid();
         var eventType = "TestEvent";
-        var timestamp = DateTimeOffset.UtcNow;
+        var tick = new CanonicalTick(100);
         var sequence = 5L;
         var streamIdentity = new TruthStreamIdentity("test", "main", 2, Domain.Parse("geo.plates"), "0");
 
         // Act
-        var @event = new MockPlateTopologyEvent(eventId, eventType, timestamp, sequence, streamIdentity);
+        var @event = new MockPlateTopologyEvent(eventId, eventType, tick, sequence, streamIdentity);
 
         // Assert - Event properties should be immutable (readonly struct in mock)
         Assert.Equal(eventId, @event.EventId);
         Assert.Equal(eventType, @event.EventType);
-        Assert.Equal(timestamp, @event.Timestamp);
+        Assert.Equal(tick, @event.Tick);
         Assert.Equal(sequence, @event.Sequence);
         Assert.Equal(streamIdentity, @event.StreamIdentity);
     }
@@ -510,12 +504,12 @@ public class EventInterfaceTests
         // Assert - Event envelope provides all metadata needed for replay:
         // - EventId: Unique identification and debugging
         // - EventType: Polymorphic deserialization
-        // - Timestamp: Temporal ordering and debugging
+        // - Tick: Canonical simulation time (RFC-V2-0010)
         // - Sequence: Deterministic replay ordering (FR-012)
         // - StreamIdentity: Isolation (FR-014)
         Assert.True(@event.EventId != Guid.Empty);
         Assert.False(string.IsNullOrWhiteSpace(@event.EventType));
-        Assert.True(@event.Timestamp != default);
+        Assert.True(@event.Tick.Value >= 0);
         Assert.True(@event.Sequence >= 0 || @event.Sequence < 0); // Can be any long
         Assert.True(@event.StreamIdentity.IsValid());
     }
@@ -535,7 +529,7 @@ public class EventInterfaceTests
         {
             Assert.True(e.EventId != Guid.Empty);
             Assert.False(string.IsNullOrWhiteSpace(e.EventType));
-            Assert.True(e.Timestamp != default);
+            Assert.True(e.Tick.Value >= 0);
             Assert.True(e.StreamIdentity.IsValid());
         });
     }

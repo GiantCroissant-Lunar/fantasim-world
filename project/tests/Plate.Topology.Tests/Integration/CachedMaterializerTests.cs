@@ -1,4 +1,5 @@
 using System.Linq;
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -23,7 +24,7 @@ public sealed class CachedMaterializerTests
             stream,
             new IPlateTopologyEvent[]
             {
-                new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), DateTimeOffset.UtcNow, 0, stream)
+                new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream)
             },
             CancellationToken.None);
 
