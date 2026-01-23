@@ -6,6 +6,7 @@ using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
+using PlateEntity = Plate.Topology.Contracts.Entities.Plate;
 
 namespace Plate.Topology.Tests.Integration;
 
@@ -226,11 +227,23 @@ public sealed class TickCutoffMaterializationTests
         var state30 = new PlateTopologyState(_stream);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(_stream, 10), state10), CancellationToken.None);
+            Key: new PlateTopologyMaterializationKey(_stream, 10),
+            LastEventSequence: 10,
+            Plates: Array.Empty<PlateEntity>(),
+            Boundaries: Array.Empty<Boundary>(),
+            Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(_stream, 20), state20), CancellationToken.None);
+            Key: new PlateTopologyMaterializationKey(_stream, 20),
+            LastEventSequence: 20,
+            Plates: Array.Empty<PlateEntity>(),
+            Boundaries: Array.Empty<Boundary>(),
+            Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(_stream, 30), state30), CancellationToken.None);
+            Key: new PlateTopologyMaterializationKey(_stream, 30),
+            LastEventSequence: 30,
+            Plates: Array.Empty<PlateEntity>(),
+            Boundaries: Array.Empty<Boundary>(),
+            Junctions: Array.Empty<Junction>()), CancellationToken.None);
 
         // Act & Assert - query at various ticks
         var at5 = await snapshotStore.GetLatestSnapshotBeforeAsync(_stream, 5, CancellationToken.None);
@@ -266,9 +279,17 @@ public sealed class TickCutoffMaterializationTests
         var state2 = new PlateTopologyState(stream2);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(stream1, 10), state1), CancellationToken.None);
+            Key: new PlateTopologyMaterializationKey(stream1, 10),
+            LastEventSequence: 10,
+            Plates: Array.Empty<PlateEntity>(),
+            Boundaries: Array.Empty<Boundary>(),
+            Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(stream2, 50), state2), CancellationToken.None);
+            Key: new PlateTopologyMaterializationKey(stream2, 50),
+            LastEventSequence: 50,
+            Plates: Array.Empty<PlateEntity>(),
+            Boundaries: Array.Empty<Boundary>(),
+            Junctions: Array.Empty<Junction>()), CancellationToken.None);
 
         // Act - query stream1 at tick 100
         var result = await snapshotStore.GetLatestSnapshotBeforeAsync(stream1, 100, CancellationToken.None);
@@ -299,7 +320,7 @@ public sealed class TickCutoffMaterializationTests
 
         await store.AppendAsync(
             _stream,
-            plates.Select((p, i) => TestEventFactory.PlateCreated(
+            plates.Select((p, i) => (IPlateTopologyEvent)TestEventFactory.PlateCreated(
                 Guid.NewGuid(), p, new CanonicalTick(i), i, _stream)),
             CancellationToken.None);
 
@@ -307,7 +328,6 @@ public sealed class TickCutoffMaterializationTests
         var stateAtSeq5 = new PlateTopologyState(_stream);
         for (var i = 0; i <= 5; i++)
             stateAtSeq5.Plates[plates[i]] = new Plate.Topology.Contracts.Entities.Plate(plates[i], false, null);
-        stateAtSeq5.SetLastEventSequence(5);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
             new PlateTopologyMaterializationKey(_stream, 5),  // tick 5, seq 5
@@ -357,13 +377,12 @@ public sealed class TickCutoffMaterializationTests
                 i,
                 _stream))
             .ToList();
-        await store.AppendAsync(_stream, initialEvents, CancellationToken.None);
+        await store.AppendAsync(_stream, initialEvents.Cast<IPlateTopologyEvent>(), CancellationToken.None);
 
         // Create snapshot at tick 1000 (last tick), seq 10
         var stateAtSnapshot = new PlateTopologyState(_stream);
         foreach (var evt in initialEvents.Cast<PlateCreatedEvent>())
             stateAtSnapshot.Plates[evt.PlateId] = new Plate.Topology.Contracts.Entities.Plate(evt.PlateId, false, null);
-        stateAtSnapshot.SetLastEventSequence(10);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
             new PlateTopologyMaterializationKey(_stream, 1000),  // tick 1000
@@ -375,7 +394,7 @@ public sealed class TickCutoffMaterializationTests
         // Now append a "back-in-time" event: seq 11 with tick 900
         await store.AppendAsync(
             _stream,
-            new[] { TestEventFactory.PlateCreated(Guid.NewGuid(), plate2, new CanonicalTick(900), 11, _stream) },
+            new IPlateTopologyEvent[] { TestEventFactory.PlateCreated(Guid.NewGuid(), plate2, new CanonicalTick(900), 11, _stream) },
             CancellationToken.None);
 
         var materializer = new SnapshottingPlateTopologyMaterializer(store, snapshotStore);
