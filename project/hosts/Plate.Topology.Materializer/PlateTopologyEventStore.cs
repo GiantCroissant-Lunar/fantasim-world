@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Text;
 using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Derived;
@@ -605,6 +606,18 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
             return ValueTask.FromResult(false);
 
         var caps = StreamCapabilities.FromBytes(capsBytes);
+
+        // Guard: If monotone flag is set but RejectFromGenesis isn't, something is wrong
+        // This protects against corrupted metadata or future misuse
+        if (caps.IsTickMonotoneFromGenesis && !caps.IsTickPolicyRejectFromGenesis)
+        {
+            Trace.WriteLineIf(
+                DiagnosticSwitches.CapabilityValidation.TraceWarning,
+                $"[EventStore] Stream {stream} has TickMonotoneFromGenesis=true but TickPolicyRejectFromGenesis=false. " +
+                "This is inconsistent - ignoring monotone flag for safety.");
+            return ValueTask.FromResult(false);
+        }
+
         return ValueTask.FromResult(caps.IsTickMonotoneFromGenesis);
     }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Capabilities;
 using Plate.Topology.Contracts.Entities;
@@ -198,12 +199,29 @@ public sealed class PlateTopologyMaterializer
 
         // Auto: check stream capabilities
         if (_capabilities == null)
+        {
+            Trace.WriteLineIf(
+                DiagnosticSwitches.MaterializationOptimization.TraceInfo,
+                $"[Materializer] Auto resolved to ScanAll for {stream} (no capabilities provider)");
             return TickMaterializationMode.ScanAll;
+        }
 
         var isMonotone = await _capabilities.IsTickMonotoneFromGenesisAsync(stream, cancellationToken);
-        return isMonotone
-            ? TickMaterializationMode.BreakOnFirstBeyondTick
-            : TickMaterializationMode.ScanAll;
+
+        if (isMonotone)
+        {
+            Trace.WriteLineIf(
+                DiagnosticSwitches.MaterializationOptimization.TraceInfo,
+                $"[Materializer] Auto resolved to BreakOnFirstBeyondTick for {stream} (TickMonotoneFromGenesis=true)");
+            return TickMaterializationMode.BreakOnFirstBeyondTick;
+        }
+        else
+        {
+            Trace.WriteLineIf(
+                DiagnosticSwitches.MaterializationOptimization.TraceInfo,
+                $"[Materializer] Auto resolved to ScanAll for {stream} (TickMonotoneFromGenesis=false)");
+            return TickMaterializationMode.ScanAll;
+        }
     }
 
     /// <summary>
