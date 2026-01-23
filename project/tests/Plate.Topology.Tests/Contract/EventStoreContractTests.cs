@@ -17,6 +17,19 @@ namespace Plate.Topology.Tests.Contract;
 /// </summary>
 public class EventStoreContractTests
 {
+    /// <summary>
+    /// Gets the original 3-parameter AppendAsync method (without AppendOptions).
+    /// </summary>
+    private static MethodInfo? GetCoreAppendAsyncMethod()
+    {
+        var interfaceType = typeof(ITopologyEventStore);
+        return interfaceType.GetMethods()
+            .FirstOrDefault(m =>
+                m.Name == "AppendAsync" &&
+                m.GetParameters().Length == 3 &&
+                m.GetParameters()[0].ParameterType == typeof(TruthStreamIdentity));
+    }
+
     #region Interface Existence
 
     [Fact]
@@ -47,11 +60,8 @@ public class EventStoreContractTests
     [Fact]
     public void EventStore_AppendAsync_Method_Exists()
     {
-        // Arrange
-        var interfaceType = typeof(ITopologyEventStore);
-
-        // Act - Get the AppendAsync method
-        var method = interfaceType.GetMethod("AppendAsync");
+        // Act - Get the core AppendAsync method (without AppendOptions)
+        var method = GetCoreAppendAsyncMethod();
 
         // Assert
         Assert.NotNull(method);
@@ -61,11 +71,8 @@ public class EventStoreContractTests
     [Fact]
     public void EventStore_AppendAsync_HasCorrectParameters()
     {
-        // Arrange
-        var interfaceType = typeof(ITopologyEventStore);
-
         // Act
-        var method = interfaceType.GetMethod("AppendAsync");
+        var method = GetCoreAppendAsyncMethod();
         var parameters = method?.GetParameters();
 
         // Assert - Should have exactly 3 parameters
@@ -88,11 +95,8 @@ public class EventStoreContractTests
     [Fact]
     public void EventStore_AppendAsync_IsAsync()
     {
-        // Arrange
-        var interfaceType = typeof(ITopologyEventStore);
-
         // Act
-        var method = interfaceType.GetMethod("AppendAsync");
+        var method = GetCoreAppendAsyncMethod();
 
         // Assert - Should return Task (async operation)
         Assert.Equal(typeof(Task), method?.ReturnType);
@@ -102,8 +106,7 @@ public class EventStoreContractTests
     public void EventStore_AppendAsync_NoStorageReferences()
     {
         // Arrange
-        var interfaceType = typeof(ITopologyEventStore);
-        var method = interfaceType.GetMethod("AppendAsync");
+        var method = GetCoreAppendAsyncMethod();
 
         // Act - Check all parameters
         var parameters = method?.GetParameters();
@@ -367,7 +370,7 @@ public class EventStoreContractTests
         var interfaceType = typeof(ITopologyEventStore);
 
         // Act - Check AppendAsync and ReadAsync
-        var appendAsyncMethod = interfaceType.GetMethod("AppendAsync");
+        var appendAsyncMethod = GetCoreAppendAsyncMethod();
         var readAsyncMethod = interfaceType.GetMethod("ReadAsync");
 
         // Assert - Both should use IPlateTopologyEvent (not concrete types)
@@ -386,7 +389,7 @@ public class EventStoreContractTests
         var interfaceType = typeof(ITopologyEventStore);
 
         // Act - Check for essential methods
-        var hasAppend = interfaceType.GetMethod("AppendAsync") != null;
+        var hasAppend = GetCoreAppendAsyncMethod() != null;
         var hasRead = interfaceType.GetMethod("ReadAsync") != null;
         var hasGetLastSequence = interfaceType.GetMethod("GetLastSequenceAsync") != null;
 

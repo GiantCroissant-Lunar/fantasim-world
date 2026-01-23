@@ -3,6 +3,58 @@ using Plate.Topology.Contracts.Identity;
 namespace Plate.Topology.Contracts.Events;
 
 /// <summary>
+/// Policy for handling tick monotonicity violations during event append.
+///
+/// In an event-sourced system, the Sequence number is the primary ordering key.
+/// However, the Tick (simulation time) may sometimes decrease due to:
+/// - Undo/redo operations
+/// - Parallel processing with late arrivals
+/// - Clock corrections in simulation
+///
+/// This policy controls how the event store handles cases where
+/// Tick decreases while Sequence increases.
+/// </summary>
+public enum TickMonotonicityPolicy
+{
+    /// <summary>
+    /// Allow tick to decrease without any action.
+    /// This is the default policy for backward compatibility.
+    /// The event store orders by Sequence, not Tick, so this is safe.
+    /// </summary>
+    Allow = 0,
+
+    /// <summary>
+    /// Warn when tick decreases but still allow the append.
+    /// Implementations should log a warning for monitoring.
+    /// </summary>
+    Warn = 1,
+
+    /// <summary>
+    /// Reject the append if tick decreases.
+    /// Throws an InvalidOperationException.
+    /// Use this for strict simulation timelines that should never go backward.
+    /// </summary>
+    Reject = 2
+}
+
+/// <summary>
+/// Options for appending events to a topology event store.
+/// </summary>
+public sealed class AppendOptions
+{
+    /// <summary>
+    /// Default options with backward-compatible behavior.
+    /// </summary>
+    public static readonly AppendOptions Default = new();
+
+    /// <summary>
+    /// Policy for handling tick monotonicity violations.
+    /// Default is <see cref="TickMonotonicityPolicy.Allow"/>.
+    /// </summary>
+    public TickMonotonicityPolicy TickPolicy { get; init; } = TickMonotonicityPolicy.Allow;
+}
+
+/// <summary>
 /// Contract interface for topology event store per FR-001, FR-012, FR-014.
 ///
 /// Defines operations for appending and reading topology events from a persistent
@@ -26,6 +78,9 @@ public interface ITopologyEventStore
     ///
     /// Sequence numbers and StreamIdentity are used for deterministic replay,
     /// ensuring events are replayed in the exact order they were appended per SC-001.
+    ///
+    /// Note: Tick monotonicity is NOT enforced by default. Ticks may decrease while
+    /// sequences increase. Use the overload with AppendOptions to control tick policy.
     /// </summary>
     /// <param name="stream">
     /// The truth stream identity where events will be appended.
@@ -44,6 +99,32 @@ public interface ITopologyEventStore
     Task AppendAsync(
         TruthStreamIdentity stream,
         IEnumerable<IPlateTopologyEvent> events,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>
+    /// Appends a batch of events to the specified stream with custom options.
+    ///
+    /// All events must have the same StreamIdentity matching the stream parameter.
+    /// Events must have monotonically increasing Sequence numbers for the stream.
+    /// The operation should be atomic: either all events succeed or none are persisted.
+    /// </summary>
+    /// <param name="stream">
+    /// The truth stream identity where events will be appended.
+    /// </param>
+    /// <param name="events">
+    /// The events to append.
+    /// </param>
+    /// <param name="options">
+    /// Options controlling append behavior, including tick monotonicity policy.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token to cancel the operation.
+    /// </param>
+    Task AppendAsync(
+        TruthStreamIdentity stream,
+        IEnumerable<IPlateTopologyEvent> events,
+        AppendOptions options,
         CancellationToken cancellationToken
     );
 

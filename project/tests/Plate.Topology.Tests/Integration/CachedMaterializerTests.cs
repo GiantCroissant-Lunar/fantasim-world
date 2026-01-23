@@ -51,6 +51,12 @@ public sealed class CachedMaterializerTests
             return Task.CompletedTask;
         }
 
+        public Task AppendAsync(TruthStreamIdentity stream, IEnumerable<IPlateTopologyEvent> events, AppendOptions options, CancellationToken cancellationToken)
+        {
+            // Ignore options in test - just append
+            return AppendAsync(stream, events, cancellationToken);
+        }
+
         public async IAsyncEnumerable<IPlateTopologyEvent> ReadAsync(
             TruthStreamIdentity stream,
             long fromSequenceInclusive,

@@ -47,6 +47,8 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// Uses WriteBatch to ensure atomicity: either all events succeed
     /// or none are persisted. Validates that all events match the stream identity
     /// and have monotonically increasing Sequence numbers.
+    ///
+    /// Note: This overload uses default options (tick policy = Allow).
     /// </summary>
     /// <exception cref="ArgumentException">
     /// If events don't match stream identity or sequences are not monotonic.
@@ -59,8 +61,36 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         IEnumerable<IPlateTopologyEvent> events,
         CancellationToken cancellationToken)
     {
+        return AppendAsync(stream, events, AppendOptions.Default, cancellationToken);
+    }
+
+    /// <summary>
+    /// Appends a batch of events to the specified stream atomically with custom options.
+    ///
+    /// Uses WriteBatch to ensure atomicity: either all events succeed
+    /// or none are persisted. Validates that all events match the stream identity
+    /// and have monotonically increasing Sequence numbers.
+    ///
+    /// Tick monotonicity policy is controlled via options:
+    /// - Allow: tick can decrease without any action (default)
+    /// - Warn: tick decrease logs a warning but allows append
+    /// - Reject: tick decrease throws InvalidOperationException
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// If events don't match stream identity or sequences are not monotonic.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// If stream identity is not valid, or if tick decreases and policy is Reject.
+    /// </exception>
+    public Task AppendAsync(
+        TruthStreamIdentity stream,
+        IEnumerable<IPlateTopologyEvent> events,
+        AppendOptions options,
+        CancellationToken cancellationToken)
+    {
         ArgumentNullException.ThrowIfNull(stream);
         ArgumentNullException.ThrowIfNull(events);
+        options ??= AppendOptions.Default;
 
         // Validate stream identity per RFC-V2-0001 review recommendation
         if (!stream.IsValid())
@@ -96,6 +126,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
             }
         }
 
+        // Apply tick monotonicity policy
+        ApplyTickMonotonicityPolicy(eventsList, options.TickPolicy);
+
         // Build batch atomically
         var prefix = BuildStreamPrefix(stream);
         using var batch = _store.CreateWriteBatch();
@@ -130,6 +163,40 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Applies the tick monotonicity policy to a list of events.
+    /// </summary>
+    private static void ApplyTickMonotonicityPolicy(
+        List<IPlateTopologyEvent> events,
+        TickMonotonicityPolicy policy)
+    {
+        if (policy == TickMonotonicityPolicy.Allow || events.Count < 2)
+            return;
+
+        for (int i = 1; i < events.Count; i++)
+        {
+            if (events[i].Tick.Value < events[i - 1].Tick.Value)
+            {
+                var message = $"Tick decreased from {events[i - 1].Tick.Value} to {events[i].Tick.Value} " +
+                              $"at event index {i} (Sequence {events[i].Sequence})";
+
+                switch (policy)
+                {
+                    case TickMonotonicityPolicy.Warn:
+                        // Log warning - implementation should use a proper logging framework
+                        // For now, use Debug.WriteLine which is visible in tests
+                        System.Diagnostics.Debug.WriteLine($"[TickMonotonicity.Warn] {message}");
+                        break;
+
+                    case TickMonotonicityPolicy.Reject:
+                        throw new InvalidOperationException(
+                            $"Tick monotonicity violation: {message}. " +
+                            "Use TickMonotonicityPolicy.Allow or Warn to permit tick decreases.");
+                }
+            }
+        }
     }
 
     /// <summary>

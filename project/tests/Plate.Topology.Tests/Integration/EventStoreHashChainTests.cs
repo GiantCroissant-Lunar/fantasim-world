@@ -359,4 +359,102 @@ public class EventStoreHashChainTests : IDisposable
     }
 
     #endregion
+
+    #region Tick Monotonicity Policy Tests
+
+    /// <summary>
+    /// Verifies that TickMonotonicityPolicy.Allow (default) permits tick to decrease.
+    /// </summary>
+    [Fact]
+    public async Task TickPolicy_Allow_PermitsDecreasingTick()
+    {
+        // Arrange - Events with decreasing tick
+        var events = new IPlateTopologyEvent[]
+        {
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(50), 1, _stream),  // Tick decreases
+        };
+
+        // Act - Should not throw
+        await _store.AppendAsync(_stream, events, AppendOptions.Default, CancellationToken.None);
+        var readEvents = await _store.ReadAsync(_stream, 0, CancellationToken.None).ToListAsync();
+
+        // Assert - Events were stored
+        Assert.Equal(2, readEvents.Count);
+    }
+
+    /// <summary>
+    /// Verifies that TickMonotonicityPolicy.Reject throws on tick decrease.
+    /// </summary>
+    [Fact]
+    public async Task TickPolicy_Reject_ThrowsOnDecreasingTick()
+    {
+        // Arrange - Events with decreasing tick
+        var events = new IPlateTopologyEvent[]
+        {
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(50), 1, _stream),  // Tick decreases
+        };
+
+        var options = new AppendOptions { TickPolicy = TickMonotonicityPolicy.Reject };
+
+        // Act & Assert - Should throw InvalidOperationException
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _store.AppendAsync(_stream, events, options, CancellationToken.None));
+
+        Assert.Contains("Tick monotonicity violation", ex.Message);
+        Assert.Contains("100", ex.Message);  // Previous tick
+        Assert.Contains("50", ex.Message);   // Current tick
+    }
+
+    /// <summary>
+    /// Verifies that TickMonotonicityPolicy.Reject allows monotonically increasing ticks.
+    /// </summary>
+    [Fact]
+    public async Task TickPolicy_Reject_AllowsIncreasingTick()
+    {
+        // Arrange - Events with increasing tick
+        var events = new IPlateTopologyEvent[]
+        {
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 1, _stream),  // Same tick is OK
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(200), 2, _stream),  // Increasing tick
+        };
+
+        var options = new AppendOptions { TickPolicy = TickMonotonicityPolicy.Reject };
+
+        // Act - Should not throw
+        await _store.AppendAsync(_stream, events, options, CancellationToken.None);
+        var readEvents = await _store.ReadAsync(_stream, 0, CancellationToken.None).ToListAsync();
+
+        // Assert - Events were stored
+        Assert.Equal(3, readEvents.Count);
+    }
+
+    /// <summary>
+    /// Verifies that TickMonotonicityPolicy.Warn permits tick decrease but logs warning.
+    /// (Warning is logged via Debug.WriteLine, which is visible in test output)
+    /// </summary>
+    [Fact]
+    public async Task TickPolicy_Warn_PermitsDecreasingTick()
+    {
+        // Arrange - Events with decreasing tick
+        var events = new IPlateTopologyEvent[]
+        {
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(50), 1, _stream),  // Tick decreases
+        };
+
+        var options = new AppendOptions { TickPolicy = TickMonotonicityPolicy.Warn };
+
+        // Act - Should not throw
+        await _store.AppendAsync(_stream, events, options, CancellationToken.None);
+        var readEvents = await _store.ReadAsync(_stream, 0, CancellationToken.None).ToListAsync();
+
+        // Assert - Events were stored
+        Assert.Equal(2, readEvents.Count);
+        // Note: Warning is logged via Debug.WriteLine, visible in test output
+    }
+
+    #endregion
 }
