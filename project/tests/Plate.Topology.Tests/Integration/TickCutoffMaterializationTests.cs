@@ -281,6 +281,124 @@ public sealed class TickCutoffMaterializationTests
 
     #endregion
 
+    #region Incremental Replay Tests
+
+    /// <summary>
+    /// Proves that incremental replay skips events before the snapshot sequence.
+    /// This verifies the store is read from startSeq = snapshot.LastEventSequence + 1.
+    /// </summary>
+    [Fact]
+    public async Task IncrementalReplay_SkipsPrefixBySequence()
+    {
+        // Arrange - append 10 events at ticks 0..9
+        var store = new CountingEventStore();
+        var snapshotStore = new InMemorySnapshotStore();
+        var plates = Enumerable.Range(0, 10)
+            .Select(i => new PlateId(Guid.NewGuid()))
+            .ToArray();
+
+        await store.AppendAsync(
+            _stream,
+            plates.Select((p, i) => TestEventFactory.PlateCreated(
+                Guid.NewGuid(), p, new CanonicalTick(i), i, _stream)),
+            CancellationToken.None);
+
+        // Create snapshot at seq 5 (covers events 0..5, i.e., 6 events)
+        var stateAtSeq5 = new PlateTopologyState(_stream);
+        for (var i = 0; i <= 5; i++)
+            stateAtSeq5.Plates[plates[i]] = new Plate.Topology.Contracts.Entities.Plate(plates[i], false, null);
+        stateAtSeq5.SetLastEventSequence(5);
+
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(_stream, 5),  // tick 5, seq 5
+            5,  // LastEventSequence
+            stateAtSeq5.Plates.Values.ToArray(),
+            Array.Empty<Boundary>(),
+            Array.Empty<Junction>()), CancellationToken.None);
+
+        var materializer = new SnapshottingPlateTopologyMaterializer(store, snapshotStore);
+
+        // Act - materialize at tick 9 (max tick)
+        store.ResetReadCount();
+        var result = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(9),
+            TickMaterializationMode.ScanAll,
+            CancellationToken.None);
+
+        // Assert - should have read only events 6..9 (4 events), not 0..9 (10 events)
+        Assert.True(result.FromSnapshot, "Should have used snapshot");
+        Assert.Equal(10, result.State.Plates.Count); // All 10 plates present
+        Assert.Equal(4, store.EventsRead); // Only events 6,7,8,9 were read
+    }
+
+    /// <summary>
+    /// Proves that incremental replay does NOT miss back-in-time events.
+    /// This is the critical correctness test: sequence boundary, not tick boundary.
+    /// </summary>
+    [Fact]
+    public async Task IncrementalReplay_DoesNotMissBackInTimeEvent()
+    {
+        // Arrange - create scenario where event arrives "back in time"
+        // Snapshot at tick 1000, seq 10
+        // Then append event at seq 11 with tick 900 (back-in-time!)
+        var store = new InMemoryTopologyEventStore();
+        var snapshotStore = new InMemorySnapshotStore();
+
+        var plate1 = new PlateId(Guid.NewGuid());
+        var plate2 = new PlateId(Guid.NewGuid()); // This one arrives "late" with earlier tick
+
+        // First, append 11 events ending at seq 10 tick 1000
+        var initialEvents = Enumerable.Range(0, 11)
+            .Select(i => TestEventFactory.PlateCreated(
+                Guid.NewGuid(),
+                i == 0 ? plate1 : new PlateId(Guid.NewGuid()),
+                new CanonicalTick(i * 100),  // ticks: 0, 100, 200, ... 1000
+                i,
+                _stream))
+            .ToList();
+        await store.AppendAsync(_stream, initialEvents, CancellationToken.None);
+
+        // Create snapshot at tick 1000 (last tick), seq 10
+        var stateAtSnapshot = new PlateTopologyState(_stream);
+        foreach (var evt in initialEvents.Cast<PlateCreatedEvent>())
+            stateAtSnapshot.Plates[evt.PlateId] = new Plate.Topology.Contracts.Entities.Plate(evt.PlateId, false, null);
+        stateAtSnapshot.SetLastEventSequence(10);
+
+        await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
+            new PlateTopologyMaterializationKey(_stream, 1000),  // tick 1000
+            10,  // LastEventSequence
+            stateAtSnapshot.Plates.Values.ToArray(),
+            Array.Empty<Boundary>(),
+            Array.Empty<Junction>()), CancellationToken.None);
+
+        // Now append a "back-in-time" event: seq 11 with tick 900
+        await store.AppendAsync(
+            _stream,
+            new[] { TestEventFactory.PlateCreated(Guid.NewGuid(), plate2, new CanonicalTick(900), 11, _stream) },
+            CancellationToken.None);
+
+        var materializer = new SnapshottingPlateTopologyMaterializer(store, snapshotStore);
+
+        // Act - query at tick 1000
+        // If we incorrectly used tick boundary, we'd miss plate2 (tick 900 < 1000 but seq 11 > 10)
+        // If we correctly use sequence boundary, we'll read seq 11 and include it (tick 900 <= 1000)
+        var result = await materializer.MaterializeAtTickAsync(
+            _stream,
+            new CanonicalTick(1000),
+            TickMaterializationMode.ScanAll,  // Must be ScanAll to catch back-in-time events
+            CancellationToken.None);
+
+        // Assert - result MUST include plate2 (the back-in-time event)
+        Assert.True(result.FromSnapshot, "Should have used snapshot");
+        Assert.True(result.State.Plates.ContainsKey(plate2),
+            "CRITICAL: Must include back-in-time event (seq 11, tick 900). " +
+            "This proves we use sequence boundary, not tick boundary.");
+        Assert.Equal(12, result.State.Plates.Count); // 11 from snapshot + 1 back-in-time
+    }
+
+    #endregion
+
     #region TickMaterializationMode Tests
 
     /// <summary>

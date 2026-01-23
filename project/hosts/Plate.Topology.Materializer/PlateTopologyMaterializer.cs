@@ -225,6 +225,72 @@ public sealed class PlateTopologyMaterializer
     }
 
     /// <summary>
+    /// Incrementally materializes topology state from a snapshot up to a target tick.
+    ///
+    /// This is the key method for efficient "deep time" queries:
+    /// 1. Load a nearby snapshot
+    /// 2. Replay only the tail of events (seq > snapshot.LastEventSequence)
+    /// 3. Filter by tick as usual
+    ///
+    /// The snapshot's LastEventSequence is used as the sequence boundary, NOT the tick.
+    /// This is crucial because ticks may be non-monotone: an event appended at seq=11
+    /// might have tick=900 even if the snapshot was at tick=1000 seq=10.
+    /// By using sequence as the boundary, we don't miss "back-in-time" events.
+    /// </summary>
+    /// <param name="state">
+    /// The state restored from a snapshot. This will be mutated in place.
+    /// </param>
+    /// <param name="targetTick">The maximum tick to include (inclusive).</param>
+    /// <param name="mode">Controls iteration behavior. Default is Auto.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>
+    /// The same state instance, updated with events from snapshot through target tick.
+    /// </returns>
+    public async Task<PlateTopologyState> MaterializeIncrementallyAsync(
+        PlateTopologyState state,
+        CanonicalTick targetTick,
+        TickMaterializationMode mode = TickMaterializationMode.Auto,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var stream = state.StreamIdentity;
+        var startSeq = state.LastEventSequence + 1;
+
+        Trace.WriteLineIf(
+            DiagnosticSwitches.MaterializationOptimization.TraceInfo,
+            $"[Materializer] Incremental replay for {stream}: startSeq={startSeq}, targetTick={targetTick.Value}");
+
+        // Determine effective mode for the tail (the snapshot prefix was already correct)
+        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken);
+
+        await foreach (var evt in _store.ReadAsync(stream, startSeq, cancellationToken))
+        {
+            if (effectiveMode == TickMaterializationMode.BreakOnFirstBeyondTick)
+            {
+                // Fast path: break early (only safe for monotone streams)
+                if (evt.Tick > targetTick)
+                    break;
+
+                ApplyEvent(state, evt);
+            }
+            else
+            {
+                // Safe path: scan all, filter by tick
+                if (evt.Tick <= targetTick)
+                {
+                    ApplyEvent(state, evt);
+                }
+                // Continue scanning - later events may have earlier ticks
+            }
+        }
+
+        state.RebuildIndices();
+
+        return state;
+    }
+
+    /// <summary>
     /// [OBSOLETE] Use MaterializeAtSequenceAsync or MaterializeAtTickAsync instead.
     /// This method is kept for backward compatibility but delegates to MaterializeAtSequenceAsync.
     /// </summary>

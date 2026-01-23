@@ -56,16 +56,24 @@ public sealed class SnapshottingPlateTopologyMaterializer
         var snapshot = await _snapshotStore.GetLatestSnapshotBeforeAsync(stream, targetTick.Value, cancellationToken);
         if (snapshot.HasValue)
         {
-            // If we found an exact match, we're done
+            // Load snapshot into state
+            var stateFromSnapshot = FromSnapshot(snapshot.Value);
+
+            // If we found an exact match, we're done (no tail replay needed)
             if (snapshot.Value.Key.Tick == targetTick.Value)
             {
-                var stateFromSnapshot = FromSnapshot(snapshot.Value);
                 return new MaterializationResult(key, stateFromSnapshot, true);
             }
 
-            // Otherwise, load the snapshot and replay only the tail
-            // TODO: Implement incremental replay from snapshot tick to target tick
-            // For now, fall through to full replay (but at least we tried!)
+            // Incremental replay: use sequence boundary, not tick
+            // This is crucial for non-monotone ticks: we don't miss "back-in-time" events
+            var incrementalState = await _inner.MaterializeIncrementallyAsync(
+                stateFromSnapshot,
+                targetTick,
+                mode,
+                cancellationToken);
+
+            return new MaterializationResult(key, incrementalState, true);
         }
 
         // No usable snapshot - do full replay with tick-based cutoff
