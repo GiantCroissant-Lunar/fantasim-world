@@ -24,7 +24,7 @@ public sealed class CachedMaterializerTests
             stream,
             new IPlateTopologyEvent[]
             {
-                new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream)
+                TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream)
             },
             CancellationToken.None);
 

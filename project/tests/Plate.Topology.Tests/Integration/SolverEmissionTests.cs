@@ -76,7 +76,7 @@ public class SolverEmissionTests : IDisposable
         var plateId = new PlateId(Guid.Parse("10000000-0000-0000-0000-000000000001"));
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 plateId,
                 FixedTick,
@@ -118,19 +118,19 @@ public class SolverEmissionTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-000000000002"),
                 plateId,
                 FixedTick,
                 0,
                 stream),
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-000000000003"),
                 plateId2,
                 FixedTick,
                 2,
                 stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-000000000002"),
                 boundaryId,
                 plateId,
@@ -140,7 +140,7 @@ public class SolverEmissionTests : IDisposable
                 FixedTick,
                 3,
                 stream),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("40000000-0000-0000-0000-000000000002"),
                 junctionId,
                 [boundaryId],
@@ -243,21 +243,21 @@ public class SolverEmissionTests : IDisposable
 
         return new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff01"),
                 plateId1,
                 FixedTick,
                 0,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff02"),
                 plateId2,
                 FixedTick,
                 1,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff02"),
                 boundaryId,
                 plateId1,
@@ -268,7 +268,7 @@ public class SolverEmissionTests : IDisposable
                 2,
                 stream),
 
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff02"),
                 junctionId,
                 [boundaryId],
@@ -277,7 +277,7 @@ public class SolverEmissionTests : IDisposable
                 3,
                 stream),
 
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff03"),
                 boundaryId,
                 "premature retirement",
@@ -297,21 +297,21 @@ public class SolverEmissionTests : IDisposable
 
         return new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff11"),
                 plateId1,
                 FixedTick,
                 0,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff12"),
                 plateId2,
                 FixedTick,
                 1,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff12"),
                 boundaryId,
                 plateId1,
@@ -322,7 +322,7 @@ public class SolverEmissionTests : IDisposable
                 2,
                 stream),
 
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff12"),
                 junctionId,
                 [boundaryId],
@@ -331,7 +331,7 @@ public class SolverEmissionTests : IDisposable
                 3,
                 stream),
 
-            new JunctionRetiredEvent(
+            TestEventFactory.JunctionRetired(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff13"),
                 junctionId,
                 "junction removed",
@@ -339,7 +339,7 @@ public class SolverEmissionTests : IDisposable
                 4,
                 stream),
 
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff13"),
                 boundaryId,
                 "boundary retired",
@@ -361,28 +361,28 @@ public class SolverEmissionTests : IDisposable
 
         return new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff21"),
                 plateId1,
                 FixedTick,
                 0,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff22"),
                 plateId2,
                 FixedTick,
                 1,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-00000000ff23"),
                 plateId3,
                 FixedTick,
                 2,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff22"),
                 boundaryId1,
                 plateId1,
@@ -393,7 +393,7 @@ public class SolverEmissionTests : IDisposable
                 3,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff23"),
                 boundaryId2,
                 plateId2,
@@ -404,7 +404,7 @@ public class SolverEmissionTests : IDisposable
                 4,
                 stream),
 
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff22"),
                 junctionId,
                 [boundaryId1, boundaryId2],
@@ -413,7 +413,7 @@ public class SolverEmissionTests : IDisposable
                 5,
                 stream),
 
-            new JunctionUpdatedEvent(
+            TestEventFactory.JunctionUpdated(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff23"),
                 junctionId,
                 [boundaryId2],
@@ -422,7 +422,7 @@ public class SolverEmissionTests : IDisposable
                 6,
                 stream),
 
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.Parse("30000000-0000-0000-0000-00000000ff23"),
                 boundaryId1,
                 "boundary retired",
@@ -455,21 +455,21 @@ public class SolverEmissionTests : IDisposable
 
         return new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 plateId1,
                 FixedTick,
                 0,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("20000000-0000-0000-0000-000000000002"),
                 plateId2,
                 FixedTick,
                 1,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("30000000-0000-0000-0000-000000000002"),
                 boundaryId,
                 plateId1,
@@ -480,7 +480,7 @@ public class SolverEmissionTests : IDisposable
                 2,
                 stream),
 
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("40000000-0000-0000-0000-000000000002"),
                 junctionId,
                 [boundaryId],

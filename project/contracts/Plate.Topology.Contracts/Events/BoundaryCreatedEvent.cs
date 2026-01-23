@@ -1,3 +1,4 @@
+using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Geometry;
@@ -21,6 +22,8 @@ namespace Plate.Topology.Contracts.Events;
 /// <param name="Tick">Canonical simulation tick when this event occurred.</param>
 /// <param name="Sequence">Ordering within the event stream.</param>
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
+/// <param name="PreviousHash">Hash of the previous event in the chain (empty for genesis).</param>
+/// <param name="Hash">Cryptographic hash of this event (computed, not set by callers).</param>
 public readonly record struct BoundaryCreatedEvent(
     Guid EventId,
     BoundaryId BoundaryId,
@@ -30,7 +33,9 @@ public readonly record struct BoundaryCreatedEvent(
     IGeometry Geometry,
     CanonicalTick Tick,
     long Sequence,
-    TruthStreamIdentity StreamIdentity
+    TruthStreamIdentity StreamIdentity,
+    ReadOnlyMemory<byte> PreviousHash,
+    ReadOnlyMemory<byte> Hash
 ) : IPlateTopologyEvent
 {
     /// <summary>

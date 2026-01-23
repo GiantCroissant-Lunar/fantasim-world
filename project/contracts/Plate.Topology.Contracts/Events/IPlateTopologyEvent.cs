@@ -1,3 +1,4 @@
+using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Identity;
 
@@ -87,4 +88,34 @@ public interface IPlateTopologyEvent
     /// - Multiple models/governing equations (M0, M1, ...)
     /// </summary>
     TruthStreamIdentity StreamIdentity { get; }
+
+    /// <summary>
+    /// Gets the hash of the previous event in the chain.
+    ///
+    /// This field establishes a cryptographic chain across events in a stream.
+    /// For the genesis event (first event in a stream), this is empty.
+    /// For all subsequent events, this must equal the Hash of the preceding event.
+    ///
+    /// This enables:
+    /// - Tamper detection (any modification breaks the chain)
+    /// - Deterministic verification of event ordering
+    /// - Efficient integrity checks without replaying full history
+    /// </summary>
+    ReadOnlyMemory<byte> PreviousHash { get; }
+
+    /// <summary>
+    /// Gets the cryptographic hash of this event.
+    ///
+    /// The hash is computed over a canonical preimage that includes:
+    /// - Tick (canonical simulation time)
+    /// - StreamIdentity (truth stream tuple)
+    /// - PreviousHash (chain link to prior event)
+    /// - Payload bytes (event-specific data, MessagePack-encoded)
+    ///
+    /// The Hash field itself is NOT included in the preimage (would be circular).
+    /// Algorithm: SHA-256 (producing 32 bytes).
+    ///
+    /// This field is computed, never set by callers directly.
+    /// </summary>
+    ReadOnlyMemory<byte> Hash { get; }
 }

@@ -55,8 +55,8 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdRight, new CanonicalTick(0), 0, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdRight, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 new PlateId(Guid.NewGuid()), // Non-existent left plate
@@ -91,8 +91,8 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateIdLeft,
@@ -128,10 +128,10 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
-            new PlateRetiredEvent(Guid.NewGuid(), plateIdLeft, "test retirement", new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateRetired(Guid.NewGuid(), plateIdLeft, "test retirement", new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateIdLeft, // Retired left plate
@@ -166,8 +166,8 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId,
@@ -206,7 +206,7 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId], // Non-existent boundary
@@ -242,9 +242,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateIdLeft,
@@ -255,8 +255,8 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
-            new JunctionCreatedEvent(
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId], // Retired boundary
@@ -293,10 +293,10 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateIdNew, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdLeft, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdRight, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateIdNew, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateIdLeft,
@@ -307,7 +307,7 @@ public class InvariantEnforcementTests : IDisposable
                 3,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1],
@@ -316,7 +316,7 @@ public class InvariantEnforcementTests : IDisposable
                 4,
                 _stream
             ),
-            new JunctionUpdatedEvent(
+            TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId2], // Non-existent boundary
@@ -354,9 +354,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -367,8 +367,8 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -403,9 +403,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -416,8 +416,8 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
-            new BoundaryGeometryUpdatedEvent(
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream),
+            TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
                 new LineSegment(0.0, 0.0, 2.0, 0.0),
@@ -452,9 +452,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -465,7 +465,7 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -474,8 +474,8 @@ public class InvariantEnforcementTests : IDisposable
                 3,
                 _stream
             ),
-            new JunctionRetiredEvent(Guid.NewGuid(), junctionId, "test retirement", new CanonicalTick(4), 4, _stream),
-            new JunctionUpdatedEvent(
+            TestEventFactory.JunctionRetired(Guid.NewGuid(), junctionId, "test retirement", new CanonicalTick(4), 4, _stream),
+            TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -508,9 +508,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId, "first retirement", new CanonicalTick(1), 1, _stream),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId, "second retirement", new CanonicalTick(2), 2, _stream)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateRetired(Guid.NewGuid(), plateId, "first retirement", new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateRetired(Guid.NewGuid(), plateId, "second retirement", new CanonicalTick(2), 2, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -536,9 +536,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -549,8 +549,8 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "first retirement", new CanonicalTick(3), 3, _stream),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "second retirement", new CanonicalTick(4), 4, _stream)
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "first retirement", new CanonicalTick(3), 3, _stream),
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "second retirement", new CanonicalTick(4), 4, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -577,9 +577,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -590,7 +590,7 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -599,8 +599,8 @@ public class InvariantEnforcementTests : IDisposable
                 3,
                 _stream
             ),
-            new JunctionRetiredEvent(Guid.NewGuid(), junctionId, "first retirement", new CanonicalTick(4), 4, _stream),
-            new JunctionRetiredEvent(Guid.NewGuid(), junctionId, "second retirement", new CanonicalTick(5), 5, _stream)
+            TestEventFactory.JunctionRetired(Guid.NewGuid(), junctionId, "first retirement", new CanonicalTick(4), 4, _stream),
+            TestEventFactory.JunctionRetired(Guid.NewGuid(), junctionId, "second retirement", new CanonicalTick(5), 5, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -628,7 +628,7 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -660,7 +660,7 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new BoundaryGeometryUpdatedEvent(
+            TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
                 new LineSegment(0.0, 0.0, 1.0, 0.0),
@@ -691,7 +691,7 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new JunctionUpdatedEvent(
+            TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
                 Array.Empty<BoundaryId>(),
@@ -723,7 +723,7 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateRetiredEvent(
+            TestEventFactory.PlateRetired(
                 Guid.NewGuid(),
                 plateId,
                 "test retirement",
@@ -761,9 +761,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -774,7 +774,7 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -784,7 +784,7 @@ public class InvariantEnforcementTests : IDisposable
                 _stream
             ),
             // Attempt to retire boundary while junction still references it (FR-016 violation)
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.NewGuid(),
                 boundaryId,
                 "test retirement",
@@ -822,9 +822,9 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -835,7 +835,7 @@ public class InvariantEnforcementTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -845,7 +845,7 @@ public class InvariantEnforcementTests : IDisposable
                 _stream
             ),
             // First retire the junction (resolves the FR-016 constraint)
-            new JunctionRetiredEvent(
+            TestEventFactory.JunctionRetired(
                 Guid.NewGuid(),
                 junctionId,
                 "test retirement",
@@ -854,7 +854,7 @@ public class InvariantEnforcementTests : IDisposable
                 _stream
             ),
             // Then retire the boundary (now valid)
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.NewGuid(),
                 boundaryId,
                 "test retirement",
@@ -897,10 +897,10 @@ public class InvariantEnforcementTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -911,7 +911,7 @@ public class InvariantEnforcementTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -922,7 +922,7 @@ public class InvariantEnforcementTests : IDisposable
                 4,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2],
@@ -932,7 +932,7 @@ public class InvariantEnforcementTests : IDisposable
                 _stream
             ),
             // Update junction to remove reference to boundaryId1 (resolves the FR-016 constraint)
-            new JunctionUpdatedEvent(
+            TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId2], // Remove boundaryId1
@@ -942,7 +942,7 @@ public class InvariantEnforcementTests : IDisposable
                 _stream
             ),
             // Now can retire boundaryId1 (junction no longer references it)
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.NewGuid(),
                 boundaryId1,
                 "test retirement",

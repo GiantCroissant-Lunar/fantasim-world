@@ -1,3 +1,4 @@
+using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -29,13 +30,17 @@ public class EventInterfaceTests
         public CanonicalTick Tick { get; }
         public long Sequence { get; }
         public TruthStreamIdentity StreamIdentity { get; }
+        public ReadOnlyMemory<byte> PreviousHash { get; }
+        public ReadOnlyMemory<byte> Hash { get; }
 
         public MockPlateTopologyEvent(
             Guid eventId,
             string eventType,
             CanonicalTick tick,
             long sequence,
-            TruthStreamIdentity streamIdentity
+            TruthStreamIdentity streamIdentity,
+            ReadOnlyMemory<byte> previousHash = default,
+            ReadOnlyMemory<byte> hash = default
         )
         {
             EventId = eventId;
@@ -43,6 +48,8 @@ public class EventInterfaceTests
             Tick = tick;
             Sequence = sequence;
             StreamIdentity = streamIdentity;
+            PreviousHash = previousHash;
+            Hash = hash;
         }
 
         /// <summary>
@@ -53,7 +60,9 @@ public class EventInterfaceTests
             string? eventType = null,
             CanonicalTick? tick = null,
             long? sequence = null,
-            TruthStreamIdentity? streamIdentity = null
+            TruthStreamIdentity? streamIdentity = null,
+            ReadOnlyMemory<byte> previousHash = default,
+            ReadOnlyMemory<byte> hash = default
         )
         {
             return new MockPlateTopologyEvent(
@@ -61,7 +70,9 @@ public class EventInterfaceTests
                 eventType ?? "MockEvent",
                 tick ?? new CanonicalTick(0),
                 sequence ?? 0L,
-                streamIdentity ?? CreateValidStreamIdentity()
+                streamIdentity ?? CreateValidStreamIdentity(),
+                previousHash,
+                hash
             );
         }
 

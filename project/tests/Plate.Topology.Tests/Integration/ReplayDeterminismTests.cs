@@ -56,7 +56,7 @@ public class ReplayDeterminismTests : IDisposable
     {
         // Arrange
         var tick = new CanonicalTick(0);
-        var evt = new PlateCreatedEvent(
+        var evt = TestEventFactory.PlateCreated(
             Guid.NewGuid(),
             new PlateId(Guid.NewGuid()),
             tick,
@@ -87,21 +87,21 @@ public class ReplayDeterminismTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.NewGuid(),
                 plateIdLeft,
                 new CanonicalTick(0),
                 0,
                 _stream1
             ),
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.NewGuid(),
                 plateIdRight,
                 new CanonicalTick(1),
                 1,
                 _stream1
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateIdLeft,
@@ -112,7 +112,7 @@ public class ReplayDeterminismTests : IDisposable
                 2,
                 _stream1
             ),
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -148,7 +148,7 @@ public class ReplayDeterminismTests : IDisposable
         var events = new List<IPlateTopologyEvent>();
         for (int i = 0; i < 10; i++)
         {
-            events.Add(new PlateCreatedEvent(
+            events.Add(TestEventFactory.PlateCreated(
                 Guid.NewGuid(),
                 new PlateId(Guid.NewGuid()),
                 new CanonicalTick(i),
@@ -183,9 +183,9 @@ public class ReplayDeterminismTests : IDisposable
         // Arrange
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(5), 5, _stream1)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(5), 5, _stream1)
         };
 
         await _store.AppendAsync(_stream1, events, CancellationToken.None);
@@ -207,8 +207,8 @@ public class ReplayDeterminismTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream1),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId,
@@ -219,7 +219,7 @@ public class ReplayDeterminismTests : IDisposable
                 1,
                 _stream1
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -228,7 +228,7 @@ public class ReplayDeterminismTests : IDisposable
                 2,
                 _stream1
             ),
-            new BoundaryGeometryUpdatedEvent(
+            TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
                 new LineSegment(0.0, 0.0, 2.0, 0.0),
@@ -236,7 +236,7 @@ public class ReplayDeterminismTests : IDisposable
                 3,
                 _stream1
             ),
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -275,14 +275,14 @@ public class ReplayDeterminismTests : IDisposable
         // Arrange
         var events1 = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1)
         };
 
         var events2 = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream2),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream2)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream2),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream2)
         };
 
         await _store.AppendAsync(_stream1, events1, CancellationToken.None);
@@ -310,7 +310,7 @@ public class ReplayDeterminismTests : IDisposable
     public async Task StreamIsolation_ReadFromDifferentStream_ReturnsEmpty()
     {
         // Arrange
-        var evt = new PlateCreatedEvent(
+        var evt = TestEventFactory.PlateCreated(
             Guid.NewGuid(),
             new PlateId(Guid.NewGuid()),
             new CanonicalTick(0),
@@ -333,9 +333,9 @@ public class ReplayDeterminismTests : IDisposable
         // Arrange
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1) // Invalid: not monotonic
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1) // Invalid: not monotonic
         };
 
         // Act & Assert
@@ -351,8 +351,8 @@ public class ReplayDeterminismTests : IDisposable
         // Arrange
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream2) // Wrong stream
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream2) // Wrong stream
         };
 
         // Act & Assert
@@ -368,9 +368,9 @@ public class ReplayDeterminismTests : IDisposable
         // Arrange
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(2), 2, _stream1)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(2), 2, _stream1)
         };
 
         // Act
@@ -399,14 +399,14 @@ public class ReplayDeterminismTests : IDisposable
         var events = new List<IPlateTopologyEvent>
         {
             // Creation events
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 Guid.Parse("01234567-89ab-cdef-0123-456789abcdef"),
                 plateId,
                 new CanonicalTick(0),
                 0,
                 _stream1
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.Parse("11234567-89ab-cdef-0123-456789abcdef"),
                 boundaryId,
                 plateId,
@@ -417,7 +417,7 @@ public class ReplayDeterminismTests : IDisposable
                 1,
                 _stream1
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.Parse("21234567-89ab-cdef-0123-456789abcdef"),
                 junctionId,
                 [boundaryId],
@@ -427,7 +427,7 @@ public class ReplayDeterminismTests : IDisposable
                 _stream1
             ),
             // Update events
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -494,9 +494,9 @@ public class ReplayDeterminismTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream1),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream1),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream1),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream1),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId,
@@ -507,7 +507,7 @@ public class ReplayDeterminismTests : IDisposable
                 2,
                 _stream1
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -516,7 +516,7 @@ public class ReplayDeterminismTests : IDisposable
                 3,
                 _stream1
             ),
-            new BoundaryTypeChangedEvent(
+            TestEventFactory.BoundaryTypeChanged(
                 Guid.NewGuid(),
                 boundaryId,
                 BoundaryType.Transform,
@@ -525,7 +525,7 @@ public class ReplayDeterminismTests : IDisposable
                 4,
                 _stream1
             ),
-            new BoundaryGeometryUpdatedEvent(
+            TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
                 new LineSegment(0.0, 0.0, 2.0, 0.0),

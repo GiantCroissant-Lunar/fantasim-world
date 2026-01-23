@@ -50,7 +50,7 @@ public class EventSchemaTests
     public void PlateCreatedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             Guid.NewGuid(),
             PlateId.NewId(),
             new CanonicalTick(0),
@@ -73,7 +73,7 @@ public class EventSchemaTests
         var streamIdentity = CreateValidStreamIdentity();
 
         // Act
-        var @event = new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
+        var @event = TestEventFactory.PlateCreated(eventId, plateId, tick, sequence, streamIdentity);
 
         // Assert - All required fields should be valid
         Assert.NotEqual(Guid.Empty, @event.EventId);
@@ -86,7 +86,7 @@ public class EventSchemaTests
     public void PlateCreatedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             Guid.NewGuid(),
             PlateId.NewId(),
             new CanonicalTick(0),
@@ -109,7 +109,7 @@ public class EventSchemaTests
         var streamIdentity = CreateValidStreamIdentity();
 
         // Act
-        var @event = new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
+        var @event = TestEventFactory.PlateCreated(eventId, plateId, tick, sequence, streamIdentity);
 
         // Assert
         Assert.Equal(eventId, @event.EventId);
@@ -127,7 +127,7 @@ public class EventSchemaTests
     public void BoundaryCreatedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new BoundaryCreatedEvent(
+        var @event = TestEventFactory.BoundaryCreated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             PlateId.NewId(),
@@ -154,7 +154,7 @@ public class EventSchemaTests
         var geometry = Polyline.FromCoordinates(0, 0, 1, 1, 2, 0);
 
         // Act
-        var @event = new BoundaryCreatedEvent(
+        var @event = TestEventFactory.BoundaryCreated(
             Guid.NewGuid(),
             boundaryId,
             plateIdLeft,
@@ -179,7 +179,7 @@ public class EventSchemaTests
     public void BoundaryCreatedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new BoundaryCreatedEvent(
+        var @event = TestEventFactory.BoundaryCreated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             PlateId.NewId(),
@@ -204,7 +204,7 @@ public class EventSchemaTests
         // Act & Assert
         foreach (var boundaryType in boundaryTypes)
         {
-            var @event = new BoundaryCreatedEvent(
+            var @event = TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 BoundaryId.NewId(),
                 PlateId.NewId(),
@@ -227,7 +227,7 @@ public class EventSchemaTests
         var geometry = new LineSegment(0, 0, 10, 10);
 
         // Act
-        var @event = new BoundaryCreatedEvent(
+        var @event = TestEventFactory.BoundaryCreated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             PlateId.NewId(),
@@ -254,7 +254,7 @@ public class EventSchemaTests
     public void JunctionCreatedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new JunctionCreatedEvent(
+        var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId(), BoundaryId.NewId() },
@@ -277,7 +277,7 @@ public class EventSchemaTests
         var location = new Point2D(10, 20);
 
         // Act
-        var @event = new JunctionCreatedEvent(
+        var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             junctionId,
             boundaryIds,
@@ -300,7 +300,7 @@ public class EventSchemaTests
     public void JunctionCreatedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new JunctionCreatedEvent(
+        var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
@@ -326,7 +326,7 @@ public class EventSchemaTests
         };
 
         // Act
-        var @event = new JunctionCreatedEvent(
+        var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             boundaryIds,
@@ -350,7 +350,7 @@ public class EventSchemaTests
         var location = new Point2D(42.5, -17.3);
 
         // Act
-        var @event = new JunctionCreatedEvent(
+        var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
@@ -373,7 +373,7 @@ public class EventSchemaTests
     public void BoundaryTypeChangedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new BoundaryTypeChangedEvent(
+        var @event = TestEventFactory.BoundaryTypeChanged(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             BoundaryType.Divergent,
@@ -396,7 +396,7 @@ public class EventSchemaTests
         var newType = BoundaryType.Convergent;
 
         // Act
-        var @event = new BoundaryTypeChangedEvent(
+        var @event = TestEventFactory.BoundaryTypeChanged(
             Guid.NewGuid(),
             boundaryId,
             oldType,
@@ -416,7 +416,7 @@ public class EventSchemaTests
     public void BoundaryTypeChangedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new BoundaryTypeChangedEvent(
+        var @event = TestEventFactory.BoundaryTypeChanged(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             BoundaryType.Convergent,
@@ -438,7 +438,7 @@ public class EventSchemaTests
         var newType = BoundaryType.Convergent;
 
         // Act
-        var @event = new BoundaryTypeChangedEvent(
+        var @event = TestEventFactory.BoundaryTypeChanged(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             oldType,
@@ -462,7 +462,7 @@ public class EventSchemaTests
     public void BoundaryGeometryUpdatedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             Polyline.FromCoordinates(0, 0, 1, 1, 2, 0),
@@ -483,7 +483,7 @@ public class EventSchemaTests
         var newGeometry = new LineSegment(0, 0, 100, 100);
 
         // Act
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             boundaryId,
             newGeometry,
@@ -503,7 +503,7 @@ public class EventSchemaTests
     public void BoundaryGeometryUpdatedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             new LineSegment(0, 0, 1, 1),
@@ -523,7 +523,7 @@ public class EventSchemaTests
         var newGeometry = Polyline.FromCoordinates(0, 0, 10, 10, 20, 0);
 
         // Act
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             newGeometry,
@@ -545,7 +545,7 @@ public class EventSchemaTests
     public void BoundaryRetiredEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new BoundaryRetiredEvent(
+        var @event = TestEventFactory.BoundaryRetired(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             "Plate merger",
@@ -565,7 +565,7 @@ public class EventSchemaTests
         var boundaryId = BoundaryId.NewId();
 
         // Act
-        var @event = new BoundaryRetiredEvent(
+        var @event = TestEventFactory.BoundaryRetired(
             Guid.NewGuid(),
             boundaryId,
             "Plate merger",
@@ -584,7 +584,7 @@ public class EventSchemaTests
     public void BoundaryRetiredEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new BoundaryRetiredEvent(
+        var @event = TestEventFactory.BoundaryRetired(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             "Plate merger",
@@ -601,7 +601,7 @@ public class EventSchemaTests
     public void BoundaryRetiredEvent_Reason_CanBeNull()
     {
         // Arrange & Act
-        var @event = new BoundaryRetiredEvent(
+        var @event = TestEventFactory.BoundaryRetired(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             null,
@@ -621,7 +621,7 @@ public class EventSchemaTests
         var reason = "Boundary removed due to plate merger event";
 
         // Act
-        var @event = new BoundaryRetiredEvent(
+        var @event = TestEventFactory.BoundaryRetired(
             Guid.NewGuid(),
             BoundaryId.NewId(),
             reason,
@@ -642,7 +642,7 @@ public class EventSchemaTests
     public void JunctionUpdatedEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
@@ -664,7 +664,7 @@ public class EventSchemaTests
         var newBoundaryIds = new[] { BoundaryId.NewId(), BoundaryId.NewId() };
 
         // Act
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             junctionId,
             newBoundaryIds,
@@ -686,7 +686,7 @@ public class EventSchemaTests
     public void JunctionUpdatedEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
@@ -712,7 +712,7 @@ public class EventSchemaTests
         };
 
         // Act
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             newBoundaryIds,
@@ -730,7 +730,7 @@ public class EventSchemaTests
     public void JunctionUpdatedEvent_NewLocation_CanBeNull()
     {
         // Arrange & Act
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
@@ -751,7 +751,7 @@ public class EventSchemaTests
         var newLocation = new Point2D(100, 200);
 
         // Act
-        var @event = new JunctionUpdatedEvent(
+        var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId() },
@@ -775,7 +775,7 @@ public class EventSchemaTests
     public void JunctionRetiredEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new JunctionRetiredEvent(
+        var @event = TestEventFactory.JunctionRetired(
             Guid.NewGuid(),
             JunctionId.NewId(),
             "Junction merged into another",
@@ -795,7 +795,7 @@ public class EventSchemaTests
         var junctionId = JunctionId.NewId();
 
         // Act
-        var @event = new JunctionRetiredEvent(
+        var @event = TestEventFactory.JunctionRetired(
             Guid.NewGuid(),
             junctionId,
             "Junction retired",
@@ -814,7 +814,7 @@ public class EventSchemaTests
     public void JunctionRetiredEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new JunctionRetiredEvent(
+        var @event = TestEventFactory.JunctionRetired(
             Guid.NewGuid(),
             JunctionId.NewId(),
             "Junction removed",
@@ -831,7 +831,7 @@ public class EventSchemaTests
     public void JunctionRetiredEvent_Reason_CanBeNull()
     {
         // Arrange & Act
-        var @event = new JunctionRetiredEvent(
+        var @event = TestEventFactory.JunctionRetired(
             Guid.NewGuid(),
             JunctionId.NewId(),
             null,
@@ -851,7 +851,7 @@ public class EventSchemaTests
         var reason = "Junction removed due to boundary reorganization";
 
         // Act
-        var @event = new JunctionRetiredEvent(
+        var @event = TestEventFactory.JunctionRetired(
             Guid.NewGuid(),
             JunctionId.NewId(),
             reason,
@@ -872,7 +872,7 @@ public class EventSchemaTests
     public void PlateRetiredEvent_ImplementsIPlateTopologyEvent()
     {
         // Arrange
-        var @event = new PlateRetiredEvent(
+        var @event = TestEventFactory.PlateRetired(
             Guid.NewGuid(),
             PlateId.NewId(),
             "Plate subducted completely",
@@ -892,7 +892,7 @@ public class EventSchemaTests
         var plateId = PlateId.NewId();
 
         // Act
-        var @event = new PlateRetiredEvent(
+        var @event = TestEventFactory.PlateRetired(
             Guid.NewGuid(),
             plateId,
             "Plate retired",
@@ -911,7 +911,7 @@ public class EventSchemaTests
     public void PlateRetiredEvent_EventType_ReturnsCorrectDiscriminator()
     {
         // Arrange & Act
-        var @event = new PlateRetiredEvent(
+        var @event = TestEventFactory.PlateRetired(
             Guid.NewGuid(),
             PlateId.NewId(),
             "Plate removed",
@@ -928,7 +928,7 @@ public class EventSchemaTests
     public void PlateRetiredEvent_Reason_CanBeNull()
     {
         // Arrange & Act
-        var @event = new PlateRetiredEvent(
+        var @event = TestEventFactory.PlateRetired(
             Guid.NewGuid(),
             PlateId.NewId(),
             null,
@@ -948,7 +948,7 @@ public class EventSchemaTests
         var reason = "Plate completely subducted";
 
         // Act
-        var @event = new PlateRetiredEvent(
+        var @event = TestEventFactory.PlateRetired(
             Guid.NewGuid(),
             PlateId.NewId(),
             reason,
@@ -976,20 +976,20 @@ public class EventSchemaTests
 
         var events = new IPlateTopologyEvent[]
         {
-            new PlateCreatedEvent(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity),
-            new BoundaryCreatedEvent(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
+            TestEventFactory.PlateCreated(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity),
+            TestEventFactory.BoundaryCreated(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
                 BoundaryType.Divergent, new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity),
-            new JunctionCreatedEvent(eventId, JunctionId.NewId(),
+            TestEventFactory.JunctionCreated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, new Point2D(0, 0), timestamp, sequence, streamIdentity),
-            new BoundaryTypeChangedEvent(eventId, BoundaryId.NewId(),
+            TestEventFactory.BoundaryTypeChanged(eventId, BoundaryId.NewId(),
                 BoundaryType.Divergent, BoundaryType.Convergent, timestamp, sequence, streamIdentity),
-            new BoundaryGeometryUpdatedEvent(eventId, BoundaryId.NewId(),
+            TestEventFactory.BoundaryGeometryUpdated(eventId, BoundaryId.NewId(),
                 new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity),
-            new BoundaryRetiredEvent(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity),
-            new JunctionUpdatedEvent(eventId, JunctionId.NewId(),
+            TestEventFactory.BoundaryRetired(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity),
+            TestEventFactory.JunctionUpdated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, null, timestamp, sequence, streamIdentity),
-            new JunctionRetiredEvent(eventId, JunctionId.NewId(), "reason", timestamp, sequence, streamIdentity),
-            new PlateRetiredEvent(eventId, PlateId.NewId(), "reason", timestamp, sequence, streamIdentity)
+            TestEventFactory.JunctionRetired(eventId, JunctionId.NewId(), "reason", timestamp, sequence, streamIdentity),
+            TestEventFactory.PlateRetired(eventId, PlateId.NewId(), "reason", timestamp, sequence, streamIdentity)
         };
 
         // Assert - All events should implement IPlateTopologyEvent
@@ -1007,20 +1007,20 @@ public class EventSchemaTests
 
         var eventTypes = new (IPlateTopologyEvent Event, string ExpectedType)[]
         {
-            (new PlateCreatedEvent(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity), "PlateCreatedEvent"),
-            (new BoundaryCreatedEvent(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
+            (TestEventFactory.PlateCreated(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity), "PlateCreatedEvent"),
+            (TestEventFactory.BoundaryCreated(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
                 BoundaryType.Divergent, new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryCreatedEvent"),
-            (new JunctionCreatedEvent(eventId, JunctionId.NewId(),
+            (TestEventFactory.JunctionCreated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, new Point2D(0, 0), timestamp, sequence, streamIdentity), "JunctionCreatedEvent"),
-            (new BoundaryTypeChangedEvent(eventId, BoundaryId.NewId(),
+            (TestEventFactory.BoundaryTypeChanged(eventId, BoundaryId.NewId(),
                 BoundaryType.Divergent, BoundaryType.Convergent, timestamp, sequence, streamIdentity), "BoundaryTypeChangedEvent"),
-            (new BoundaryGeometryUpdatedEvent(eventId, BoundaryId.NewId(),
+            (TestEventFactory.BoundaryGeometryUpdated(eventId, BoundaryId.NewId(),
                 new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryGeometryUpdatedEvent"),
-            (new BoundaryRetiredEvent(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity), "BoundaryRetiredEvent"),
-            (new JunctionUpdatedEvent(eventId, JunctionId.NewId(),
+            (TestEventFactory.BoundaryRetired(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity), "BoundaryRetiredEvent"),
+            (TestEventFactory.JunctionUpdated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, null, timestamp, sequence, streamIdentity), "JunctionUpdatedEvent"),
-            (new JunctionRetiredEvent(eventId, JunctionId.NewId(), "reason", timestamp, sequence, streamIdentity), "JunctionRetiredEvent"),
-            (new PlateRetiredEvent(eventId, PlateId.NewId(), "reason", timestamp, sequence, streamIdentity), "PlateRetiredEvent")
+            (TestEventFactory.JunctionRetired(eventId, JunctionId.NewId(), "reason", timestamp, sequence, streamIdentity), "JunctionRetiredEvent"),
+            (TestEventFactory.PlateRetired(eventId, PlateId.NewId(), "reason", timestamp, sequence, streamIdentity), "PlateRetiredEvent")
         };
 
         // Act & Assert - EventType is explicitly implemented, accessed via interface
@@ -1034,7 +1034,7 @@ public class EventSchemaTests
     public void AllEvents_AreImmutableRecordStructs()
     {
         // Arrange - Create an instance and check it's a record struct
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             Guid.NewGuid(),
             PlateId.NewId(),
             new CanonicalTick(0),

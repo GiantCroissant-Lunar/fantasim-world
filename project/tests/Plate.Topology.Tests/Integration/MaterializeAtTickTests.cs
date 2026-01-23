@@ -38,9 +38,9 @@ public sealed class MaterializeAtTickTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -50,7 +50,7 @@ public sealed class MaterializeAtTickTests : IDisposable
                 new CanonicalTick(2),
                 2,
                 _stream),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],

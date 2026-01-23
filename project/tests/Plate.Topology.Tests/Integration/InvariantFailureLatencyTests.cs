@@ -44,21 +44,21 @@ public sealed class InvariantFailureLatencyTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 new Guid("00000000-0000-0000-0000-000000000001"),
                 plateIdLeft,
                 FixedTick,
                 0,
                 stream),
 
-            new PlateCreatedEvent(
+            TestEventFactory.PlateCreated(
                 new Guid("00000000-0000-0000-0000-000000000002"),
                 plateIdRight,
                 new CanonicalTick(1),
                 1,
                 stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 new Guid("00000000-0000-0000-0000-000000000003"),
                 boundaryId,
                 plateIdLeft,
@@ -69,7 +69,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 2,
                 stream),
 
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 new Guid("00000000-0000-0000-0000-000000000004"),
                 junctionId,
                 [boundaryId],
@@ -78,7 +78,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 3,
                 stream),
 
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 new Guid("00000000-0000-0000-0000-000000000005"),
                 boundaryId,
                 "retire-with-active-junction",
@@ -114,7 +114,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 new Guid("00000000-0000-0000-0000-000000000101"),
                 boundaryId,
                 missingPlateIdLeft,

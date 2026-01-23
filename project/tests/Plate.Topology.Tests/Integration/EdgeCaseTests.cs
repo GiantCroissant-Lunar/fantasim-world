@@ -68,7 +68,7 @@ public class EdgeCaseTests : IDisposable
         var plateId = new PlateId(Guid.NewGuid());
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId, new CanonicalTick(0), 0, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -100,9 +100,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -139,9 +139,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -152,7 +152,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream)
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -189,11 +189,11 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId4, new CanonicalTick(3), 3, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId4, new CanonicalTick(3), 3, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -204,7 +204,7 @@ public class EdgeCaseTests : IDisposable
                 4,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -215,7 +215,7 @@ public class EdgeCaseTests : IDisposable
                 5,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId3,
                 plateId3,
@@ -226,7 +226,7 @@ public class EdgeCaseTests : IDisposable
                 6,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2, boundaryId3],
@@ -268,9 +268,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -281,7 +281,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId1,
                 [boundaryId],
@@ -290,7 +290,7 @@ public class EdgeCaseTests : IDisposable
                 3,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId2,
                 [boundaryId],
@@ -338,9 +338,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -351,7 +351,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
+            TestEventFactory.PlateRetired(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -387,9 +387,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -400,7 +400,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new PlateRetiredEvent(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
+            TestEventFactory.PlateRetired(Guid.NewGuid(), plateId1, "test retirement", new CanonicalTick(3), 3, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -434,9 +434,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,
@@ -447,7 +447,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
@@ -458,7 +458,7 @@ public class EdgeCaseTests : IDisposable
             ),
             // Boundary retirement without updating junction first (FR-016 violation)
             // This would normally be caught by event validation, but let's verify state-level detection too
-            new BoundaryRetiredEvent(
+            TestEventFactory.BoundaryRetired(
                 Guid.NewGuid(),
                 boundaryId,
                 "test retirement",
@@ -488,9 +488,9 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -501,7 +501,7 @@ public class EdgeCaseTests : IDisposable
                 2,
                 _stream
             ),
-            new JunctionCreatedEvent(
+            TestEventFactory.JunctionCreated(
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2], // boundaryId2 doesn't exist
@@ -539,8 +539,8 @@ public class EdgeCaseTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,

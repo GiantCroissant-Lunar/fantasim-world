@@ -54,11 +54,11 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -69,7 +69,7 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -82,9 +82,9 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
             ),
 
             // Add Junctions AFTER boundaries (Invariant: NoOrphanJunctions)
-            new JunctionCreatedEvent(Guid.NewGuid(), j1, new[]{boundaryId1}, new Point2D(0,0), new CanonicalTick(5), 5, _stream),
-            new JunctionCreatedEvent(Guid.NewGuid(), j2, new[]{boundaryId1, boundaryId2}, new Point2D(1,0), new CanonicalTick(6), 6, _stream),
-            new JunctionCreatedEvent(Guid.NewGuid(), j3, new[]{boundaryId2}, new Point2D(2,0), new CanonicalTick(7), 7, _stream)
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j1, new[]{boundaryId1}, new Point2D(0,0), new CanonicalTick(5), 5, _stream),
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j2, new[]{boundaryId1, boundaryId2}, new Point2D(1,0), new CanonicalTick(6), 6, _stream),
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j3, new[]{boundaryId2}, new Point2D(2,0), new CanonicalTick(7), 7, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);

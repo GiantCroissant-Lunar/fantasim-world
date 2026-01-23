@@ -75,6 +75,36 @@ internal static class CanonicalTickHelper
 }
 
 /// <summary>
+/// Helper class for hash field serialization (PreviousHash, Hash).
+/// Hashes are encoded as binary (bin8/bin16/bin32) per MessagePack spec.
+/// Empty/null hashes are encoded as zero-length binary.
+/// </summary>
+internal static class HashHelper
+{
+    public static void Serialize(ref MessagePackWriter writer, ReadOnlyMemory<byte> value)
+    {
+        if (value.IsEmpty)
+        {
+            writer.Write(ReadOnlySpan<byte>.Empty);
+        }
+        else
+        {
+            writer.Write(value.Span);
+        }
+    }
+
+    public static ReadOnlyMemory<byte> Deserialize(ref MessagePackReader reader)
+    {
+        var bytes = reader.ReadBytes();
+        if (!bytes.HasValue || bytes.Value.Length == 0)
+        {
+            return ReadOnlyMemory<byte>.Empty;
+        }
+        return bytes.ToByteArray();
+    }
+}
+
+/// <summary>
 /// Custom MessagePack formatter for IGeometry using numeric discriminators.
 /// Format: [GeometryType, ...type-specific data]
 /// Point: [0, x, y]
@@ -273,58 +303,64 @@ internal abstract class EventFormatter<TEvent> : IMessagePackFormatter<TEvent>
 
 /// <summary>
 /// PlateCreatedEvent formatter
-/// Payload format: [EventId, PlateId, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, PlateId, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class PlateCreatedEventFormatter : EventFormatter<PlateCreatedEvent>
 {
     protected override void SerializePayload(ref MessagePackWriter writer, PlateCreatedEvent value)
     {
-        writer.WriteArrayHeader(5);
+        writer.WriteArrayHeader(7);
         writer.Write(value.EventId.ToString());
         writer.Write(value.PlateId.Value.ToString());
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override PlateCreatedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 5)
-            throw new InvalidOperationException($"PlateCreatedEvent must have 5 elements, got {length}");
+        if (length != 7)
+            throw new InvalidOperationException($"PlateCreatedEvent must have 7 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var plateId = new PlateId(Guid.Parse(reader.ReadString()!));
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity);
+        return new PlateCreatedEvent(eventId, plateId, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// PlateRetiredEvent formatter
-/// Payload format: [EventId, PlateId, Reason, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, PlateId, Reason, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class PlateRetiredEventFormatter : EventFormatter<PlateRetiredEvent>
 {
     protected override void SerializePayload(ref MessagePackWriter writer, PlateRetiredEvent value)
     {
-        writer.WriteArrayHeader(6);
+        writer.WriteArrayHeader(8);
         writer.Write(value.EventId.ToString());
         writer.Write(value.PlateId.Value.ToString());
         writer.Write(value.Reason);
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override PlateRetiredEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 6)
-            throw new InvalidOperationException($"PlateRetiredEvent must have 6 elements, got {length}");
+        if (length != 8)
+            throw new InvalidOperationException($"PlateRetiredEvent must have 8 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var plateId = new PlateId(Guid.Parse(reader.ReadString()!));
@@ -332,14 +368,16 @@ internal class PlateRetiredEventFormatter : EventFormatter<PlateRetiredEvent>
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new PlateRetiredEvent(eventId, plateId, reason, tick, sequence, streamIdentity);
+        return new PlateRetiredEvent(eventId, plateId, reason, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// BoundaryCreatedEvent formatter
-/// Payload format: [EventId, BoundaryId, PlateIdLeft, PlateIdRight, BoundaryType, Geometry, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, PlateIdLeft, PlateIdRight, BoundaryType, Geometry, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEvent>
 {
@@ -347,7 +385,7 @@ internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEve
 
     protected override void SerializePayload(ref MessagePackWriter writer, BoundaryCreatedEvent value)
     {
-        writer.WriteArrayHeader(9);
+        writer.WriteArrayHeader(11);
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         writer.Write(value.PlateIdLeft.Value.ToString());
@@ -357,13 +395,15 @@ internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEve
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override BoundaryCreatedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 9)
-            throw new InvalidOperationException($"BoundaryCreatedEvent must have 9 elements, got {length}");
+        if (length != 11)
+            throw new InvalidOperationException($"BoundaryCreatedEvent must have 11 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
@@ -374,20 +414,22 @@ internal class BoundaryCreatedEventFormatter : EventFormatter<BoundaryCreatedEve
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new BoundaryCreatedEvent(eventId, boundaryId, plateIdLeft, plateIdRight, boundaryType, geometry, tick, sequence, streamIdentity);
+        return new BoundaryCreatedEvent(eventId, boundaryId, plateIdLeft, plateIdRight, boundaryType, geometry, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// BoundaryTypeChangedEvent formatter
-/// Payload format: [EventId, BoundaryId, OldType, NewType, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, OldType, NewType, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeChangedEvent>
 {
     protected override void SerializePayload(ref MessagePackWriter writer, BoundaryTypeChangedEvent value)
     {
-        writer.WriteArrayHeader(7);
+        writer.WriteArrayHeader(9);
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         writer.Write((byte)value.OldType);
@@ -395,13 +437,15 @@ internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeCh
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override BoundaryTypeChangedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 7)
-            throw new InvalidOperationException($"BoundaryTypeChangedEvent must have 7 elements, got {length}");
+        if (length != 9)
+            throw new InvalidOperationException($"BoundaryTypeChangedEvent must have 9 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
@@ -410,14 +454,16 @@ internal class BoundaryTypeChangedEventFormatter : EventFormatter<BoundaryTypeCh
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new BoundaryTypeChangedEvent(eventId, boundaryId, oldType, newType, tick, sequence, streamIdentity);
+        return new BoundaryTypeChangedEvent(eventId, boundaryId, oldType, newType, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// BoundaryGeometryUpdatedEvent formatter
-/// Payload format: [EventId, BoundaryId, NewGeometry, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, NewGeometry, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGeometryUpdatedEvent>
 {
@@ -425,20 +471,22 @@ internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGe
 
     protected override void SerializePayload(ref MessagePackWriter writer, BoundaryGeometryUpdatedEvent value)
     {
-        writer.WriteArrayHeader(6);
+        writer.WriteArrayHeader(8);
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         GeometryFormatter.Serialize(ref writer, value.NewGeometry, MessagePackSerializerOptions.Standard);
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override BoundaryGeometryUpdatedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 6)
-            throw new InvalidOperationException($"BoundaryGeometryUpdatedEvent must have 6 elements, got {length}");
+        if (length != 8)
+            throw new InvalidOperationException($"BoundaryGeometryUpdatedEvent must have 8 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
@@ -446,33 +494,37 @@ internal class BoundaryGeometryUpdatedEventFormatter : EventFormatter<BoundaryGe
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new BoundaryGeometryUpdatedEvent(eventId, boundaryId, newGeometry, tick, sequence, streamIdentity);
+        return new BoundaryGeometryUpdatedEvent(eventId, boundaryId, newGeometry, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// BoundaryRetiredEvent formatter
-/// Payload format: [EventId, BoundaryId, Reason, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, BoundaryId, Reason, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class BoundaryRetiredEventFormatter : EventFormatter<BoundaryRetiredEvent>
 {
     protected override void SerializePayload(ref MessagePackWriter writer, BoundaryRetiredEvent value)
     {
-        writer.WriteArrayHeader(6);
+        writer.WriteArrayHeader(8);
         writer.Write(value.EventId.ToString());
         writer.Write(value.BoundaryId.Value.ToString());
         writer.Write(value.Reason);
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override BoundaryRetiredEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 6)
-            throw new InvalidOperationException($"BoundaryRetiredEvent must have 6 elements, got {length}");
+        if (length != 8)
+            throw new InvalidOperationException($"BoundaryRetiredEvent must have 8 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var boundaryId = new BoundaryId(Guid.Parse(reader.ReadString()!));
@@ -480,15 +532,17 @@ internal class BoundaryRetiredEventFormatter : EventFormatter<BoundaryRetiredEve
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new BoundaryRetiredEvent(eventId, boundaryId, reason, tick, sequence, streamIdentity);
+        return new BoundaryRetiredEvent(eventId, boundaryId, reason, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// JunctionCreatedEvent formatter
-/// Payload format: [EventId, JunctionId, BoundaryIdCount, [BoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity]
-/// Fixed array header count: 8 elements
+/// Payload format: [EventId, JunctionId, BoundaryIdCount, [BoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
+/// Fixed array header count: 10 elements
 /// </summary>
 internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEvent>
 {
@@ -502,7 +556,9 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         // 6: tick
         // 7: sequence
         // 8: streamIdentity
-        writer.WriteArrayHeader(8);
+        // 9: previousHash
+        // 10: hash
+        writer.WriteArrayHeader(10);
         writer.Write(value.EventId.ToString());
         writer.Write(value.JunctionId.Value.ToString());
         writer.WriteArrayHeader(value.BoundaryIds.Length);
@@ -515,13 +571,15 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override JunctionCreatedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 8)
-            throw new InvalidOperationException($"JunctionCreatedEvent must have 8 elements, got {length}");
+        if (length != 10)
+            throw new InvalidOperationException($"JunctionCreatedEvent must have 10 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var junctionId = new JunctionId(Guid.Parse(reader.ReadString()!));
@@ -536,16 +594,18 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2D(locationX, locationY), tick, sequence, streamIdentity);
+        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2D(locationX, locationY), tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// JunctionUpdatedEvent formatter
-/// Payload format: [EventId, JunctionId, BoundaryIdCount, [NewBoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, JunctionId, BoundaryIdCount, [NewBoundaryIds], LocationX, LocationY, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// Location is encoded as NaN, NaN for null.
-/// Fixed array header count: 8 elements
+/// Fixed array header count: 10 elements
 /// </summary>
 internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEvent>
 {
@@ -559,7 +619,9 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         // 6: tick
         // 7: sequence
         // 8: streamIdentity
-        writer.WriteArrayHeader(8);
+        // 9: previousHash
+        // 10: hash
+        writer.WriteArrayHeader(10);
         writer.Write(value.EventId.ToString());
         writer.Write(value.JunctionId.Value.ToString());
         writer.WriteArrayHeader(value.NewBoundaryIds.Length);
@@ -580,13 +642,15 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override JunctionUpdatedEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 8)
-            throw new InvalidOperationException($"JunctionUpdatedEvent must have 8 elements, got {length}");
+        if (length != 10)
+            throw new InvalidOperationException($"JunctionUpdatedEvent must have 10 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var junctionId = new JunctionId(Guid.Parse(reader.ReadString()!));
@@ -602,33 +666,37 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new JunctionUpdatedEvent(eventId, junctionId, newBoundaryIds, newLocation, tick, sequence, streamIdentity);
+        return new JunctionUpdatedEvent(eventId, junctionId, newBoundaryIds, newLocation, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
 /// <summary>
 /// JunctionRetiredEvent formatter
-/// Payload format: [EventId, JunctionId, Reason, Tick, Sequence, StreamIdentity]
+/// Payload format: [EventId, JunctionId, Reason, Tick, Sequence, StreamIdentity, PreviousHash, Hash]
 /// </summary>
 internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEvent>
 {
     protected override void SerializePayload(ref MessagePackWriter writer, JunctionRetiredEvent value)
     {
-        writer.WriteArrayHeader(6);
+        writer.WriteArrayHeader(8);
         writer.Write(value.EventId.ToString());
         writer.Write(value.JunctionId.Value.ToString());
         writer.Write(value.Reason);
         CanonicalTickHelper.Serialize(ref writer, value.Tick);
         writer.Write(value.Sequence);
         StreamIdentityHelper.Serialize(ref writer, value.StreamIdentity);
+        HashHelper.Serialize(ref writer, value.PreviousHash);
+        HashHelper.Serialize(ref writer, value.Hash);
     }
 
     protected override JunctionRetiredEvent DeserializePayload(ref MessagePackReader reader)
     {
         var length = reader.ReadArrayHeader();
-        if (length != 6)
-            throw new InvalidOperationException($"JunctionRetiredEvent must have 6 elements, got {length}");
+        if (length != 8)
+            throw new InvalidOperationException($"JunctionRetiredEvent must have 8 elements, got {length}");
 
         var eventId = Guid.Parse(reader.ReadString()!);
         var junctionId = new JunctionId(Guid.Parse(reader.ReadString()!));
@@ -636,8 +704,10 @@ internal class JunctionRetiredEventFormatter : EventFormatter<JunctionRetiredEve
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);
+        var previousHash = HashHelper.Deserialize(ref reader);
+        var hash = HashHelper.Deserialize(ref reader);
 
-        return new JunctionRetiredEvent(eventId, junctionId, reason, tick, sequence, streamIdentity);
+        return new JunctionRetiredEvent(eventId, junctionId, reason, tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 

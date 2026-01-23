@@ -43,7 +43,7 @@ public class PerformanceTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>();
 
-        events.Add(new PlateCreatedEvent(
+        events.Add(TestEventFactory.PlateCreated(
             new Guid("00000000-0000-0000-0000-000000000001"),
             plateIdLeft,
             fixedTick,
@@ -51,7 +51,7 @@ public class PerformanceTests : IDisposable
             _stream
         ));
 
-        events.Add(new PlateCreatedEvent(
+        events.Add(TestEventFactory.PlateCreated(
             new Guid("00000000-0000-0000-0000-000000000002"),
             plateIdRight,
             new CanonicalTick(1),
@@ -66,7 +66,7 @@ public class PerformanceTests : IDisposable
             var eventId = new Guid($"dddddddd-dddd-dddd-dddd-{seq:D12}");
             var eventType = seq % 2 == 0 ? BoundaryType.Transform : BoundaryType.Divergent;
 
-            events.Add(new BoundaryCreatedEvent(
+            events.Add(TestEventFactory.BoundaryCreated(
                 eventId,
                 boundaryId,
                 plateIdLeft,
@@ -106,7 +106,7 @@ public class PerformanceTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>();
 
-        events.Add(new PlateCreatedEvent(
+        events.Add(TestEventFactory.PlateCreated(
             new Guid("00000000-0000-0000-0000-000000000001"),
             plateIdLeft,
             fixedTick,
@@ -114,7 +114,7 @@ public class PerformanceTests : IDisposable
             _stream
         ));
 
-        events.Add(new PlateCreatedEvent(
+        events.Add(TestEventFactory.PlateCreated(
             new Guid("00000000-0000-0000-0000-000000000002"),
             plateIdRight,
             new CanonicalTick(1),
@@ -129,7 +129,7 @@ public class PerformanceTests : IDisposable
             var eventId = new Guid($"dddddddd-dddd-dddd-dddd-{seq:D12}");
             var eventType = seq % 2 == 0 ? BoundaryType.Transform : BoundaryType.Divergent;
 
-            events.Add(new BoundaryCreatedEvent(
+            events.Add(TestEventFactory.BoundaryCreated(
                 eventId,
                 boundaryId,
                 plateIdLeft,

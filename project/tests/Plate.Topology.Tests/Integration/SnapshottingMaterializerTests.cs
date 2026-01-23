@@ -28,9 +28,9 @@ public sealed class SnapshottingMaterializerTests
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId,
                 plateId1,

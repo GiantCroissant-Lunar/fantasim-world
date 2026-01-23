@@ -45,7 +45,7 @@ public class EventSerializationTests
     {
         // Arrange
         var plateId = CreateTestPlateId(Guid.NewGuid());
-        var originalEvent = new PlateCreatedEvent(
+        var originalEvent = TestEventFactory.PlateCreated(
             TestEventId,
             plateId,
             TestTick,
@@ -71,7 +71,7 @@ public class EventSerializationTests
         // Arrange
         var plateId = CreateTestPlateId(Guid.NewGuid());
         var reason = "Test retirement";
-        var originalEvent = new PlateRetiredEvent(
+        var originalEvent = TestEventFactory.PlateRetired(
             TestEventId,
             plateId,
             reason,
@@ -101,7 +101,7 @@ public class EventSerializationTests
         var plateIdLeft = CreateTestPlateId(Guid.NewGuid());
         var plateIdRight = CreateTestPlateId(Guid.NewGuid());
         var geometry = new LineSegment(0.0, 0.0, 10.0, 10.0);
-        var originalEvent = new BoundaryCreatedEvent(
+        var originalEvent = TestEventFactory.BoundaryCreated(
             TestEventId,
             boundaryId,
             plateIdLeft,
@@ -136,7 +136,7 @@ public class EventSerializationTests
         var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
         var oldType = BoundaryType.Divergent;
         var newType = BoundaryType.Convergent;
-        var originalEvent = new BoundaryTypeChangedEvent(
+        var originalEvent = TestEventFactory.BoundaryTypeChanged(
             TestEventId,
             boundaryId,
             oldType,
@@ -172,7 +172,7 @@ public class EventSerializationTests
             new Point2D(20.0, 20.0)
         };
         var newGeometry = new Polyline(points);
-        var originalEvent = new BoundaryGeometryUpdatedEvent(
+        var originalEvent = TestEventFactory.BoundaryGeometryUpdated(
             TestEventId,
             boundaryId,
             newGeometry,
@@ -200,7 +200,7 @@ public class EventSerializationTests
         // Arrange
         var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
         var reason = "Test retirement";
-        var originalEvent = new BoundaryRetiredEvent(
+        var originalEvent = TestEventFactory.BoundaryRetired(
             TestEventId,
             boundaryId,
             reason,
@@ -234,7 +234,7 @@ public class EventSerializationTests
             CreateTestBoundaryId(Guid.NewGuid())
         };
         var location = new Point2D(5.0, 5.0);
-        var originalEvent = new JunctionCreatedEvent(
+        var originalEvent = TestEventFactory.JunctionCreated(
             TestEventId,
             junctionId,
             boundaryIds,
@@ -270,7 +270,7 @@ public class EventSerializationTests
             CreateTestBoundaryId(Guid.NewGuid())
         };
         var newLocation = new Point2D(6.0, 6.0);
-        var originalEvent = new JunctionUpdatedEvent(
+        var originalEvent = TestEventFactory.JunctionUpdated(
             TestEventId,
             junctionId,
             newBoundaryIds,
@@ -301,7 +301,7 @@ public class EventSerializationTests
         // Arrange
         var junctionId = CreateTestJunctionId(Guid.NewGuid());
         var reason = "Test retirement";
-        var originalEvent = new JunctionRetiredEvent(
+        var originalEvent = TestEventFactory.JunctionRetired(
             TestEventId,
             junctionId,
             reason,
@@ -332,7 +332,7 @@ public class EventSerializationTests
     {
         // Arrange
         var plateId = CreateTestPlateId(Guid.NewGuid());
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             TestEventId,
             plateId,
             TestTick,
@@ -361,7 +361,7 @@ public class EventSerializationTests
         };
         var polyline = new Polyline(points);
         var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             TestEventId,
             boundaryId,
             polyline,
@@ -387,15 +387,15 @@ public class EventSerializationTests
     public void Deserialize_Polymorphic_AllEventTypes_CorrectlyTypeDiscriminated()
     {
         // Test all event types polymorphically
-        var plateCreated = new PlateCreatedEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), TestTick, 1L, TestStreamIdentity);
-        var plateRetired = new PlateRetiredEvent(TestEventId, CreateTestPlateId(Guid.NewGuid()), "Test retirement", new CanonicalTick(1), 9L, TestStreamIdentity);
-        var boundaryCreated = new BoundaryCreatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), BoundaryType.Divergent, new LineSegment(0.0, 0.0, 10.0, 10.0), new CanonicalTick(2), 2L, TestStreamIdentity);
-        var boundaryTypeChanged = new BoundaryTypeChangedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), BoundaryType.Divergent, BoundaryType.Convergent, new CanonicalTick(3), 4L, TestStreamIdentity);
-        var boundaryGeometryUpdated = new BoundaryGeometryUpdatedEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), new LineSegment(0.0, 0.0, 20.0, 20.0), new CanonicalTick(4), 5L, TestStreamIdentity);
-        var boundaryRetired = new BoundaryRetiredEvent(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), "Test retirement", new CanonicalTick(5), 6L, TestStreamIdentity);
-        var junctionCreated = new JunctionCreatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(5.0, 5.0), new CanonicalTick(6), 3L, TestStreamIdentity);
-        var junctionUpdated = new JunctionUpdatedEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(6.0, 6.0), new CanonicalTick(7), 7L, TestStreamIdentity);
-        var junctionRetired = new JunctionRetiredEvent(TestEventId, CreateTestJunctionId(Guid.NewGuid()), "Test retirement", new CanonicalTick(8), 8L, TestStreamIdentity);
+        var plateCreated = TestEventFactory.PlateCreated(TestEventId, CreateTestPlateId(Guid.NewGuid()), TestTick, 1L, TestStreamIdentity);
+        var plateRetired = TestEventFactory.PlateRetired(TestEventId, CreateTestPlateId(Guid.NewGuid()), "Test retirement", new CanonicalTick(1), 9L, TestStreamIdentity);
+        var boundaryCreated = TestEventFactory.BoundaryCreated(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), CreateTestPlateId(Guid.NewGuid()), BoundaryType.Divergent, new LineSegment(0.0, 0.0, 10.0, 10.0), new CanonicalTick(2), 2L, TestStreamIdentity);
+        var boundaryTypeChanged = TestEventFactory.BoundaryTypeChanged(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), BoundaryType.Divergent, BoundaryType.Convergent, new CanonicalTick(3), 4L, TestStreamIdentity);
+        var boundaryGeometryUpdated = TestEventFactory.BoundaryGeometryUpdated(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), new LineSegment(0.0, 0.0, 20.0, 20.0), new CanonicalTick(4), 5L, TestStreamIdentity);
+        var boundaryRetired = TestEventFactory.BoundaryRetired(TestEventId, CreateTestBoundaryId(Guid.NewGuid()), "Test retirement", new CanonicalTick(5), 6L, TestStreamIdentity);
+        var junctionCreated = TestEventFactory.JunctionCreated(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(5.0, 5.0), new CanonicalTick(6), 3L, TestStreamIdentity);
+        var junctionUpdated = TestEventFactory.JunctionUpdated(TestEventId, CreateTestJunctionId(Guid.NewGuid()), new[] { CreateTestBoundaryId(Guid.NewGuid()) }, new Point2D(6.0, 6.0), new CanonicalTick(7), 7L, TestStreamIdentity);
+        var junctionRetired = TestEventFactory.JunctionRetired(TestEventId, CreateTestJunctionId(Guid.NewGuid()), "Test retirement", new CanonicalTick(8), 8L, TestStreamIdentity);
 
         // Act - serialize and deserialize polymorphically
         // Use non-generic call to avoid ambiguity
@@ -445,7 +445,7 @@ public class EventSerializationTests
     public void Encoding_ContainsNoStringKeys_Events()
     {
         // Arrange
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             TestEventId,
             CreateTestPlateId(Guid.NewGuid()),
             TestTick,
@@ -479,7 +479,7 @@ public class EventSerializationTests
             new Point2D(20.0, 20.0)
         };
         var polyline = new Polyline(points);
-        var @event = new BoundaryGeometryUpdatedEvent(
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
             TestEventId,
             CreateTestBoundaryId(Guid.NewGuid()),
             polyline,
@@ -501,7 +501,7 @@ public class EventSerializationTests
     public void Encoding_Domain_SerializedAsValue()
     {
         // Verify Domain is serialized as plain string (not as numeric)
-        var @event = new PlateCreatedEvent(
+        var @event = TestEventFactory.PlateCreated(
             TestEventId,
             CreateTestPlateId(Guid.NewGuid()),
             TestTick,

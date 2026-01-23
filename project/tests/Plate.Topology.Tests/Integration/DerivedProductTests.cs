@@ -45,10 +45,10 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -59,7 +59,7 @@ public class DerivedProductTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -107,10 +107,10 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -121,7 +121,7 @@ public class DerivedProductTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -132,7 +132,7 @@ public class DerivedProductTests : IDisposable
                 4,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId2, "test", new CanonicalTick(5), 5, _stream)
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId2, "test", new CanonicalTick(5), 5, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -164,11 +164,11 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryIdToPlate3,
                 plateId2,
@@ -180,7 +180,7 @@ public class DerivedProductTests : IDisposable
                 _stream
             ),
 
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryIdToPlate1,
                 plateId2,
@@ -215,10 +215,10 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -229,7 +229,7 @@ public class DerivedProductTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -240,7 +240,7 @@ public class DerivedProductTests : IDisposable
                 4,
                 _stream
             ),
-            new BoundaryRetiredEvent(Guid.NewGuid(), boundaryId2, "test", new CanonicalTick(5), 5, _stream)
+            TestEventFactory.BoundaryRetired(Guid.NewGuid(), boundaryId2, "test", new CanonicalTick(5), 5, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);
@@ -263,10 +263,10 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId3, new CanonicalTick(2), 2, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -277,7 +277,7 @@ public class DerivedProductTests : IDisposable
                 3,
                 _stream
             ),
-            new BoundaryCreatedEvent(
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId2,
                 plateId2,
@@ -323,9 +323,9 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -373,9 +373,9 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,
@@ -414,9 +414,9 @@ public class DerivedProductTests : IDisposable
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
-            new PlateCreatedEvent(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
-            new BoundaryCreatedEvent(
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId1, new CanonicalTick(0), 0, _stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
+            TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(),
                 boundaryId1,
                 plateId1,

@@ -23,8 +23,8 @@ public sealed class EventRecordHashChainTests
 
         var events = new List<IPlateTopologyEvent>
         {
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream),
-            new PlateCreatedEvent(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, stream)
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(0), 0, stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(1), 1, stream)
         };
 
         var (store, kv) = TestStores.CreateEventStoreWithKv();
