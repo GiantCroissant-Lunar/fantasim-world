@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\UnifyGeometry.Abstractions\UnifyGeometry.Abstractions.csproj" />
+    <ProjectReference Include="..\..\contracts\Plate.Topology.Contracts\Plate.Topology.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
