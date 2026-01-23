@@ -30,6 +30,17 @@ public static class TestEventFactory
         TruthStreamIdentity streamIdentity)
         => new(eventId, plateId, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
 
+    /// <summary>Creates a PlateCreatedEvent with custom hash fields (for testing hash computation).</summary>
+    public static PlateCreatedEvent PlateCreated(
+        Guid eventId,
+        PlateId plateId,
+        CanonicalTick tick,
+        long sequence,
+        TruthStreamIdentity streamIdentity,
+        ReadOnlyMemory<byte> previousHash,
+        ReadOnlyMemory<byte> hash)
+        => new(eventId, plateId, tick, sequence, streamIdentity, previousHash, hash);
+
     /// <summary>Creates a PlateRetiredEvent with empty hash fields.</summary>
     public static PlateRetiredEvent PlateRetired(
         Guid eventId,
