@@ -457,4 +457,81 @@ public class EventStoreHashChainTests : IDisposable
     }
 
     #endregion
+
+    #region Hash Chain Corruption Detection Tests
+
+    /// <summary>
+    /// Verifies that tampered event bytes are detected during read.
+    /// This is the "corruption test" that validates hash chain integrity checking.
+    /// </summary>
+    [Fact]
+    public async Task ReadAsync_WithCorruptedEventBytes_ThrowsHashMismatch()
+    {
+        // Arrange - Create store with access to underlying KV
+        var (store, kv) = TestStores.CreateEventStoreWithKv();
+        var stream = new TruthStreamIdentity("science", "main", 2, Domain.Parse("geo.plates"), "0");
+
+        // Append events normally
+        var events = new IPlateTopologyEvent[]
+        {
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(100), 0, stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(200), 1, stream),
+            TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(300), 2, stream),
+        };
+
+        await store.AppendAsync(stream, events, CancellationToken.None);
+
+        // Find and corrupt the second event (seq=1) by modifying bytes
+        // The key format is "S:{variant}:{branch}:L{l}:{domain}:M{m}:E:{seq}"
+        // We need to iterate and find the event key
+        using (var iterator = kv.CreateIterator())
+        {
+            // Seek to beginning and find event keys
+            iterator.Seek(System.Text.Encoding.UTF8.GetBytes("S:"));
+
+            var eventKeysFound = new List<byte[]>();
+            while (iterator.Valid)
+            {
+                var keyStr = System.Text.Encoding.UTF8.GetString(iterator.Key.Span[..Math.Min(iterator.Key.Length, 50)]);
+                if (keyStr.Contains("E:"))
+                {
+                    eventKeysFound.Add(iterator.Key.Span.ToArray());
+                }
+                iterator.Next();
+
+                // Safety: only look at first 10 keys
+                if (eventKeysFound.Count >= 3) break;
+            }
+
+            // Corrupt the second event (index 1)
+            if (eventKeysFound.Count >= 2)
+            {
+                var keyToCorrupt = eventKeysFound[1];
+                if (kv.TryGet(keyToCorrupt, out var originalValue))
+                {
+                    // Flip a bit in the middle of the value
+                    var corruptedValue = (byte[])originalValue.Clone();
+                    if (corruptedValue.Length > 10)
+                    {
+                        corruptedValue[corruptedValue.Length / 2] ^= 0xFF; // Flip all bits
+                    }
+                    kv.Put(keyToCorrupt, corruptedValue);
+                }
+            }
+        }
+
+        // Act & Assert - Reading should detect hash chain corruption
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var _ in store.ReadAsync(stream, 0, CancellationToken.None))
+            {
+                // Just iterate to trigger validation
+            }
+        });
+
+        // The error should indicate a hash mismatch
+        Assert.Contains("hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    #endregion
 }
