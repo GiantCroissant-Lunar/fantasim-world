@@ -1,3 +1,4 @@
+using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
 using Plate.Topology.Contracts.Identity;
@@ -17,6 +18,10 @@ namespace Plate.Topology.Materializer;
 /// Per FR-007, materialization is event-only: no external data sources or solver
 /// execution is required. All information needed to reconstruct state is contained
 /// in the event stream.
+///
+/// Two cutoff modes are supported:
+/// - Sequence-based: applies events up to a target sequence number (for deterministic replay)
+/// - Tick-based: applies events where event.Tick &lt;= targetTick (for simulation time queries)
 /// </summary>
 public sealed class PlateTopologyMaterializer
 {
@@ -64,22 +69,33 @@ public sealed class PlateTopologyMaterializer
         return state;
     }
 
-    public async Task<PlateTopologyState> MaterializeAtTickAsync(
+    /// <summary>
+    /// Materializes topology state up to and including a target sequence number.
+    ///
+    /// This is the sequence-based cutoff: applies events where event.Sequence &lt;= targetSequence.
+    /// Use this for deterministic replay or debugging specific event prefixes.
+    /// </summary>
+    /// <param name="stream">The truth stream identity to materialize.</param>
+    /// <param name="targetSequence">The maximum sequence number to include (inclusive).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The materialized topology state.</returns>
+    public async Task<PlateTopologyState> MaterializeAtSequenceAsync(
         TruthStreamIdentity stream,
-        long tick,
+        long targetSequence,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        if (tick < -1)
-            throw new ArgumentOutOfRangeException(nameof(tick), "Tick must be >= -1");
+        if (targetSequence < -1)
+            throw new ArgumentOutOfRangeException(nameof(targetSequence), "Sequence must be >= -1");
 
         var state = new PlateTopologyState(stream);
-        if (tick < 0)
+        if (targetSequence < 0)
             return state;
 
         await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
         {
-            if (evt.Sequence > tick)
+            // Events are in sequence order, so we can break early
+            if (evt.Sequence > targetSequence)
                 break;
 
             ApplyEvent(state, evt);
@@ -88,6 +104,61 @@ public sealed class PlateTopologyMaterializer
         state.RebuildIndices();
 
         return state;
+    }
+
+    /// <summary>
+    /// Materializes topology state up to and including a target tick (simulation time).
+    ///
+    /// This is the tick-based cutoff: applies events where event.Tick &lt;= targetTick.
+    /// Use this for "what did the world look like at tick X?" queries.
+    ///
+    /// IMPORTANT: This method does NOT assume tick monotonicity. It scans all events
+    /// and applies those with tick &lt;= targetTick, regardless of sequence order.
+    /// This ensures correctness even for streams where ticks may not be monotonic
+    /// (e.g., historical streams or streams with TickMonotonicityPolicy.Allow).
+    /// </summary>
+    /// <param name="stream">The truth stream identity to materialize.</param>
+    /// <param name="targetTick">The maximum tick to include (inclusive).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The materialized topology state containing entities at or before the target tick.</returns>
+    public async Task<PlateTopologyState> MaterializeAtTickAsync(
+        TruthStreamIdentity stream,
+        CanonicalTick targetTick,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+
+        var state = new PlateTopologyState(stream);
+
+        // Scan ALL events and apply those with tick <= targetTick.
+        // We do NOT break early because tick may not be monotonic.
+        // Events must still be applied in sequence order (which ReadAsync guarantees).
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        {
+            if (evt.Tick <= targetTick)
+            {
+                ApplyEvent(state, evt);
+            }
+            // Continue scanning - later events may have earlier ticks
+        }
+
+        state.RebuildIndices();
+
+        return state;
+    }
+
+    /// <summary>
+    /// [OBSOLETE] Use MaterializeAtSequenceAsync or MaterializeAtTickAsync instead.
+    /// This method is kept for backward compatibility but delegates to MaterializeAtSequenceAsync.
+    /// </summary>
+    [Obsolete("Use MaterializeAtSequenceAsync (for sequence cutoff) or MaterializeAtTickAsync (for tick cutoff) instead.")]
+    public Task<PlateTopologyState> MaterializeAtTickAsync(
+        TruthStreamIdentity stream,
+        long tick,
+        CancellationToken cancellationToken = default)
+    {
+        // Old behavior was sequence-based despite the name
+        return MaterializeAtSequenceAsync(stream, tick, cancellationToken);
     }
 
     /// <summary>

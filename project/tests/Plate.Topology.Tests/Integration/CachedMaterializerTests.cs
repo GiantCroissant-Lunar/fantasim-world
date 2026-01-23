@@ -30,15 +30,48 @@ public sealed class CachedMaterializerTests
 
         var cached = new CachedPlateTopologyMaterializer(store);
 
-        var r1 = await cached.MaterializeAtTickAsync(stream, 0, CancellationToken.None);
+        // Use sequence-based API (the old behavior)
+        var r1 = await cached.MaterializeAtSequenceAsync(stream, 0, CancellationToken.None);
         Assert.False(r1.FromCache);
 
-        var r2 = await cached.MaterializeAtTickAsync(stream, 0, CancellationToken.None);
+        var r2 = await cached.MaterializeAtSequenceAsync(stream, 0, CancellationToken.None);
         Assert.True(r2.FromCache);
 
         Assert.Equal(r1.Key, r2.Key);
         Assert.Equal(r1.State.LastEventSequence, r2.State.LastEventSequence);
         Assert.Equal(r1.State.Plates.Count, r2.State.Plates.Count);
+    }
+
+    [Fact]
+    public async Task CachedMaterializer_TickBased_CachesCorrectly()
+    {
+        var stream = new TruthStreamIdentity(
+            "science",
+            "main",
+            2,
+            Domain.Parse("geo.plates"),
+            "0");
+
+        var store = new InMemoryTopologyEventStore();
+        await store.AppendAsync(
+            stream,
+            new IPlateTopologyEvent[]
+            {
+                TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(10), 0, stream),
+                TestEventFactory.PlateCreated(Guid.NewGuid(), new PlateId(Guid.NewGuid()), new CanonicalTick(20), 1, stream),
+            },
+            CancellationToken.None);
+
+        var cached = new CachedPlateTopologyMaterializer(store);
+
+        // Use tick-based API
+        var r1 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), CancellationToken.None);
+        Assert.False(r1.FromCache);
+        Assert.Equal(2, r1.State.Plates.Count);
+
+        var r2 = await cached.MaterializeAtTickAsync(stream, new CanonicalTick(20), CancellationToken.None);
+        Assert.True(r2.FromCache);
+        Assert.Equal(2, r2.State.Plates.Count);
     }
 
     private sealed class InMemoryTopologyEventStore : ITopologyEventStore

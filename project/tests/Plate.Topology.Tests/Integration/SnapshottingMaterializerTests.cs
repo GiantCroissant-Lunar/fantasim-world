@@ -12,8 +12,16 @@ namespace Plate.Topology.Tests.Integration;
 
 public sealed class SnapshottingMaterializerTests
 {
+    /// <summary>
+    /// Tests that corrupted event log data is detected and throws.
+    ///
+    /// NOTE: Prior to hash-chain validation (Phase 2-3), this test expected the materializer
+    /// to gracefully fall back to a snapshot when event data was corrupted. Now that we have
+    /// CTU hash-chain validation, corrupted data throws immediately - which is the correct
+    /// and more secure behavior.
+    /// </summary>
     [Fact]
-    public async Task SnapshottingMaterializer_UsesSnapshot_IfEventLogCorrupted()
+    public async Task SnapshottingMaterializer_ThrowsOnCorruptedEventLog()
     {
         var stream = new TruthStreamIdentity(
             "science",
@@ -44,19 +52,13 @@ public sealed class SnapshottingMaterializerTests
 
         var (_, kv) = TestStores.CreateEventStoreWithKv();
 
+        // Write events but do NOT materialize (no snapshot created)
         using (var store1 = new PlateTopologyEventStore(kv))
         {
             await store1.AppendAsync(stream, events, CancellationToken.None);
-
-            var snapshotting1 = new SnapshottingPlateTopologyMaterializer(store1, store1);
-            var r1 = await snapshotting1.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
-
-            Assert.False(r1.FromSnapshot);
-            Assert.Equal(2, r1.State.LastEventSequence);
-            Assert.Equal(2, r1.State.Plates.Count);
-            Assert.Single(r1.State.Boundaries);
         }
 
+        // Corrupt the event record
         {
             var prefix = Encoding.UTF8.GetBytes($"S:{stream.VariantId}:{stream.BranchId}:L{stream.LLevel}:{stream.Domain}:M{stream.Model}:");
             var key = BuildEventKey(prefix, 2);
@@ -68,24 +70,17 @@ public sealed class SnapshottingMaterializerTests
             kv.Put(key, recordBytes);
         }
 
+        // Now reading the corrupted data should throw hash mismatch
+        // Since there's no snapshot, materializer must read all events including the corrupted one
         using (var store2 = new PlateTopologyEventStore(kv))
         {
             var snapshotting2 = new SnapshottingPlateTopologyMaterializer(store2, store2);
-            var r2 = await snapshotting2.MaterializeAtTickAsync(stream, 2, CancellationToken.None);
 
-            Assert.True(r2.FromSnapshot);
-            Assert.Equal(2, r2.State.LastEventSequence);
-            Assert.Equal(2, r2.State.Plates.Count);
-            Assert.Single(r2.State.Boundaries);
-            Assert.Contains(plateId1, r2.State.Plates.Keys);
-            Assert.Contains(plateId2, r2.State.Plates.Keys);
-            Assert.Contains(boundaryId, r2.State.Boundaries.Keys);
+            // Hash validation should detect corruption and throw
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => snapshotting2.MaterializeAtSequenceAsync(stream, 2, CancellationToken.None));
 
-            var r3 = await snapshotting2.MaterializeAtTickAsync(stream, 100, CancellationToken.None);
-            Assert.True(r3.FromSnapshot);
-            Assert.Equal(r2.State.LastEventSequence, r3.State.LastEventSequence);
-            Assert.Equal(r2.State.Plates.Count, r3.State.Plates.Count);
-            Assert.Equal(r2.State.Boundaries.Count, r3.State.Boundaries.Count);
+            Assert.Contains("hash mismatch", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
      }
 
