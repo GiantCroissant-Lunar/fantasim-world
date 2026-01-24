@@ -4,25 +4,25 @@ namespace UnifyGeometry.Adapters.PlateTopology;
 
 public static class PlateTopologyGeometryAdapters
 {
-    public static UGPoint2 ToUnify(Point2D point)
+    public static Point2 ToUnify(Point2D point)
         => new(point.X, point.Y);
 
-    public static Point2D ToPlate(UGPoint2 point)
+    public static Point2D ToPlate(Point2 point)
         => new(point.X, point.Y);
 
-    public static UGSegment2 ToUnify(LineSegment segment)
+    public static Segment2 ToUnify(LineSegment segment)
         => new(ToUnify(segment.Start), ToUnify(segment.End));
 
-    public static LineSegment ToPlate(UGSegment2 segment)
+    public static LineSegment ToPlate(Segment2 segment)
         => new(ToPlate(segment.Start), ToPlate(segment.End));
 
-    public static UGPolyline2 ToUnify(Polyline polyline)
+    public static Polyline2 ToUnify(Polyline polyline)
     {
         ArgumentNullException.ThrowIfNull(polyline);
-        return new UGPolyline2(polyline.Points.Select(ToUnify));
+        return new Polyline2(polyline.Points.Select(ToUnify));
     }
 
-    public static Polyline ToPlate(UGPolyline2 polyline)
+    public static Polyline ToPlate(Polyline2 polyline)
     {
         ArgumentNullException.ThrowIfNull(polyline);
 

@@ -8,52 +8,52 @@ public sealed class PolygonOffsetTests
     [Fact]
     public void Offset_Square_Outward_IncreasesArea()
     {
-        var square = new UGPolygon2(new[]
+        var square = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
         });
 
-        var a0 = Math.Abs(Polygon2.SignedArea(square));
+        var a0 = Math.Abs(Polygon2Ops.SignedArea(square));
         var off = PolygonOffset.ByDistance(square, 1);
         Assert.False(off.IsEmpty);
 
-        var a1 = Math.Abs(Polygon2.SignedArea(off));
+        var a1 = Math.Abs(Polygon2Ops.SignedArea(off));
         Assert.True(a1 > a0);
-        Assert.True(Polygon2.ContainsPoint(off, new UGPoint2(0, 0))); // original corner becomes inside
+        Assert.True(Polygon2Ops.ContainsPoint(off, new Point2(0, 0))); // original corner becomes inside
     }
 
     [Fact]
     public void Offset_Square_Inward_DecreasesAreaOrEmpties()
     {
-        var square = new UGPolygon2(new[]
+        var square = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
         });
 
-        var a0 = Math.Abs(Polygon2.SignedArea(square));
+        var a0 = Math.Abs(Polygon2Ops.SignedArea(square));
         var off = PolygonOffset.ByDistance(square, -0.25);
         Assert.False(off.IsEmpty);
 
-        var a1 = Math.Abs(Polygon2.SignedArea(off));
+        var a1 = Math.Abs(Polygon2Ops.SignedArea(off));
         Assert.True(a1 < a0);
-        Assert.False(Polygon2.ContainsPoint(off, new UGPoint2(0, 0)));
-        Assert.True(Polygon2.ContainsPoint(off, new UGPoint2(1, 1)));
+        Assert.False(Polygon2Ops.ContainsPoint(off, new Point2(0, 0)));
+        Assert.True(Polygon2Ops.ContainsPoint(off, new Point2(1, 1)));
     }
 
     [Fact]
     public void Offset_DistanceZero_ReturnsOriginalReferenceShape()
     {
-        var poly = new UGPolygon2(new[]
+        var poly = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(1, 1),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(1, 1),
         });
 
         var off = PolygonOffset.ByDistance(poly, 0);

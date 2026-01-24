@@ -10,7 +10,7 @@ This document tracks what has been implemented so far on the `002-unify-geometry
 ## Project Layout (current)
 
 - In `unify-maths` (reusable library):
-  - `dotnet/src/UnifyGeometry.Primitives/` — stable primitives (`UGPoint2`, `UGPolyline2`, `UGPolygon2`, …)
+  - `dotnet/src/UnifyGeometry.Primitives/` — stable primitives (`Point2`, `Polyline2`, `Polygon2`, …)
   - `dotnet/src/UnifyGeometry.Operations/` — derived operators (algorithms)
 - In `fantasim-world` (domain integration only):
   - `project/plugins/UnifyGeometry.Adapters.PlateTopology/` — interop only
@@ -18,10 +18,10 @@ This document tracks what has been implemented so far on the `002-unify-geometry
 
 ## Primitives Added / In Use
 
-- `UGPoint2`, `UGSegment2`, `UGPolyline2`, `UGPolygon2`, `UGTriangle2`
-- `UGBounds2`
-- `UGPolygonRegion2` (single outer + holes)
-- `UGPolygonRegionSet2` (multiple regions)
+- `Point2`, `Segment2`, `Polyline2`, `Polygon2`, `Triangle2`
+- `Bounds2`
+- `PolygonRegion2` (single outer + holes)
+- `PolygonRegionSet2` (multiple regions)
 
 ## Operators Implemented
 
@@ -54,7 +54,7 @@ This document tracks what has been implemented so far on the `002-unify-geometry
 ### Polygon
 
 - Basic measurements / predicates:
-  - `Polygon2.SignedArea`, `Polygon2.IsClockwise`, `Polygon2.ContainsPoint`
+  - `Polygon2Ops.SignedArea`, `Polygon2Ops.IsClockwise`, `Polygon2Ops.ContainsPoint`
   - `PolygonCentroid.OfPolygon`
   - `PolygonValidateSimple.IsSimple`
   - `PolygonSelfIntersections.Find`
@@ -70,7 +70,7 @@ This document tracks what has been implemented so far on the `002-unify-geometry
   - `PolygonClipHalfPlane`
   - `PolygonClip.ToBounds`
   - `PolygonClipConvex`
-  - `PolygonClipCircle` / annulus (approx; produces `UGPolygonRegion2` best-effort)
+  - `PolygonClipCircle` / annulus (approx; produces `PolygonRegion2` best-effort)
 - Split building blocks:
   - `PolygonSplitHalfPlane.Split` (0–2 polygons)
   - `PolygonSplitAtIntersections.SplitSelfIntersections`
@@ -83,16 +83,16 @@ This document tracks what has been implemented so far on the `002-unify-geometry
 ### Polygon Booleans (derived)
 
 - Face-level booleans:
-  - `PolygonBooleanFaces.{Intersection,Union,Difference}` → `IReadOnlyList<UGPolygon2>` (simple faces)
+  - `PolygonBooleanFaces.{Intersection,Union,Difference}` → `IReadOnlyList<Polygon2>` (simple faces)
 - Region-level booleans:
-  - `PolygonBooleanRegions.{Intersection,Union,Difference}` → `UGPolygonRegionSet2`
+  - `PolygonBooleanRegions.{Intersection,Union,Difference}` → `PolygonRegionSet2`
   - Implementation: build arrangement, classify boundary half-edges by left-face inclusion, trace boundary loops, assign holes to smallest containing outer.
 
 ## Known Limitations (current)
 
 - Booleans and intersection-based splitting return **empty** on collinear/overlapping edge cases (by design for now).
 - `PolygonClipCircle/Annulus` is an approximation (regular polygon sampling), not a full exact curved boolean.
-- Boolean merging assumes the result can be represented as multiple `UGPolygonRegion2` (outers + holes) and does not yet attempt sophisticated hole/outer nesting beyond “assign hole to smallest containing outer”.
+- Boolean merging assumes the result can be represented as multiple `PolygonRegion2` (outers + holes) and does not yet attempt sophisticated hole/outer nesting beyond “assign hole to smallest containing outer”.
 
 ## Next Candidates
 

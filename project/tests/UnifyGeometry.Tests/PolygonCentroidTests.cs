@@ -8,12 +8,12 @@ public sealed class PolygonCentroidTests
     [Fact]
     public void Centroid_Square_IsCenter()
     {
-        var square = new UGPolygon2(new[]
+        var square = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
         });
 
         var c = PolygonCentroid.OfPolygon(square);
@@ -24,11 +24,11 @@ public sealed class PolygonCentroidTests
     [Fact]
     public void Centroid_Triangle_IsAverageForRightTriangle()
     {
-        var tri = new UGPolygon2(new[]
+        var tri = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(3, 0),
-            new UGPoint2(0, 3),
+            new Point2(0, 0),
+            new Point2(3, 0),
+            new Point2(0, 3),
         });
 
         var c = PolygonCentroid.OfPolygon(tri);
@@ -39,11 +39,11 @@ public sealed class PolygonCentroidTests
     [Fact]
     public void Centroid_Degenerate_ReturnsEmpty()
     {
-        var collinear = new UGPolygon2(new[]
+        var collinear = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(1, 0),
-            new UGPoint2(2, 0),
+            new Point2(0, 0),
+            new Point2(1, 0),
+            new Point2(2, 0),
         });
 
         var c = PolygonCentroid.OfPolygon(collinear);

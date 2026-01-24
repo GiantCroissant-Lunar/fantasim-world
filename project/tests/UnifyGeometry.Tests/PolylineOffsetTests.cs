@@ -8,68 +8,68 @@ public sealed class PolylineOffsetTests
     [Fact]
     public void Offset_StraightLine_Left()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var o = PolylineOffset.ByDistance(poly, 2, PolylineOffsetSide.Left);
 
         Assert.Equal(2, o.Count);
-        Assert.Equal(new UGPoint2(0, 2), o[0]);
-        Assert.Equal(new UGPoint2(10, 2), o[1]);
+        Assert.Equal(new Point2(0, 2), o[0]);
+        Assert.Equal(new Point2(10, 2), o[1]);
     }
 
     [Fact]
     public void Offset_StraightLine_Right()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var o = PolylineOffset.ByDistance(poly, 2, PolylineOffsetSide.Right);
 
         Assert.Equal(2, o.Count);
-        Assert.Equal(new UGPoint2(0, -2), o[0]);
-        Assert.Equal(new UGPoint2(10, -2), o[1]);
+        Assert.Equal(new Point2(0, -2), o[0]);
+        Assert.Equal(new Point2(10, -2), o[1]);
     }
 
     [Fact]
     public void Offset_LShape_MiterJoin()
     {
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(10, 0),
-            new UGPoint2(10, 10),
+            new Point2(0, 0),
+            new Point2(10, 0),
+            new Point2(10, 10),
         });
 
         var o = PolylineOffset.ByDistance(poly, 1, PolylineOffsetSide.Left);
 
         Assert.Equal(3, o.Count);
-        Assert.Equal(new UGPoint2(0, 1), o[0]);
-        Assert.Equal(new UGPoint2(9, 1), o[1]);
-        Assert.Equal(new UGPoint2(9, 10), o[2]);
+        Assert.Equal(new Point2(0, 1), o[0]);
+        Assert.Equal(new Point2(9, 1), o[1]);
+        Assert.Equal(new Point2(9, 10), o[2]);
     }
 
     [Fact]
     public void Offset_Colinear_FallsBackCleanly()
     {
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(10, 0),
-            new UGPoint2(20, 0),
+            new Point2(0, 0),
+            new Point2(10, 0),
+            new Point2(20, 0),
         });
 
         var o = PolylineOffset.ByDistance(poly, 1, PolylineOffsetSide.Left);
         Assert.Equal(3, o.Count);
-        Assert.Equal(new UGPoint2(0, 1), o[0]);
-        Assert.Equal(new UGPoint2(10, 1), o[1]);
-        Assert.Equal(new UGPoint2(20, 1), o[2]);
+        Assert.Equal(new Point2(0, 1), o[0]);
+        Assert.Equal(new Point2(10, 1), o[1]);
+        Assert.Equal(new Point2(20, 1), o[2]);
     }
 
     [Fact]
     public void Offset_MiterLimit_Clamps()
     {
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(10, 0),
-            new UGPoint2(10, 0.1),
+            new Point2(0, 0),
+            new Point2(10, 0),
+            new Point2(10, 0.1),
         });
 
         var dist = 1.0;

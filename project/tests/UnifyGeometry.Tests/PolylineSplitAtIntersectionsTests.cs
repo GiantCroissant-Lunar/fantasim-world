@@ -8,7 +8,7 @@ public sealed class PolylineSplitAtIntersectionsTests
     [Fact]
     public void SplitSelfIntersections_NoIntersections_ReturnsSinglePiece()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0), new UGPoint2(20, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0), new Point2(20, 0) });
         var pieces = PolylineSplitAtIntersections.SplitSelfIntersections(poly);
 
         Assert.Single(pieces);
@@ -23,12 +23,12 @@ public sealed class PolylineSplitAtIntersectionsTests
         // A simple self-intersecting polyline:
         // (0,0) -> (10,10) -> (0,10) -> (10,0)
         // Intersection between segment 0 and segment 2 at (5,5).
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(10, 10),
-            new UGPoint2(0, 10),
-            new UGPoint2(10, 0),
+            new Point2(0, 0),
+            new Point2(10, 10),
+            new Point2(0, 10),
+            new Point2(10, 0),
         });
 
         var pieces = PolylineSplitAtIntersections.SplitSelfIntersections(poly);
@@ -56,13 +56,13 @@ public sealed class PolylineSplitAtIntersectionsTests
     public void SplitSelfIntersections_CutAtEndpoints_IsIgnored()
     {
         // Closed by coincidence (first == last); intersection at the closure point should not create extra pieces.
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(5, 0),
-            new UGPoint2(5, 5),
-            new UGPoint2(0, 5),
-            new UGPoint2(0, 0),
+            new Point2(0, 0),
+            new Point2(5, 0),
+            new Point2(5, 5),
+            new Point2(0, 5),
+            new Point2(0, 0),
         });
 
         var pieces = PolylineSplitAtIntersections.SplitSelfIntersections(poly);

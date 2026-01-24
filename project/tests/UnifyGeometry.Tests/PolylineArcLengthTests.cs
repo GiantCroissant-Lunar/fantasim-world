@@ -8,14 +8,14 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void PointAtDistance_Empty_ReturnsEmptyPoint()
     {
-        var p = PolylineArcLength.PointAtDistance(UGPolyline2.Empty, 1);
+        var p = PolylineArcLength.PointAtDistance(Polyline2.Empty, 1);
         Assert.True(p.IsEmpty);
     }
 
     [Fact]
     public void PointAtDistance_ClampsToEndpoints()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
 
         var a = PolylineArcLength.PointAtDistance(poly, -1);
         Assert.Equal(0d, a.X, 12);
@@ -29,7 +29,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void PointAtDistance_MultiSegment_WalksAcrossSegments()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(6, 0), new UGPoint2(6, 8) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(6, 0), new Point2(6, 8) });
 
         var p = PolylineArcLength.PointAtDistance(poly, 10); // 6 along x, then 4 along y
         Assert.Equal(6d, p.X, 12);
@@ -39,7 +39,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SliceByDistance_Line_ReturnsSubSegment()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var s = PolylineArcLength.SliceByDistance(poly, 2.5, 7.5);
 
         Assert.Equal(2, s.Count);
@@ -52,7 +52,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SliceByDistance_MultiSegment_IncludesInteriorVertices()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(6, 0), new UGPoint2(6, 8) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(6, 0), new Point2(6, 8) });
         var s = PolylineArcLength.SliceByDistance(poly, 2, 12);
 
         Assert.Equal(3, s.Count);
@@ -70,7 +70,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SliceByDistance_EndBeforeStart_ReturnsEmpty()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var s = PolylineArcLength.SliceByDistance(poly, 5, 5);
         Assert.True(s.IsEmpty);
     }
@@ -78,14 +78,14 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SplitByDistances_EmptyPolyline_ReturnsEmptyList()
     {
-        var parts = PolylineArcLength.SplitByDistances(UGPolyline2.Empty, new[] { 1d, 2d });
+        var parts = PolylineArcLength.SplitByDistances(Polyline2.Empty, new[] { 1d, 2d });
         Assert.Empty(parts);
     }
 
     [Fact]
     public void SplitByDistances_NoCuts_ReturnsSinglePolyline()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var parts = PolylineArcLength.SplitByDistances(poly, Array.Empty<double>());
 
         Assert.Single(parts);
@@ -97,7 +97,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SplitByDistances_SingleCutInSegment_ReturnsTwoParts()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var parts = PolylineArcLength.SplitByDistances(poly, new[] { 2.5 });
 
         Assert.Equal(2, parts.Count);
@@ -114,7 +114,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SplitByDistances_CutsAcrossMultiSegment_IncludesVertexSplit()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(6, 0), new UGPoint2(6, 8) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(6, 0), new Point2(6, 8) });
         var parts = PolylineArcLength.SplitByDistances(poly, new[] { 6d }); // cut exactly at the vertex
 
         Assert.Equal(2, parts.Count);
@@ -134,7 +134,7 @@ public sealed class PolylineArcLengthTests
     [Fact]
     public void SplitByDistances_UnsortedDuplicatesAndOutOfRange_AreIgnored()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
         var parts = PolylineArcLength.SplitByDistances(poly, new[] { 100d, -1d, 5d, 5d, 0d, 10d });
 
         Assert.Equal(2, parts.Count);

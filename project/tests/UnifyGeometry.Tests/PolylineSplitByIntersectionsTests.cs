@@ -8,8 +8,8 @@ public sealed class PolylineSplitByIntersectionsTests
     [Fact]
     public void SplitByIntersections_SimpleCrossing_SplitsIntoTwo()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var b = new UGPolyline2(new[] { new UGPoint2(5, -5), new UGPoint2(5, 5) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var b = new Polyline2(new[] { new Point2(5, -5), new Point2(5, 5) });
 
         var parts = PolylineSplitAtIntersections.SplitByIntersections(a, b);
 
@@ -23,8 +23,8 @@ public sealed class PolylineSplitByIntersectionsTests
     [Fact]
     public void SplitByIntersections_NoIntersection_ReturnsSingle()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var b = new UGPolyline2(new[] { new UGPoint2(0, 5), new UGPoint2(10, 5) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var b = new Polyline2(new[] { new Point2(0, 5), new Point2(10, 5) });
 
         var parts = PolylineSplitAtIntersections.SplitByIntersections(a, b);
         Assert.Single(parts);
@@ -33,8 +33,8 @@ public sealed class PolylineSplitByIntersectionsTests
     [Fact]
     public void SplitByIntersections_CollinearOverlap_SplitsAtOverlapEndpoints()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var b = new UGPolyline2(new[] { new UGPoint2(3, 0), new UGPoint2(7, 0) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var b = new Polyline2(new[] { new Point2(3, 0), new Point2(7, 0) });
 
         var parts = PolylineSplitAtIntersections.SplitByIntersections(a, b);
 

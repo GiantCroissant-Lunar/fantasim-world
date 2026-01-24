@@ -8,52 +8,52 @@ public sealed class PolygonNormalizeTests
     [Fact]
     public void Simplify_RemovesClosingDuplicateAndCollinear()
     {
-        var poly = new UGPolygon2(new[]
+        var poly = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(4, 0), // collinear
-            new UGPoint2(4, 2),
-            new UGPoint2(0, 2),
-            new UGPoint2(0, 0), // closing dup
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(4, 0), // collinear
+            new Point2(4, 2),
+            new Point2(0, 2),
+            new Point2(0, 0), // closing dup
         });
 
         var s = PolygonSimplify.RemoveCollinearAndDuplicates(poly);
         Assert.Equal(4, s.Count);
-        Assert.Equal(8d, Math.Abs(Polygon2.SignedArea(s)), 12);
+        Assert.Equal(8d, Math.Abs(Polygon2Ops.SignedArea(s)), 12);
     }
 
     [Fact]
     public void EnsureCounterClockwise_ReversesIfNeeded()
     {
-        var squareCW = new UGPolygon2(new[]
+        var squareCW = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(0, 2),
-            new UGPoint2(2, 2),
-            new UGPoint2(2, 0),
+            new Point2(0, 0),
+            new Point2(0, 2),
+            new Point2(2, 2),
+            new Point2(2, 0),
         });
 
         var ccw = PolygonNormalize.EnsureCounterClockwise(squareCW);
         Assert.False(ccw.IsEmpty);
-        Assert.False(Polygon2.IsClockwise(ccw));
-        Assert.Equal(4d, Polygon2.SignedArea(ccw), 12);
+        Assert.False(Polygon2Ops.IsClockwise(ccw));
+        Assert.Equal(4d, Polygon2Ops.SignedArea(ccw), 12);
     }
 
     [Fact]
     public void EnsureClockwise_ReversesIfNeeded()
     {
-        var squareCCW = new UGPolygon2(new[]
+        var squareCCW = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
         });
 
         var cw = PolygonNormalize.EnsureClockwise(squareCCW);
         Assert.False(cw.IsEmpty);
-        Assert.True(Polygon2.IsClockwise(cw));
-        Assert.Equal(-4d, Polygon2.SignedArea(cw), 12);
+        Assert.True(Polygon2Ops.IsClockwise(cw));
+        Assert.Equal(-4d, Polygon2Ops.SignedArea(cw), 12);
     }
 }

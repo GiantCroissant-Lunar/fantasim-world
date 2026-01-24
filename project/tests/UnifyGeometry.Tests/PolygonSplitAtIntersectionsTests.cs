@@ -8,31 +8,31 @@ public sealed class PolygonSplitAtIntersectionsTests
     [Fact]
     public void SplitSelfIntersections_SimpleSquare_ReturnsSinglePolygon()
     {
-        var square = new UGPolygon2(new[]
+        var square = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
+            new Point2(0, 0),
+            new Point2(2, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
         });
 
         var parts = PolygonSplitAtIntersections.SplitSelfIntersections(square);
 
         Assert.Single(parts);
         Assert.True(PolygonValidateSimple.IsSimple(parts[0]));
-        Assert.Equal(Math.Abs(Polygon2.SignedArea(square)), Math.Abs(Polygon2.SignedArea(parts[0])), 12);
+        Assert.Equal(Math.Abs(Polygon2Ops.SignedArea(square)), Math.Abs(Polygon2Ops.SignedArea(parts[0])), 12);
     }
 
     [Fact]
     public void SplitSelfIntersections_Bowtie_ReturnsTwoTriangles()
     {
         // Self-intersecting "bowtie" polygon.
-        var bowtie = new UGPolygon2(new[]
+        var bowtie = new Polygon2(new[]
         {
-            new UGPoint2(0, 0),
-            new UGPoint2(2, 2),
-            new UGPoint2(0, 2),
-            new UGPoint2(2, 0),
+            new Point2(0, 0),
+            new Point2(2, 2),
+            new Point2(0, 2),
+            new Point2(2, 0),
         });
 
         var parts = PolygonSplitAtIntersections.SplitSelfIntersections(bowtie);
@@ -44,7 +44,7 @@ public sealed class PolygonSplitAtIntersectionsTests
             Assert.Equal(3, p.Count);
         }
 
-        var sum = parts.Sum(p => Math.Abs(Polygon2.SignedArea(p)));
+        var sum = parts.Sum(p => Math.Abs(Polygon2Ops.SignedArea(p)));
         Assert.Equal(2d, sum, 12);
     }
 }

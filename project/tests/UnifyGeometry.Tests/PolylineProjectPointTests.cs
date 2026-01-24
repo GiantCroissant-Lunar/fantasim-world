@@ -8,8 +8,8 @@ public sealed class PolylineProjectPointTests
     [Fact]
     public void ClosestPoint_OnSingleSegment_ProjectsOrthogonally()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var p = new UGPoint2(5, 2);
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var p = new Point2(5, 2);
 
         var proj = PolylineProjectPoint.ProjectPoint(poly, p);
 
@@ -26,8 +26,8 @@ public sealed class PolylineProjectPointTests
     [Fact]
     public void ProjectPoint_ClampsBeforeStart()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var p = new UGPoint2(-3, 4);
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var p = new Point2(-3, 4);
 
         var proj = PolylineProjectPoint.ProjectPoint(poly, p);
 
@@ -41,8 +41,8 @@ public sealed class PolylineProjectPointTests
     [Fact]
     public void ProjectPoint_ClampsAfterEnd()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var p = new UGPoint2(12, -1);
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var p = new Point2(12, -1);
 
         var proj = PolylineProjectPoint.ProjectPoint(poly, p);
 
@@ -56,8 +56,8 @@ public sealed class PolylineProjectPointTests
     [Fact]
     public void ProjectPoint_MultiSegment_ReportsArcLengthCoordinate()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(6, 0), new UGPoint2(6, 8) });
-        var p = new UGPoint2(8, 3);
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(6, 0), new Point2(6, 8) });
+        var p = new Point2(8, 3);
 
         var proj = PolylineProjectPoint.ProjectPoint(poly, p);
 
@@ -72,8 +72,8 @@ public sealed class PolylineProjectPointTests
     [Fact]
     public void ProjectPoint_DegenerateSegment_StillWorks()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var p = new UGPoint2(5, 1);
+        var poly = new Polyline2(new[] { new Point2(0, 0), new Point2(0, 0), new Point2(10, 0) });
+        var p = new Point2(5, 1);
 
         var proj = PolylineProjectPoint.ProjectPoint(poly, p);
 

@@ -8,8 +8,8 @@ public sealed class PolylineClipHalfPlaneTests
     [Fact]
     public void Clip_XGreaterOrEqualZero()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(-1, 0), new UGPoint2(1, 0) });
-        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new UGPoint2(0, 0), inwardNormal: new UGPoint2(1, 0));
+        var poly = new Polyline2(new[] { new Point2(-1, 0), new Point2(1, 0) });
+        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new Point2(0, 0), inwardNormal: new Point2(1, 0));
 
         Assert.Single(clipped);
         Assert.Equal(2, clipped[0].Count);
@@ -22,22 +22,22 @@ public sealed class PolylineClipHalfPlaneTests
     [Fact]
     public void Clip_Outside_ReturnsEmpty()
     {
-        var poly = new UGPolyline2(new[] { new UGPoint2(-2, 0), new UGPoint2(-1, 1) });
-        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new UGPoint2(0, 0), inwardNormal: new UGPoint2(1, 0));
+        var poly = new Polyline2(new[] { new Point2(-2, 0), new Point2(-1, 1) });
+        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new Point2(0, 0), inwardNormal: new Point2(1, 0));
         Assert.Empty(clipped);
     }
 
     [Fact]
     public void Clip_ZigZag_DoesNotThrow()
     {
-        var poly = new UGPolyline2(new[]
+        var poly = new Polyline2(new[]
         {
-            new UGPoint2(1, 0),
-            new UGPoint2(-1, 0),
-            new UGPoint2(1, 0),
+            new Point2(1, 0),
+            new Point2(-1, 0),
+            new Point2(1, 0),
         });
 
-        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new UGPoint2(0, 0), inwardNormal: new UGPoint2(1, 0));
+        var clipped = PolylineClipHalfPlane.ToHalfPlane(poly, pointOnBoundary: new Point2(0, 0), inwardNormal: new Point2(1, 0));
 
         // The polyline exits the half-plane and re-enters, so clipping returns two pieces.
         Assert.Equal(2, clipped.Count);

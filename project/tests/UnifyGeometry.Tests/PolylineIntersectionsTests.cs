@@ -8,8 +8,8 @@ public sealed class PolylineIntersectionsTests
     [Fact]
     public void IntersectPolylines_SimpleCrossing_ReturnsSingleHitWithDistances()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var b = new UGPolyline2(new[] { new UGPoint2(5, -5), new UGPoint2(5, 5) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var b = new Polyline2(new[] { new Point2(5, -5), new Point2(5, 5) });
 
         var hits = PolylineIntersections.IntersectPolylines(a, b);
 
@@ -25,8 +25,8 @@ public sealed class PolylineIntersectionsTests
     [Fact]
     public void IntersectPolylines_MultiSegment_ReturnsHitWithArcLength()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(6, 0), new UGPoint2(6, 8) });
-        var b = new UGPolyline2(new[] { new UGPoint2(2, 4), new UGPoint2(10, 4) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(6, 0), new Point2(6, 8) });
+        var b = new Polyline2(new[] { new Point2(2, 4), new Point2(10, 4) });
 
         var hits = PolylineIntersections.IntersectPolylines(a, b);
 
@@ -42,8 +42,8 @@ public sealed class PolylineIntersectionsTests
     [Fact]
     public void IntersectPolylines_CollinearOverlap_ReturnsEndpoints()
     {
-        var a = new UGPolyline2(new[] { new UGPoint2(0, 0), new UGPoint2(10, 0) });
-        var b = new UGPolyline2(new[] { new UGPoint2(5, 0), new UGPoint2(15, 0) });
+        var a = new Polyline2(new[] { new Point2(0, 0), new Point2(10, 0) });
+        var b = new Polyline2(new[] { new Point2(5, 0), new Point2(15, 0) });
 
         var hits = PolylineIntersections.IntersectPolylines(a, b);
 
