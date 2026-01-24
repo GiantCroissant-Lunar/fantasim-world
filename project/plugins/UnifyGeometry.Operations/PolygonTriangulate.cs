@@ -84,6 +84,11 @@ public static class PolygonTriangulate
                     if (idx == iPrev || idx == iCurr || idx == iNext)
                         continue;
 
+                    // Weakly-simple polygons (e.g., hole-bridged) may legitimately repeat vertices.
+                    // Don't let a duplicated vertex reject an otherwise valid ear.
+                    if (NearlySame(verts[idx], a, epsilon) || NearlySame(verts[idx], b, epsilon) || NearlySame(verts[idx], c, epsilon))
+                        continue;
+
                     if (PointInTriangle(verts[idx], a, b, c, epsilon))
                     {
                         anyInside = true;
