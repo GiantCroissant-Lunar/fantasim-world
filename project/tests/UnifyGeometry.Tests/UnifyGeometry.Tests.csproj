@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\contracts\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
     <ProjectReference Include="..\..\plugins\UnifyGeometry.Adapters.PlateTopology\UnifyGeometry.Adapters.PlateTopology.csproj" />
-    <ProjectReference Include="..\..\plugins\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj" />
   </ItemGroup>
 
 </Project>

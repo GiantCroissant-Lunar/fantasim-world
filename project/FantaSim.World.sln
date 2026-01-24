@@ -13,11 +13,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Tests", "tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contracts", "contracts", "{A73F2606-6D4C-3EEE-1759-0E59DCFEF523}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Primitives", "contracts\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{07D57EEB-2F50-60C4-C011-FE4FA775C9A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operations", "plugins\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unify-maths", "unify-maths", "{DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Primitives", "..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operations", "..\..\unify-maths\dotnet\src\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
@@ -136,8 +138,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{0DB3653F-18C2-4540-A777-B1A1F1362E58} = {A73F2606-6D4C-3EEE-1759-0E59DCFEF523}
-		{BA298AD0-11FD-4B4D-AE86-60473AA21A3B} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{0DB3653F-18C2-4540-A777-B1A1F1362E58} = {DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}
+		{BA298AD0-11FD-4B4D-AE86-60473AA21A3B} = {DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}
 		{FD867679-5344-4FC5-8080-A43CA4BF2C9C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{10CC3206-E697-4993-8E0C-9011B4472532} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
