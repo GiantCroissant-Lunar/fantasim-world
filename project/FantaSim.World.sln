@@ -25,8 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Tests", "tests\UnifyGeometry.Tests\UnifyGeometry.Tests.csproj", "{FD867679-5344-4FC5-8080-A43CA4BF2C9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Adapters.PlateTopology", "plugins\UnifyGeometry.Adapters.PlateTopology\UnifyGeometry.Adapters.PlateTopology.csproj", "{10CC3206-E697-4993-8E0C-9011B4472532}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,18 +119,6 @@ Global
 		{FD867679-5344-4FC5-8080-A43CA4BF2C9C}.Release|x64.Build.0 = Release|Any CPU
 		{FD867679-5344-4FC5-8080-A43CA4BF2C9C}.Release|x86.ActiveCfg = Release|Any CPU
 		{FD867679-5344-4FC5-8080-A43CA4BF2C9C}.Release|x86.Build.0 = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|x64.Build.0 = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Debug|x86.Build.0 = Debug|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|Any CPU.Build.0 = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|x64.ActiveCfg = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|x64.Build.0 = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|x86.ActiveCfg = Release|Any CPU
-		{10CC3206-E697-4993-8E0C-9011B4472532}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +127,5 @@ Global
 		{0DB3653F-18C2-4540-A777-B1A1F1362E58} = {DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}
 		{BA298AD0-11FD-4B4D-AE86-60473AA21A3B} = {DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}
 		{FD867679-5344-4FC5-8080-A43CA4BF2C9C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
-		{10CC3206-E697-4993-8E0C-9011B4472532} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
 EndGlobal
