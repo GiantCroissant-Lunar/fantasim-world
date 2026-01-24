@@ -13,11 +13,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Tests", "tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contracts", "contracts", "{A73F2606-6D4C-3EEE-1759-0E59DCFEF523}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Abstractions", "contracts\UnifyGeometry.Abstractions\UnifyGeometry.Abstractions.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Primitives", "contracts\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{07D57EEB-2F50-60C4-C011-FE4FA775C9A8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operators", "plugins\UnifyGeometry.Operators\UnifyGeometry.Operators.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operations", "plugins\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject

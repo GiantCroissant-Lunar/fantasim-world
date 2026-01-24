@@ -1,6 +1,6 @@
 using UnifyGeometry;
 
-namespace UnifyGeometry.Operators;
+namespace UnifyGeometry.Operations;
 
 public static class PolylineResample
 {
@@ -81,6 +81,73 @@ public static class PolylineResample
             var t = (target - aDist) / denom;
             outPoints[k] = Lerp(a, b, t);
         }
+
+        return new UGPolyline2(outPoints);
+    }
+
+    public static UGPolyline2 BySpacing(UGPolyline2 polyline, double spacing)
+    {
+        ArgumentNullException.ThrowIfNull(polyline);
+
+        if (double.IsNaN(spacing) || double.IsInfinity(spacing) || spacing <= 0d)
+            throw new ArgumentOutOfRangeException(nameof(spacing), "spacing must be finite and > 0.");
+
+        if (polyline.IsEmpty)
+            return UGPolyline2.Empty;
+
+        if (polyline.Count == 1)
+            return polyline;
+
+        // Avoid undefined behavior in downstream math.
+        for (var i = 0; i < polyline.Count; i++)
+        {
+            if (polyline[i].IsEmpty)
+                return polyline;
+        }
+
+        // Cumulative lengths (monotone non-decreasing).
+        var cum = new double[polyline.Count];
+        cum[0] = 0d;
+        for (var i = 1; i < polyline.Count; i++)
+        {
+            var seg = new UGSegment2(polyline[i - 1], polyline[i]);
+            cum[i] = cum[i - 1] + seg.Length;
+        }
+
+        var total = cum[^1];
+        if (double.IsNaN(total) || double.IsInfinity(total) || total <= 0d)
+            return polyline;
+
+        var outPoints = new List<UGPoint2>(capacity: (int)Math.Ceiling(total / spacing) + 2);
+        outPoints.Add(polyline[0]);
+
+        var segIndex = 0;
+        for (var target = spacing; target < total; target += spacing)
+        {
+            while (segIndex < cum.Length - 2 && cum[segIndex + 1] < target)
+            {
+                segIndex++;
+            }
+
+            var a = polyline[segIndex];
+            var b = polyline[segIndex + 1];
+            var aDist = cum[segIndex];
+            var bDist = cum[segIndex + 1];
+
+            var denom = bDist - aDist;
+            if (denom <= 0d)
+            {
+                outPoints.Add(a);
+                continue;
+            }
+
+            var t = (target - aDist) / denom;
+            outPoints.Add(Lerp(a, b, t));
+        }
+
+        var end = polyline[^1];
+        if (outPoints.Count == 0 || outPoints[^1] != end)
+            outPoints.Add(end);
 
         return new UGPolyline2(outPoints);
     }

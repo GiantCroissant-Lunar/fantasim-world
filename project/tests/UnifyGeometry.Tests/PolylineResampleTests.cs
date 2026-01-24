@@ -1,5 +1,5 @@
 using UnifyGeometry;
-using UnifyGeometry.Operators;
+using UnifyGeometry.Operations;
 
 namespace UnifyGeometry.Tests;
 

@@ -1,6 +1,6 @@
 using UnifyGeometry;
 
-namespace UnifyGeometry.Operators;
+namespace UnifyGeometry.Operations;
 
 public static class PolylineClipHalfPlane
 {

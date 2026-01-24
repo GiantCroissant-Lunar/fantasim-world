@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\contracts\UnifyGeometry.Abstractions\UnifyGeometry.Abstractions.csproj" />
+    <ProjectReference Include="..\..\contracts\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
 </Project>
