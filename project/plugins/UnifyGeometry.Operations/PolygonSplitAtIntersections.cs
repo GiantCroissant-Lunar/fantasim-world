@@ -203,6 +203,127 @@ public static class PolygonSplitAtIntersections
         return result;
     }
 
+    /// <summary>
+    /// Splits <paramref name="subject"/> into face polygons induced by intersections with <paramref name="cutter"/>'s boundary.
+    /// All resulting face polygons that lie inside <paramref name="subject"/> are returned (best-effort).
+    ///
+    /// Returns an empty list if splitting fails (e.g., overlapping/collinear intersections).
+    /// </summary>
+    public static IReadOnlyList<UGPolygon2> SplitByIntersections(UGPolygon2 subject, UGPolygon2 cutter, double epsilon = 1e-12)
+    {
+        ArgumentNullException.ThrowIfNull(subject);
+        ArgumentNullException.ThrowIfNull(cutter);
+
+        if (double.IsNaN(epsilon) || double.IsInfinity(epsilon) || epsilon < 0d)
+            throw new ArgumentOutOfRangeException(nameof(epsilon), "epsilon must be finite and >= 0.");
+
+        var aVerts = CollectVertices(subject, epsilon);
+        var bVerts = CollectVertices(cutter, epsilon);
+        if (aVerts.Count < 3 || bVerts.Count < 3)
+            return Array.Empty<UGPolygon2>();
+
+        // Fast path: if no edge intersections, return subject as-is.
+        if (!AnyIntersections(aVerts, bVerts, epsilon))
+            return new[] { new UGPolygon2(aVerts) };
+
+        var aEdgeCount = aVerts.Count;
+        var bEdgeCount = bVerts.Count;
+
+        var aSplitsByEdge = new List<SplitPoint>[aEdgeCount];
+        for (var i = 0; i < aEdgeCount; i++)
+        {
+            aSplitsByEdge[i] = new List<SplitPoint>
+            {
+                new(0d, aVerts[i]),
+                new(1d, aVerts[(i + 1) % aEdgeCount]),
+            };
+        }
+
+        var bSplitsByEdge = new List<SplitPoint>[bEdgeCount];
+        for (var i = 0; i < bEdgeCount; i++)
+        {
+            bSplitsByEdge[i] = new List<SplitPoint>
+            {
+                new(0d, bVerts[i]),
+                new(1d, bVerts[(i + 1) % bEdgeCount]),
+            };
+        }
+
+        // Insert intersection points into both polygons' edges.
+        for (var i = 0; i < aEdgeCount; i++)
+        {
+            var a0 = aVerts[i];
+            var a1 = aVerts[(i + 1) % aEdgeCount];
+            var segA = new UGSegment2(a0, a1);
+
+            for (var j = 0; j < bEdgeCount; j++)
+            {
+                var b0 = bVerts[j];
+                var b1 = bVerts[(j + 1) % bEdgeCount];
+                var segB = new UGSegment2(b0, b1);
+
+                var hit = SegmentIntersection2.Intersect(segA, segB, epsilon);
+                if (hit.Kind == UGSegmentIntersectionKind.None)
+                    continue;
+
+                if (hit.Kind == UGSegmentIntersectionKind.Overlap)
+                    return Array.Empty<UGPolygon2>();
+
+                aSplitsByEdge[i].Add(new SplitPoint(hit.A_T, hit.Point));
+                bSplitsByEdge[j].Add(new SplitPoint(hit.B_T, hit.Point));
+            }
+        }
+
+        var nodes = new List<UGPoint2>();
+        var undirected = new HashSet<long>();
+        var undirectedPairs = new List<(int A, int B)>();
+
+        AddSplitSegmentsToGraph(aSplitsByEdge, nodes, undirected, undirectedPairs, epsilon);
+        AddSplitSegmentsToGraph(bSplitsByEdge, nodes, undirected, undirectedPairs, epsilon);
+
+        if (nodes.Count < 3 || undirectedPairs.Count < 3)
+            return Array.Empty<UGPolygon2>();
+
+        var faces = BuildFaces(nodes, undirectedPairs, epsilon);
+        if (faces.Count == 0)
+            return Array.Empty<UGPolygon2>();
+
+        // Remove unbounded face (largest-magnitude area).
+        var outerIndex = -1;
+        var outerAbsArea = 0d;
+        for (var i = 0; i < faces.Count; i++)
+        {
+            var abs = Math.Abs(faces[i].SignedArea);
+            if (abs > outerAbsArea)
+            {
+                outerAbsArea = abs;
+                outerIndex = i;
+            }
+        }
+
+        var result = new List<UGPolygon2>();
+
+        for (var i = 0; i < faces.Count; i++)
+        {
+            if (i == outerIndex)
+                continue;
+
+            if (Math.Abs(faces[i].SignedArea) <= epsilon)
+                continue;
+
+            var facePoly = faces[i].Poly;
+
+            var sample = SamplePointInsidePolygon(facePoly, epsilon);
+            if (sample.IsEmpty)
+                continue;
+
+            if (Polygon2.ContainsPoint(subject, sample, epsilon))
+                result.Add(PolygonNormalize.EnsureCounterClockwise(facePoly, epsilon));
+        }
+
+        return result;
+    }
+
     private static List<UGPoint2> TraceFace(
         List<UGPoint2> nodes,
         List<int>[] outgoing,
@@ -251,6 +372,151 @@ public static class PolygonSplitAtIntersections
             verts.RemoveAt(verts.Count - 1);
 
         return verts;
+    }
+
+    private static bool AnyIntersections(List<UGPoint2> aVerts, List<UGPoint2> bVerts, double epsilon)
+    {
+        for (var i = 0; i < aVerts.Count; i++)
+        {
+            var a0 = aVerts[i];
+            var a1 = aVerts[(i + 1) % aVerts.Count];
+            var segA = new UGSegment2(a0, a1);
+
+            for (var j = 0; j < bVerts.Count; j++)
+            {
+                var b0 = bVerts[j];
+                var b1 = bVerts[(j + 1) % bVerts.Count];
+                var segB = new UGSegment2(b0, b1);
+
+                var hit = SegmentIntersection2.Intersect(segA, segB, epsilon);
+                if (hit.Kind != UGSegmentIntersectionKind.None)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void AddSplitSegmentsToGraph(
+        List<SplitPoint>[] splitsByEdge,
+        List<UGPoint2> nodes,
+        HashSet<long> undirected,
+        List<(int A, int B)> undirectedPairs,
+        double epsilon)
+    {
+        for (var i = 0; i < splitsByEdge.Length; i++)
+        {
+            var splits = splitsByEdge[i];
+            if (splits.Count <= 1)
+                continue;
+
+            splits.Sort(static (l, r) => l.T.CompareTo(r.T));
+            var dedup = DedupSplitPoints(splits, epsilon);
+            if (dedup.Count < 2)
+                continue;
+
+            for (var k = 0; k < dedup.Count - 1; k++)
+            {
+                var p0 = dedup[k].Point;
+                var p1 = dedup[k + 1].Point;
+                if (NearlySame(p0, p1, epsilon))
+                    continue;
+
+                var u = GetOrAddNode(nodes, p0, epsilon);
+                var v = GetOrAddNode(nodes, p1, epsilon);
+                if (u == v)
+                    continue;
+
+                var a = Math.Min(u, v);
+                var b = Math.Max(u, v);
+                var key = PackEdgeKey(a, b);
+                if (undirected.Add(key))
+                    undirectedPairs.Add((a, b));
+            }
+        }
+    }
+
+    private static List<(UGPolygon2 Poly, double SignedArea)> BuildFaces(
+        List<UGPoint2> nodes,
+        List<(int A, int B)> undirectedPairs,
+        double epsilon)
+    {
+        var halfFrom = new int[undirectedPairs.Count * 2];
+        var halfTo = new int[undirectedPairs.Count * 2];
+        var halfTwin = new int[undirectedPairs.Count * 2];
+
+        for (var e = 0; e < undirectedPairs.Count; e++)
+        {
+            var (a, b) = undirectedPairs[e];
+
+            var he0 = 2 * e;
+            var he1 = he0 + 1;
+
+            halfFrom[he0] = a;
+            halfTo[he0] = b;
+            halfTwin[he0] = he1;
+
+            halfFrom[he1] = b;
+            halfTo[he1] = a;
+            halfTwin[he1] = he0;
+        }
+
+        var outgoing = new List<int>[nodes.Count];
+        for (var i = 0; i < outgoing.Length; i++)
+            outgoing[i] = new List<int>();
+
+        var halfAngle = new double[halfFrom.Length];
+        for (var he = 0; he < halfFrom.Length; he++)
+        {
+            var p0 = nodes[halfFrom[he]];
+            var p1 = nodes[halfTo[he]];
+            halfAngle[he] = Math.Atan2(p1.Y - p0.Y, p1.X - p0.X);
+            outgoing[halfFrom[he]].Add(he);
+        }
+
+        var indexInOutgoing = new int[halfFrom.Length];
+        for (var n = 0; n < outgoing.Length; n++)
+        {
+            outgoing[n].Sort((a, b) => halfAngle[a].CompareTo(halfAngle[b]));
+            for (var i = 0; i < outgoing[n].Count; i++)
+                indexInOutgoing[outgoing[n][i]] = i;
+        }
+
+        var visited = new bool[halfFrom.Length];
+        var faces = new List<(UGPolygon2 Poly, double SignedArea)>();
+
+        for (var he = 0; he < halfFrom.Length; he++)
+        {
+            if (visited[he])
+                continue;
+
+            var faceVerts = TraceFace(nodes, outgoing, indexInOutgoing, halfFrom, halfTo, halfTwin, visited, he, epsilon);
+            if (faceVerts.Count < 3)
+                continue;
+
+            var poly = PolygonSimplify.RemoveCollinearAndDuplicates(new UGPolygon2(faceVerts), epsilon);
+            if (poly.Count < 3)
+                continue;
+
+            var area = Polygon2.SignedArea(poly);
+            if (double.IsNaN(area) || double.IsInfinity(area) || Math.Abs(area) <= epsilon)
+                continue;
+
+            faces.Add((poly, area));
+        }
+
+        return faces;
+    }
+
+    private static UGPoint2 SamplePointInsidePolygon(UGPolygon2 polygon, double epsilon)
+    {
+        // Use triangulation (if possible) to get a point that is reliably inside the polygon.
+        var tris = PolygonTriangulate.EarClip(polygon, epsilon);
+        if (tris.Count == 0)
+            return UGPoint2.Empty;
+
+        var t = tris[0];
+        return new UGPoint2((t.A.X + t.B.X + t.C.X) / 3d, (t.A.Y + t.B.Y + t.C.Y) / 3d);
     }
 
     private static List<UGPoint2> CollectVertices(UGPolygon2 polygon, double epsilon)
