@@ -1,0 +1,12 @@
+# Global permissions for OpenCode
+# Agent-specific permissions are in agents/*.md frontmatter
+
+schema: https://opencode.ai/config.json
+
+permission:
+  edit:
+    "*": ask
+  external_directory:
+    "*": ask
+    "../fantasim-hub/docs/**": allow
+    "../modern-rocksdb/**": allow
