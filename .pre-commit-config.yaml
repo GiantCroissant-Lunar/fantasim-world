@@ -28,11 +28,11 @@ repos:
   # Local hooks
   - repo: local
     hooks:
-      # Sync agent config (skills, rules, commands) before commit
+      # Sync agent config (skills, rules, commands, hooks) before commit
       - id: sync-agent
         name: Sync agent config
         entry: python scripts/sync_skills.py
         language: python
-        files: '^\.agent/(skills/.*SKILL\.md|rules/.*\.md|commands/.*\.md)$'
+        files: '^\.agent/(skills/.*SKILL\.md|rules/.*\.md|commands/.*\.md|hooks/.*)$'
         pass_filenames: false
         stages: [pre-commit]

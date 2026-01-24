@@ -8,14 +8,16 @@ in tool-specific directories that reference the shared source.
 Syncs:
 - Skills: .agent/skills/ → .claude/skills/, .cline/skills/, .codex/skills/, etc.
 - Rules: .agent/rules/ → .claude/rules/, .clinerules/, .windsurf/rules/, AGENTS.md, GEMINI.md
-- Commands/Workflows: .agent/commands/ → .gemini/commands/, .windsurf/workflows/
+- Commands/Workflows: .agent/commands/ → .gemini/commands/, .windsurf/workflows/, .clinerules/workflows/
+- Hooks: .agent/hooks/ → .clinerules/hooks/ (Cline hooks)
 
 Usage:
-    python scripts/sync_skills.py           # Sync everything
-    python scripts/sync_skills.py --skills  # Sync skills only
-    python scripts/sync_skills.py --rules   # Sync rules only
+    python scripts/sync_skills.py            # Sync everything
+    python scripts/sync_skills.py --skills   # Sync skills only
+    python scripts/sync_skills.py --rules    # Sync rules only
     python scripts/sync_skills.py --commands # Sync commands/workflows only
-    task agent:sync                         # Via Taskfile
+    python scripts/sync_skills.py --hooks    # Sync hooks only
+    task agent:sync                          # Via Taskfile
 """
 
 import argparse
@@ -56,8 +58,15 @@ RULES_CONCAT_TARGETS = {
 # Commands/Workflows targets
 COMMANDS_SOURCE = AGENT_DIR / "commands"
 COMMANDS_TARGETS = {
+    "cline": Path(".clinerules/workflows"),
     "gemini": Path(".gemini/commands"),
     "windsurf": Path(".windsurf/workflows"),
+}
+
+# Hooks targets
+HOOKS_SOURCE = AGENT_DIR / "hooks"
+HOOKS_TARGETS = {
+    "cline": Path(".clinerules/hooks"),
 }
 
 
@@ -324,8 +333,8 @@ Please read and execute the instructions from that file.
 '''
 
 
-def create_windsurf_workflow_stub(cmd_name: str, description: str, depth: int = 2) -> str:
-    """Create a workflow stub for Windsurf."""
+def create_workflow_stub(cmd_name: str, description: str, depth: int = 2) -> str:
+    """Create a workflow stub for Windsurf and Cline."""
     relative_prefix = "../" * depth
     relative_path = f"{relative_prefix}.agent/commands/{cmd_name}.md"
 
@@ -386,6 +395,20 @@ def sync_commands() -> int:
         print(f"  [OK] {filename} -> {target_path}")
         cmd_count += 1
 
+    # Sync to Cline workflows (MD format in .clinerules/workflows/)
+    cline_target = COMMANDS_TARGETS["cline"]
+    ensure_dir(cline_target)
+    clean_dir(cline_target)
+    print(f"  -> {cline_target}")
+
+    depth = len(cline_target.parts)
+    for stem, filename, description in commands_data:
+        stub_content = create_workflow_stub(stem, description, depth)
+        target_path = cline_target / filename
+        target_path.write_text(stub_content, encoding="utf-8")
+        print(f"  [OK] {filename} -> {target_path}")
+        cmd_count += 1
+
     # Sync to Windsurf workflows (MD format)
     windsurf_target = COMMANDS_TARGETS["windsurf"]
     ensure_dir(windsurf_target)
@@ -394,13 +417,91 @@ def sync_commands() -> int:
 
     depth = len(windsurf_target.parts)
     for stem, filename, description in commands_data:
-        stub_content = create_windsurf_workflow_stub(stem, description, depth)
+        stub_content = create_workflow_stub(stem, description, depth)
         target_path = windsurf_target / filename
         target_path.write_text(stub_content, encoding="utf-8")
         print(f"  [OK] {filename} -> {target_path}")
         cmd_count += 1
 
     return cmd_count
+
+
+# =============================================================================
+# Hooks Sync
+# =============================================================================
+
+def create_hook_stub(hook_name: str, description: str, depth: int = 2) -> str:
+    """Create a hook stub that points to the source."""
+    relative_prefix = "../" * depth
+    relative_path = f"{relative_prefix}.agent/hooks/{hook_name}"
+
+    return f"""#!/usr/bin/env bash
+# Auto-generated pointer to .agent/hooks/{hook_name}
+# Edit the source file, not this stub.
+#
+# Description: {description}
+# Source: {relative_path}
+#
+# This stub executes the source hook script.
+# Cline hooks receive JSON via stdin and return JSON to control execution.
+
+exec "$(dirname "$0")/{relative_path}" "$@"
+"""
+
+
+def sync_hooks() -> int:
+    """Sync all hooks from source to target directories."""
+    print(f"Syncing hooks from {HOOKS_SOURCE}...")
+
+    if not HOOKS_SOURCE.exists():
+        print(f"  [SKIP] Source directory not found: {HOOKS_SOURCE}")
+        return 0
+
+    # Collect all hooks
+    hooks_data: list[tuple[str, str]] = []  # (filename, description)
+
+    for hook_file in sorted(HOOKS_SOURCE.iterdir()):
+        if hook_file.is_file():
+            # Try to extract description from file if it's a script with comments
+            description = ""
+            try:
+                content = hook_file.read_text(encoding="utf-8")
+                # Look for description in comments
+                for line in content.split("\n")[:10]:
+                    if line.startswith("# Description:"):
+                        description = line.replace("# Description:", "").strip()
+                        break
+            except Exception:
+                pass
+
+            hooks_data.append((hook_file.name, description))
+
+    if not hooks_data:
+        print("  [SKIP] No hooks found")
+        return 0
+
+    hook_count = 0
+
+    # Sync to Cline hooks
+    for tool, target_dir in HOOKS_TARGETS.items():
+        ensure_dir(target_dir)
+        clean_dir(target_dir)
+        print(f"  -> {target_dir}")
+
+        depth = len(target_dir.parts)
+        for filename, description in hooks_data:
+            stub_content = create_hook_stub(filename, description, depth)
+            target_path = target_dir / filename
+            target_path.write_text(stub_content, encoding="utf-8")
+            # Make executable on Unix
+            try:
+                target_path.chmod(0o755)
+            except Exception:
+                pass
+            print(f"  [OK] {filename} -> {target_dir}")
+            hook_count += 1
+
+    return hook_count
 
 
 # =============================================================================
@@ -412,10 +513,11 @@ def main():
     parser.add_argument("--skills", action="store_true", help="Sync skills only")
     parser.add_argument("--rules", action="store_true", help="Sync rules only")
     parser.add_argument("--commands", action="store_true", help="Sync commands/workflows only")
+    parser.add_argument("--hooks", action="store_true", help="Sync hooks only")
     args = parser.parse_args()
 
     # If no specific flag, sync everything
-    sync_all = not (args.skills or args.rules or args.commands)
+    sync_all = not (args.skills or args.rules or args.commands or args.hooks)
 
     total = 0
 
@@ -427,6 +529,9 @@ def main():
 
     if sync_all or args.commands:
         total += sync_commands()
+
+    if sync_all or args.hooks:
+        total += sync_hooks()
 
     print(f"\nSync complete!")
     print(f"Total items synced: {total}")
