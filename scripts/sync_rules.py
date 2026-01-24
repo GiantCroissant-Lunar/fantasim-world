@@ -5,10 +5,11 @@ Sync rules from .agent/rules to tool-specific rules directories and files.
 Generates:
 - .kilocode/rules/*.md     (directory of markdown files)
 - .windsurf/rules/*.md     (directory of markdown files)
-- .clinerules/rules/*.md   (directory of markdown files)
 - .cursor/rules/*.mdc      (directory of MDC files)
 - CLAUDE.md                (single concatenated file)
 - AGENTS.md                (single concatenated file with header)
+
+Note: Cline rules (.clinerules/) are handled by sync_skills.py
 
 Supports adapter overrides: if .agent/adapters/<tool>/rules/ exists,
 those files take precedence over the canonical .agent/rules/ files.
@@ -27,10 +28,10 @@ SOURCE_DIR = Path(".agent/rules")
 ADAPTERS_DIR = Path(".agent/adapters")
 
 # Tools that use directory-based rules
+# Note: Cline uses .clinerules/ (root) which is handled by sync_skills.py
 DIRECTORY_TARGETS = {
     "kilocode": Path(".kilocode/rules"),
     "windsurf": Path(".windsurf/rules"),
-    "cline": Path(".clinerules/rules"),
     "cursor": Path(".cursor/rules"),
 }
 
@@ -38,7 +39,6 @@ DIRECTORY_TARGETS = {
 TOOL_EXTENSIONS = {
     "kilocode": ".md",
     "windsurf": ".md",
-    "cline": ".md",
     "cursor": ".mdc",
 }
 
