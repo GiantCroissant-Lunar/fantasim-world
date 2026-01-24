@@ -3,12 +3,15 @@
 # =============================================================================
 .claude/
 .cline/
+.clinerules/
 .codex/
 .cursor/
 .gemini/
 .kilocode/
 .opencode/
 .windsurf/
+AGENTS.md
+GEMINI.md
 
 # =============================================================================
 # Dependencies

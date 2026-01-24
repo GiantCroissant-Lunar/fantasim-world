@@ -169,5 +169,5 @@ The skill will automatically be available to all supported tools via the junctio
 .windsurf/skills/                # Stub files → .agent/skills
 
 scripts/
-└── sync_skills.py               # Cross-platform sync script
+└── sync_skills.py               # Unified sync script (skills + rules + commands)
 ```
