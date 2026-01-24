@@ -6,8 +6,8 @@ Reads all configuration from .agent/ and creates pointer/stub files
 in tool-specific directories that reference the shared source.
 
 Syncs:
-- Skills: .agent/skills/ → .claude/skills/, .cline/skills/, .codex/skills/, .cursor/skills/, etc.
-- Rules: .agent/rules/ → .claude/rules/, .clinerules/, .cursor/rules/, .windsurf/rules/, AGENTS.md, GEMINI.md
+- Skills: .agent/skills/ → .claude/skills/, .clinerules/skills/, .codex/skills/, .cursor/skills/, etc.
+- Rules: .agent/rules/ → .claude/rules/, .clinerules/rules/, .cursor/rules/, .windsurf/rules/, AGENTS.md, GEMINI.md
 - Commands/Workflows: .agent/commands/ → .cursor/commands/, .gemini/commands/, .windsurf/workflows/, .clinerules/workflows/
 - Hooks: .agent/hooks/ → .clinerules/hooks/ (Cline hooks)
 
@@ -36,7 +36,7 @@ AGENT_DIR = Path(".agent")
 SKILLS_SOURCE = AGENT_DIR / "skills"
 SKILLS_TARGETS = [
     Path(".claude/skills"),
-    Path(".cline/skills"),
+    Path(".clinerules/skills"),
     Path(".codex/skills"),
     Path(".cursor/skills"),
     Path(".gemini/skills"),
@@ -49,7 +49,7 @@ SKILLS_TARGETS = [
 RULES_SOURCE = AGENT_DIR / "rules"
 RULES_TARGETS = {
     "claude": Path(".claude/rules"),
-    "cline": Path(".clinerules"),
+    "cline": Path(".clinerules/rules"),
     "cursor": Path(".cursor/rules"),
     "windsurf": Path(".windsurf/rules"),
 }

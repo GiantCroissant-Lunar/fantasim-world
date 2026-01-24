@@ -5,7 +5,7 @@ Sync rules from .agent/rules to tool-specific rules directories and files.
 Generates:
 - .kilocode/rules/*.md     (directory of markdown files)
 - .windsurf/rules/*.md     (directory of markdown files)
-- .cline/rules/*.md        (directory of markdown files)
+- .clinerules/rules/*.md   (directory of markdown files)
 - .cursor/rules/*.mdc      (directory of MDC files)
 - CLAUDE.md                (single concatenated file)
 - AGENTS.md                (single concatenated file with header)
@@ -30,7 +30,7 @@ ADAPTERS_DIR = Path(".agent/adapters")
 DIRECTORY_TARGETS = {
     "kilocode": Path(".kilocode/rules"),
     "windsurf": Path(".windsurf/rules"),
-    "cline": Path(".cline/rules"),
+    "cline": Path(".clinerules/rules"),
     "cursor": Path(".cursor/rules"),
 }
 

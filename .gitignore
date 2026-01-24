@@ -2,7 +2,6 @@
 # Agent Config (generated - regenerate with: task agent:sync)
 # =============================================================================
 .claude/
-.cline/
 .clinerules/
 .codex/
 .cursor/
