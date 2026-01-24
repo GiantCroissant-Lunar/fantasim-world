@@ -1,8 +1,8 @@
 using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
-using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
+using UnifyGeometry;
 
 namespace Plate.Topology.Contracts.Events;
 
@@ -26,7 +26,7 @@ public readonly record struct JunctionUpdatedEvent(
     Guid EventId,
     JunctionId JunctionId,
     BoundaryId[] NewBoundaryIds,
-    Point2D? NewLocation,
+    Point2? NewLocation,
     CanonicalTick Tick,
     long Sequence,
     TruthStreamIdentity StreamIdentity,
