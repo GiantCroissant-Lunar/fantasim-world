@@ -9,9 +9,12 @@ This document tracks what has been implemented so far on the `002-unify-geometry
 
 ## Project Layout (current)
 
-- `project/contracts/UnifyGeometry.Primitives/` — stable primitives (`UGPoint2`, `UGPolyline2`, `UGPolygon2`, …)
-- `project/plugins/UnifyGeometry.Operations/` — derived operators (algorithms)
-- `project/plugins/UnifyGeometry.Adapters.PlateTopology/` — interop only
+- In `unify-maths` (reusable library):
+  - `dotnet/src/UnifyGeometry.Primitives/` — stable primitives (`UGPoint2`, `UGPolyline2`, `UGPolygon2`, …)
+  - `dotnet/src/UnifyGeometry.Operations/` — derived operators (algorithms)
+- In `fantasim-world` (domain integration only):
+  - `project/plugins/UnifyGeometry.Adapters.PlateTopology/` — interop only
+  - `project/tests/UnifyGeometry.Tests/` — tests (will likely move to `unify-maths` later, except adapter-specific coverage)
 
 ## Primitives Added / In Use
 
