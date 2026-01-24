@@ -6,10 +6,12 @@ Reads all configuration from .agent/ and creates pointer/stub files
 in tool-specific directories that reference the shared source.
 
 Syncs:
-- Skills: .agent/skills/ → .claude/skills/, .cline/skills/, .codex/skills/, etc.
-- Rules: .agent/rules/ → .claude/rules/, .clinerules/, .windsurf/rules/, AGENTS.md, GEMINI.md
-- Commands/Workflows: .agent/commands/ → .gemini/commands/, .windsurf/workflows/, .clinerules/workflows/
+- Skills: .agent/skills/ → .claude/skills/, .cline/skills/, .codex/skills/, .cursor/skills/, etc.
+- Rules: .agent/rules/ → .claude/rules/, .clinerules/, .cursor/rules/, .windsurf/rules/, AGENTS.md, GEMINI.md
+- Commands/Workflows: .agent/commands/ → .cursor/commands/, .gemini/commands/, .windsurf/workflows/, .clinerules/workflows/
 - Hooks: .agent/hooks/ → .clinerules/hooks/ (Cline hooks)
+
+Note: Cursor hooks use JSON config (.cursor/hooks.json) - not synced automatically.
 
 Usage:
     python scripts/sync_skills.py            # Sync everything
@@ -36,6 +38,7 @@ SKILLS_TARGETS = [
     Path(".claude/skills"),
     Path(".cline/skills"),
     Path(".codex/skills"),
+    Path(".cursor/skills"),
     Path(".gemini/skills"),
     Path(".kilocode/skills"),
     Path(".opencode/skills"),
@@ -47,6 +50,7 @@ RULES_SOURCE = AGENT_DIR / "rules"
 RULES_TARGETS = {
     "claude": Path(".claude/rules"),
     "cline": Path(".clinerules"),
+    "cursor": Path(".cursor/rules"),
     "windsurf": Path(".windsurf/rules"),
 }
 # These get concatenated pointer files
@@ -59,6 +63,7 @@ RULES_CONCAT_TARGETS = {
 COMMANDS_SOURCE = AGENT_DIR / "commands"
 COMMANDS_TARGETS = {
     "cline": Path(".clinerules/workflows"),
+    "cursor": Path(".cursor/commands"),
     "gemini": Path(".gemini/commands"),
     "windsurf": Path(".windsurf/workflows"),
 }
@@ -405,6 +410,20 @@ def sync_commands() -> int:
     for stem, filename, description in commands_data:
         stub_content = create_workflow_stub(stem, description, depth)
         target_path = cline_target / filename
+        target_path.write_text(stub_content, encoding="utf-8")
+        print(f"  [OK] {filename} -> {target_path}")
+        cmd_count += 1
+
+    # Sync to Cursor commands (MD format in .cursor/commands/)
+    cursor_target = COMMANDS_TARGETS["cursor"]
+    ensure_dir(cursor_target)
+    clean_dir(cursor_target)
+    print(f"  -> {cursor_target}")
+
+    depth = len(cursor_target.parts)
+    for stem, filename, description in commands_data:
+        stub_content = create_workflow_stub(stem, description, depth)
+        target_path = cursor_target / filename
         target_path.write_text(stub_content, encoding="utf-8")
         print(f"  [OK] {filename} -> {target_path}")
         cmd_count += 1
