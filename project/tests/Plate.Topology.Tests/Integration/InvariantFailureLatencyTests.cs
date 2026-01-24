@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 using Xunit;
@@ -64,7 +64,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 stream),
@@ -73,7 +73,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 new Guid("00000000-0000-0000-0000-000000000004"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 stream),
@@ -120,7 +120,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
                 missingPlateIdLeft,
                 missingPlateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 0,
                 stream)

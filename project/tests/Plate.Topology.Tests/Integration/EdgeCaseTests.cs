@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -108,7 +108,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -147,7 +147,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -199,7 +199,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -210,7 +210,7 @@ public class EdgeCaseTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Transform,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(5),
                 5,
                 _stream
@@ -221,7 +221,7 @@ public class EdgeCaseTests : IDisposable
                 plateId3,
                 plateId4,
                 BoundaryType.Transform,
-                new LineSegment(2.0, 0.0, 3.0, 0.0),
+                new Segment2(2.0, 0.0, 3.0, 0.0),
                 new CanonicalTick(6),
                 6,
                 _stream
@@ -230,7 +230,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2, boundaryId3],
-                new Point2D(1.0, 0.0),
+                new Point2(1.0, 0.0),
                 new CanonicalTick(7),
                 7,
                 _stream
@@ -276,7 +276,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -285,7 +285,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 junctionId1,
                 [boundaryId],
-                new Point2D(0.0, 0.0),
+                new Point2(0.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -294,7 +294,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 junctionId2,
                 [boundaryId],
-                new Point2D(1.0, 0.0),
+                new Point2(1.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -346,7 +346,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -395,7 +395,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -442,7 +442,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -451,7 +451,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -496,7 +496,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -505,7 +505,7 @@ public class EdgeCaseTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2], // boundaryId2 doesn't exist
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -546,7 +546,7 @@ public class EdgeCaseTests : IDisposable
                 plateId1,
                 new PlateId(Guid.NewGuid()), // Non-existent right plate
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream

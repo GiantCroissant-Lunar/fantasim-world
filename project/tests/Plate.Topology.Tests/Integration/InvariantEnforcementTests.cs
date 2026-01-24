@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -62,7 +62,7 @@ public class InvariantEnforcementTests : IDisposable
                 new PlateId(Guid.NewGuid()), // Non-existent left plate
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream
@@ -98,7 +98,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateIdLeft,
                 new PlateId(Guid.NewGuid()), // Non-existent right plate
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream
@@ -137,7 +137,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateIdLeft, // Retired left plate
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -173,7 +173,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId,
                 plateId,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream
@@ -210,7 +210,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId], // Non-existent boundary
-                new Point2D(0.0, 0.0),
+                new Point2(0.0, 0.0),
                 new CanonicalTick(0),
                 0,
                 _stream
@@ -250,7 +250,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -260,7 +260,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId], // Retired boundary
-                new Point2D(0.0, 0.0),
+                new Point2(0.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -302,7 +302,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -311,7 +311,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -362,7 +362,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -411,7 +411,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -420,7 +420,7 @@ public class InvariantEnforcementTests : IDisposable
             TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
-                new LineSegment(0.0, 0.0, 2.0, 0.0),
+                new Segment2(0.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -460,7 +460,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -469,7 +469,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -479,7 +479,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.6, 0.0),
+                new Point2(0.6, 0.0),
                 new CanonicalTick(5),
                 5,
                 _stream
@@ -544,7 +544,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -585,7 +585,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -594,7 +594,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -663,7 +663,7 @@ public class InvariantEnforcementTests : IDisposable
             TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(0),
                 0,
                 _stream
@@ -695,7 +695,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 Array.Empty<BoundaryId>(),
-                new Point2D(0.0, 0.0),
+                new Point2(0.0, 0.0),
                 new CanonicalTick(0),
                 0,
                 _stream
@@ -769,7 +769,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -778,7 +778,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -830,7 +830,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -839,7 +839,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -906,7 +906,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -917,7 +917,7 @@ public class InvariantEnforcementTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Transform,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -926,7 +926,7 @@ public class InvariantEnforcementTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId1, boundaryId2],
-                new Point2D(1.0, 0.0),
+                new Point2(1.0, 0.0),
                 new CanonicalTick(5),
                 5,
                 _stream

@@ -1,7 +1,7 @@
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -46,7 +46,7 @@ public sealed class MaterializeAtTickTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream),
@@ -54,7 +54,7 @@ public sealed class MaterializeAtTickTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream)

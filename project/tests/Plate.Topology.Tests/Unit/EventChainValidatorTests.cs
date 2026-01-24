@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Serializers;
 using Xunit;

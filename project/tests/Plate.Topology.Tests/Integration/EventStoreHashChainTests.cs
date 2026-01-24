@@ -1,7 +1,7 @@
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 using Plate.Topology.Serializers;
@@ -90,7 +90,7 @@ public class EventStoreHashChainTests : IDisposable
             TestEventFactory.PlateCreated(Guid.NewGuid(), plateId2, new CanonicalTick(1), 1, _stream),
             TestEventFactory.BoundaryCreated(
                 Guid.NewGuid(), boundaryId, plateId1, plateId2,
-                BoundaryType.Divergent, new LineSegment(0, 0, 10, 10),
+                BoundaryType.Divergent, new Segment2(0, 0, 10, 10),
                 new CanonicalTick(2), 2, _stream)
         };
 
