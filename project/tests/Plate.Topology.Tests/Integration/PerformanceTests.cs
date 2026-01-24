@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -72,7 +72,7 @@ public class PerformanceTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 eventType,
-                new LineSegment(0.0, (double)i, 1.0, (double)i),
+                new Segment2(0.0, (double)i, 1.0, (double)i),
                 new CanonicalTick(seq),
                 seq,
                 _stream
@@ -135,7 +135,7 @@ public class PerformanceTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 eventType,
-                new LineSegment(0.0, (double)i, 1.0, (double)i),
+                new Segment2(0.0, (double)i, 1.0, (double)i),
                 new CanonicalTick(seq),
                 seq,
                 _stream

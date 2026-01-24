@@ -4,7 +4,7 @@ using System.Text;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -44,7 +44,7 @@ public sealed class SnapshottingMaterializerTests
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 stream)

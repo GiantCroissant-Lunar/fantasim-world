@@ -1,4 +1,4 @@
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 
 namespace Plate.Topology.Contracts.Entities;
 

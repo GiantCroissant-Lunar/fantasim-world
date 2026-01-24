@@ -2,7 +2,7 @@ using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Derived;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 using UnifyTopology.Graph;
@@ -64,7 +64,7 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -75,16 +75,16 @@ public sealed class PlateTopologyIndexAccessTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Convergent,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
             ),
 
             // Add Junctions AFTER boundaries (Invariant: NoOrphanJunctions)
-            TestEventFactory.JunctionCreated(Guid.NewGuid(), j1, new[]{boundaryId1}, new Point2D(0,0), new CanonicalTick(5), 5, _stream),
-            TestEventFactory.JunctionCreated(Guid.NewGuid(), j2, new[]{boundaryId1, boundaryId2}, new Point2D(1,0), new CanonicalTick(6), 6, _stream),
-            TestEventFactory.JunctionCreated(Guid.NewGuid(), j3, new[]{boundaryId2}, new Point2D(2,0), new CanonicalTick(7), 7, _stream)
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j1, new[]{boundaryId1}, new Point2(0,0), new CanonicalTick(5), 5, _stream),
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j2, new[]{boundaryId1, boundaryId2}, new Point2(1,0), new CanonicalTick(6), 6, _stream),
+            TestEventFactory.JunctionCreated(Guid.NewGuid(), j3, new[]{boundaryId2}, new Point2(2,0), new CanonicalTick(7), 7, _stream)
         };
 
         await _store.AppendAsync(_stream, events, CancellationToken.None);

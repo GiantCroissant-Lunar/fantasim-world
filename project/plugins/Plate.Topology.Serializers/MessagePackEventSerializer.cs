@@ -9,8 +9,8 @@ using MessagePack.Resolvers;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
+using UnifyGeometry;
 
 namespace Plate.Topology.Serializers;
 
@@ -123,14 +123,14 @@ internal class GeometryFormatter : IMessagePackFormatter<IGeometry>
 
         switch (value)
         {
-            case Point2D point:
+            case Point2 point:
                 writer.WriteArrayHeader(3);
                 writer.Write((byte)GeometryType.Point);
                 writer.Write(point.X);
                 writer.Write(point.Y);
                 break;
 
-            case LineSegment segment:
+            case Segment2 segment:
                 writer.WriteArrayHeader(5);
                 writer.Write((byte)GeometryType.LineSegment);
                 writer.Write(segment.Start.X);
@@ -139,8 +139,8 @@ internal class GeometryFormatter : IMessagePackFormatter<IGeometry>
                 writer.Write(segment.End.Y);
                 break;
 
-            case Polyline polyline:
-                writer.WriteArrayHeader(2 + polyline.Points.Count * 2);
+            case Polyline2 polyline:
+                writer.WriteArrayHeader(2 + polyline.Count * 2);
                 writer.Write((byte)GeometryType.Polyline);
                 foreach (var point in polyline.Points)
                 {
@@ -158,7 +158,7 @@ internal class GeometryFormatter : IMessagePackFormatter<IGeometry>
     {
         if (reader.TryReadNil())
         {
-            return new Point2D(double.NaN, double.NaN);
+            return Point2.Empty;
         }
 
         var length = reader.ReadArrayHeader();
@@ -176,17 +176,17 @@ internal class GeometryFormatter : IMessagePackFormatter<IGeometry>
         };
     }
 
-    private Point2D DeserializePoint(ref MessagePackReader reader, int expectedLength)
+    private Point2 DeserializePoint(ref MessagePackReader reader, int expectedLength)
     {
         if (expectedLength != 3)
             throw new InvalidOperationException($"Point geometry must have 3 elements, got {expectedLength}");
 
         var x = reader.ReadDouble();
         var y = reader.ReadDouble();
-        return new Point2D(x, y);
+        return new Point2(x, y);
     }
 
-    private LineSegment DeserializeLineSegment(ref MessagePackReader reader, int expectedLength)
+    private Segment2 DeserializeLineSegment(ref MessagePackReader reader, int expectedLength)
     {
         if (expectedLength != 5)
             throw new InvalidOperationException($"LineSegment geometry must have 5 elements, got {expectedLength}");
@@ -195,25 +195,25 @@ internal class GeometryFormatter : IMessagePackFormatter<IGeometry>
         var startY = reader.ReadDouble();
         var endX = reader.ReadDouble();
         var endY = reader.ReadDouble();
-        return new LineSegment(startX, startY, endX, endY);
+        return new Segment2(new Point2(startX, startY), new Point2(endX, endY));
     }
 
-    private Polyline DeserializePolyline(ref MessagePackReader reader, int expectedLength)
+    private Polyline2 DeserializePolyline(ref MessagePackReader reader, int expectedLength)
     {
         if (expectedLength < 2)
             throw new InvalidOperationException($"Polyline geometry must have at least 2 elements, got {expectedLength}");
 
         var pointCount = (expectedLength - 1) / 2;
-        var points = new Point2D[pointCount];
+        var points = new Point2[pointCount];
 
         for (int i = 0; i < pointCount; i++)
         {
             var x = reader.ReadDouble();
             var y = reader.ReadDouble();
-            points[i] = new Point2D(x, y);
+            points[i] = new Point2(x, y);
         }
 
-        return new Polyline(points);
+        return new Polyline2(points);
     }
 }
 
@@ -597,7 +597,7 @@ internal class JunctionCreatedEventFormatter : EventFormatter<JunctionCreatedEve
         var previousHash = HashHelper.Deserialize(ref reader);
         var hash = HashHelper.Deserialize(ref reader);
 
-        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2D(locationX, locationY), tick, sequence, streamIdentity, previousHash, hash);
+        return new JunctionCreatedEvent(eventId, junctionId, boundaryIds, new Point2(locationX, locationY), tick, sequence, streamIdentity, previousHash, hash);
     }
 }
 
@@ -662,7 +662,7 @@ internal class JunctionUpdatedEventFormatter : EventFormatter<JunctionUpdatedEve
         }
         var locationX = reader.ReadDouble();
         var locationY = reader.ReadDouble();
-        var newLocation = double.IsNaN(locationX) || double.IsNaN(locationY) ? null : new Point2D?(new Point2D(locationX, locationY));
+        var newLocation = double.IsNaN(locationX) || double.IsNaN(locationY) ? null : new Point2?(new Point2(locationX, locationY));
         var tick = CanonicalTickHelper.Deserialize(ref reader);
         var sequence = reader.ReadInt64();
         var streamIdentity = StreamIdentityHelper.Deserialize(ref reader);

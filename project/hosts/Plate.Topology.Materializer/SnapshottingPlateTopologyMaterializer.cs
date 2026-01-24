@@ -59,10 +59,16 @@ public sealed class SnapshottingPlateTopologyMaterializer
             // Load snapshot into state
             var stateFromSnapshot = FromSnapshot(snapshot.Value);
 
-            // If we found an exact match, we're done (no tail replay needed)
+            // If we found an exact tick match, we can only skip tail replay if the snapshot
+            // is also at the current head sequence. Otherwise, late-arriving events with
+            // earlier/equal ticks (non-monotone streams) would be missed.
             if (snapshot.Value.Key.Tick == targetTick.Value)
             {
-                return new MaterializationResult(key, stateFromSnapshot, true);
+                var headSeq = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);
+                if (headSeq.HasValue && headSeq.Value == snapshot.Value.LastEventSequence)
+                {
+                    return new MaterializationResult(key, stateFromSnapshot, true);
+                }
             }
 
             // Incremental replay: use sequence boundary, not tick

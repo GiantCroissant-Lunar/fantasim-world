@@ -1,4 +1,4 @@
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Xunit;
 
 namespace Plate.Topology.Tests.Contract;
@@ -285,7 +285,7 @@ public class GeometryContractTests
     public void GeometryType_Point2D_ReturnsPoint()
     {
         // Arrange
-        var point = new Point2D(1.0, 2.0);
+        var point = new Point2(1.0, 2.0);
 
         // Act
         var geometryType = ((IGeometry)point).GeometryType;
@@ -298,7 +298,7 @@ public class GeometryContractTests
     public void GeometryType_LineSegment_ReturnsLineSegment()
     {
         // Arrange
-        var segment = new LineSegment(0.0, 0.0, 5.0, 0.0);
+        var segment = new Segment2(0.0, 0.0, 5.0, 0.0);
 
         // Act
         var geometryType = ((IGeometry)segment).GeometryType;
@@ -311,7 +311,7 @@ public class GeometryContractTests
     public void GeometryType_Polyline_ReturnsPolyline()
     {
         // Arrange
-        var polyline = new Polyline(new[] { new Point2D(0.0, 0.0), new Point2D(1.0, 1.0) });
+        var polyline = new Polyline2(new[] { new Point2(0.0, 0.0), new Point2(1.0, 1.0) });
 
         // Act
         var geometryType = ((IGeometry)polyline).GeometryType;
@@ -324,9 +324,9 @@ public class GeometryContractTests
     public void GeometryType_CanDiscriminateLineSegmentFromPolyline()
     {
         // Arrange
-        // Both LineSegment and Polyline have Dimension=1
-        var lineSegment = new LineSegment(0.0, 0.0, 1.0, 1.0);
-        var polyline = new Polyline(new[] { new Point2D(0.0, 0.0), new Point2D(1.0, 1.0) });
+        // Both Segment2 and Polyline2 have Dimension=1
+        var lineSegment = new Segment2(0.0, 0.0, 1.0, 1.0);
+        var polyline = new Polyline2(new[] { new Point2(0.0, 0.0), new Point2(1.0, 1.0) });
 
         // Act
         var lineSegmentType = ((IGeometry)lineSegment).GeometryType;
@@ -344,9 +344,9 @@ public class GeometryContractTests
     public void GeometryType_PolymorphicDiscrimination()
     {
         // Arrange
-        IGeometry point = new Point2D(1.0, 2.0);
-        IGeometry segment = new LineSegment(0.0, 0.0, 5.0, 0.0);
-        IGeometry polyline = new Polyline(new[] { new Point2D(0.0, 0.0), new Point2D(1.0, 1.0) });
+        IGeometry point = new Point2(1.0, 2.0);
+        IGeometry segment = new Segment2(0.0, 0.0, 5.0, 0.0);
+        IGeometry polyline = new Polyline2(new[] { new Point2(0.0, 0.0), new Point2(1.0, 1.0) });
 
         // Act
         var pointType = point.GeometryType;
@@ -367,9 +367,9 @@ public class GeometryContractTests
         // Arrange
         var geometries = new IGeometry[]
         {
-            new Point2D(0.0, 0.0),
-            new LineSegment(0.0, 0.0, 1.0, 1.0),
-            new Polyline(new[] { new Point2D(0.0, 0.0), new Point2D(1.0, 1.0), new Point2D(2.0, 0.0) })
+            new Point2(0.0, 0.0),
+            new Segment2(0.0, 0.0, 1.0, 1.0),
+            new Polyline2(new[] { new Point2(0.0, 0.0), new Point2(1.0, 1.0), new Point2(2.0, 0.0) })
         };
 
         // Act & Assert - Can use GeometryType in switch statement
@@ -453,13 +453,13 @@ public class GeometryContractTests
 
     #endregion
 
-    #region Concrete Type Tests - Point2D
+    #region Concrete Type Tests - Point2
 
     [Fact]
     public void Point2D_Constructor_SetsCoordinates()
     {
         // Arrange & Act
-        var point = new Point2D(3.5, 7.2);
+        var point = new Point2(3.5, 7.2);
 
         // Assert
         Assert.Equal(3.5, point.X);
@@ -470,7 +470,7 @@ public class GeometryContractTests
     public void Point2D_Empty_ReturnsNaNCoordinates()
     {
         // Arrange & Act
-        var point = Point2D.Empty;
+        var point = Point2.Empty;
 
         // Assert
         Assert.True(point.IsEmpty);
@@ -482,7 +482,7 @@ public class GeometryContractTests
     public void Point2D_Origin_ReturnsZeroCoordinates()
     {
         // Arrange & Act
-        var point = Point2D.Origin;
+        var point = Point2.Origin;
 
         // Assert
         Assert.Equal(0.0, point.X);
@@ -494,7 +494,7 @@ public class GeometryContractTests
     public void Point2D_Dimension_ReturnsZero()
     {
         // Arrange
-        var point = new Point2D(1.0, 2.0);
+        var point = new Point2(1.0, 2.0);
 
         // Act & Assert
         Assert.Equal(0, point.Dimension);
@@ -504,7 +504,7 @@ public class GeometryContractTests
     public void Point2D_ComputeLength_ReturnsZero()
     {
         // Arrange
-        var point = new Point2D(5.0, 10.0);
+        var point = new Point2(5.0, 10.0);
 
         // Act
         var length = point.ComputeLength();
@@ -517,8 +517,8 @@ public class GeometryContractTests
     public void Point2D_DistanceTo_ComputesCorrectDistance()
     {
         // Arrange
-        var point1 = new Point2D(0.0, 0.0);
-        var point2 = new Point2D(3.0, 4.0);
+        var point1 = new Point2(0.0, 0.0);
+        var point2 = new Point2(3.0, 4.0);
 
         // Act
         var distance = point1.DistanceTo(point2);
@@ -531,8 +531,8 @@ public class GeometryContractTests
     public void Point2D_DistanceTo_EmptyPoint_ReturnsNaN()
     {
         // Arrange
-        var point1 = new Point2D(1.0, 2.0);
-        var point2 = Point2D.Empty;
+        var point1 = new Point2(1.0, 2.0);
+        var point2 = Point2.Empty;
 
         // Act
         var distance = point1.DistanceTo(point2);
@@ -545,39 +545,39 @@ public class GeometryContractTests
     public void Point2D_Clone_ReturnsThisInstance()
     {
         // Arrange
-        var point = new Point2D(1.5, 2.5);
+        var point = new Point2(1.5, 2.5);
 
         // Act
         var clone = ((IGeometry)point).Clone();
 
         // Assert - Since it's a value type, Clone returns this
-        Assert.Equal(point.X, ((Point2D)clone).X);
-        Assert.Equal(point.Y, ((Point2D)clone).Y);
+        Assert.Equal(point.X, ((Point2)clone).X);
+        Assert.Equal(point.Y, ((Point2)clone).Y);
     }
 
     [Fact]
     public void Point2D_ToString_FormatsCorrectly()
     {
         // Arrange
-        var point = new Point2D(1.5, 2.5);
-        var emptyPoint = Point2D.Empty;
+        var point = new Point2(1.5, 2.5);
+        var emptyPoint = Point2.Empty;
 
         // Act
         var formatted = point.ToString();
         var emptyFormatted = emptyPoint.ToString();
 
         // Assert
-        Assert.Equal("Point2D(1.5, 2.5)", formatted);
-        Assert.Equal("Point2D(Empty)", emptyFormatted);
+        Assert.Equal("Point2(1.5, 2.5)", formatted);
+        Assert.Equal("Point2(Empty)", emptyFormatted);
     }
 
     [Fact]
     public void Point2D_Equality_ValueSemantics()
     {
         // Arrange
-        var point1 = new Point2D(1.0, 2.0);
-        var point2 = new Point2D(1.0, 2.0);
-        var point3 = new Point2D(1.0, 3.0);
+        var point1 = new Point2(1.0, 2.0);
+        var point2 = new Point2(1.0, 2.0);
+        var point3 = new Point2(1.0, 3.0);
 
         // Assert
         Assert.Equal(point1, point2);
@@ -586,17 +586,17 @@ public class GeometryContractTests
 
     #endregion
 
-    #region Concrete Type Tests - LineSegment
+    #region Concrete Type Tests - Segment2
 
     [Fact]
     public void LineSegment_Constructor_SetsEndpoints()
     {
         // Arrange
-        var start = new Point2D(0.0, 0.0);
-        var end = new Point2D(5.0, 0.0);
+        var start = new Point2(0.0, 0.0);
+        var end = new Point2(5.0, 0.0);
 
         // Act
-        var segment = new LineSegment(start, end);
+        var segment = new Segment2(start, end);
 
         // Assert
         Assert.Equal(start, segment.Start);
@@ -607,7 +607,7 @@ public class GeometryContractTests
     public void LineSegment_Constructor_Coordinates_SetsEndpoints()
     {
         // Arrange & Act
-        var segment = new LineSegment(0.0, 0.0, 5.0, 0.0);
+        var segment = new Segment2(0.0, 0.0, 5.0, 0.0);
 
         // Assert
         Assert.Equal(0.0, segment.Start.X);
@@ -620,7 +620,7 @@ public class GeometryContractTests
     public void LineSegment_Empty_ReturnsEmptyEndpoints()
     {
         // Arrange & Act
-        var segment = LineSegment.Empty;
+        var segment = Segment2.Empty;
 
         // Assert
         Assert.True(segment.IsEmpty);
@@ -632,7 +632,7 @@ public class GeometryContractTests
     public void LineSegment_Dimension_ReturnsOne()
     {
         // Arrange
-        var segment = new LineSegment(0.0, 0.0, 5.0, 0.0);
+        var segment = new Segment2(0.0, 0.0, 5.0, 0.0);
 
         // Act & Assert
         Assert.Equal(1, segment.Dimension);
@@ -642,7 +642,7 @@ public class GeometryContractTests
     public void LineSegment_ComputeLength_ReturnsCorrectLength()
     {
         // Arrange
-        var segment = new LineSegment(0.0, 0.0, 3.0, 4.0);
+        var segment = new Segment2(0.0, 0.0, 3.0, 4.0);
 
         // Act
         var length = segment.ComputeLength();
@@ -655,7 +655,7 @@ public class GeometryContractTests
     public void LineSegment_ComputeLength_EmptySegment_ReturnsNaN()
     {
         // Arrange
-        var segment = LineSegment.Empty;
+        var segment = Segment2.Empty;
 
         // Act
         var length = segment.ComputeLength();
@@ -668,41 +668,41 @@ public class GeometryContractTests
     public void LineSegment_Clone_ReturnsThisInstance()
     {
         // Arrange
-        var segment = new LineSegment(0.0, 0.0, 5.0, 5.0);
+        var segment = new Segment2(0.0, 0.0, 5.0, 5.0);
 
         // Act
         var clone = ((IGeometry)segment).Clone();
 
         // Assert
-        Assert.Equal(segment.Start, ((LineSegment)clone).Start);
-        Assert.Equal(segment.End, ((LineSegment)clone).End);
+        Assert.Equal(segment.Start, ((Segment2)clone).Start);
+        Assert.Equal(segment.End, ((Segment2)clone).End);
     }
 
     [Fact]
     public void LineSegment_ToString_FormatsCorrectly()
     {
         // Arrange
-        var segment = new LineSegment(1.0, 2.0, 3.0, 4.0);
-        var emptySegment = LineSegment.Empty;
+        var segment = new Segment2(1.0, 2.0, 3.0, 4.0);
+        var emptySegment = Segment2.Empty;
 
         // Act
         var formatted = segment.ToString();
         var emptyFormatted = emptySegment.ToString();
 
         // Assert
-        Assert.Contains("LineSegment", formatted);
-        Assert.Contains("Point2D(1, 2)", formatted);
-        Assert.Contains("Point2D(3, 4)", formatted);
-        Assert.Equal("LineSegment(Empty)", emptyFormatted);
+        Assert.Contains("Segment2", formatted);
+        Assert.Contains("Point2(1, 2)", formatted);
+        Assert.Contains("Point2(3, 4)", formatted);
+        Assert.Equal("Segment2(Empty)", emptyFormatted);
     }
 
     [Fact]
     public void LineSegment_Equality_ValueSemantics()
     {
         // Arrange
-        var segment1 = new LineSegment(0.0, 0.0, 5.0, 0.0);
-        var segment2 = new LineSegment(0.0, 0.0, 5.0, 0.0);
-        var segment3 = new LineSegment(0.0, 0.0, 5.0, 1.0);
+        var segment1 = new Segment2(0.0, 0.0, 5.0, 0.0);
+        var segment2 = new Segment2(0.0, 0.0, 5.0, 0.0);
+        var segment3 = new Segment2(0.0, 0.0, 5.0, 1.0);
 
         // Assert
         Assert.Equal(segment1, segment2);
@@ -711,18 +711,18 @@ public class GeometryContractTests
 
     #endregion
 
-    #region Concrete Type Tests - Polyline
+    #region Concrete Type Tests - Polyline2
 
     [Fact]
     public void Polyline_Constructor_CreatesEmptyPolyline()
     {
         // Arrange & Act
-        var polyline = new Polyline();
+        var polyline = new Polyline2();
 
         // Assert
         Assert.True(polyline.IsEmpty);
         Assert.Equal(0, polyline.PointCount);
-        Assert.Empty(polyline.Points);
+        Assert.Equal(0, polyline.Points.Length);
     }
 
     [Fact]
@@ -731,13 +731,13 @@ public class GeometryContractTests
         // Arrange
         var points = new[]
         {
-            new Point2D(0.0, 0.0),
-            new Point2D(1.0, 1.0),
-            new Point2D(2.0, 0.0)
+            new Point2(0.0, 0.0),
+            new Point2(1.0, 1.0),
+            new Point2(2.0, 0.0)
         };
 
         // Act
-        var polyline = new Polyline(points);
+        var polyline = new Polyline2(points);
 
         // Assert
         Assert.False(polyline.IsEmpty);
@@ -748,7 +748,7 @@ public class GeometryContractTests
     public void Polyline_Empty_ReturnsEmptyPolyline()
     {
         // Arrange & Act
-        var polyline = Polyline.Empty;
+        var polyline = Polyline2.Empty;
 
         // Assert
         Assert.True(polyline.IsEmpty);
@@ -759,7 +759,7 @@ public class GeometryContractTests
     public void Polyline_FromCoordinates_CreatesPolyline()
     {
         // Arrange & Act
-        var polyline = Polyline.FromCoordinates(0.0, 0.0, 1.0, 1.0, 2.0, 0.0);
+        var polyline = Polyline2.FromCoordinates(0.0, 0.0, 1.0, 1.0, 2.0, 0.0);
 
         // Assert
         Assert.False(polyline.IsEmpty);
@@ -779,15 +779,15 @@ public class GeometryContractTests
         var coordinates = new[] { 1.0, 2.0, 3.0 }; // Odd number
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => Polyline.FromCoordinates(coordinates));
+        Assert.Throws<ArgumentException>(() => Polyline2.FromCoordinates(coordinates));
     }
 
     [Fact]
     public void Polyline_AddPoint_AddsPoint()
     {
         // Arrange
-        var polyline = new Polyline();
-        var point = new Point2D(5.0, 5.0);
+        var polyline = new Polyline2();
+        var point = new Point2(5.0, 5.0);
 
         // Act
         polyline.AddPoint(point);
@@ -801,7 +801,7 @@ public class GeometryContractTests
     public void Polyline_Dimension_ReturnsOne()
     {
         // Arrange
-        var polyline = new Polyline(new[] { new Point2D(0.0, 0.0) });
+        var polyline = new Polyline2(new[] { new Point2(0.0, 0.0) });
 
         // Act & Assert
         Assert.Equal(1, polyline.Dimension);
@@ -811,7 +811,7 @@ public class GeometryContractTests
     public void Polyline_ComputeLength_Empty_ReturnsZero()
     {
         // Arrange
-        var polyline = new Polyline();
+        var polyline = new Polyline2();
 
         // Act
         var length = polyline.ComputeLength();
@@ -824,7 +824,7 @@ public class GeometryContractTests
     public void Polyline_ComputeLength_SinglePoint_ReturnsZero()
     {
         // Arrange
-        var polyline = new Polyline(new[] { new Point2D(1.0, 1.0) });
+        var polyline = new Polyline2(new[] { new Point2(1.0, 1.0) });
 
         // Act
         var length = polyline.ComputeLength();
@@ -837,7 +837,7 @@ public class GeometryContractTests
     public void Polyline_ComputeLength_MultipleSegments_ReturnsCorrectLength()
     {
         // Arrange
-        var polyline = Polyline.FromCoordinates(0.0, 0.0, 3.0, 4.0, 6.0, 4.0);
+        var polyline = Polyline2.FromCoordinates(0.0, 0.0, 3.0, 4.0, 6.0, 4.0);
         // Segments: (0,0) to (3,4) = 5, (3,4) to (6,4) = 3, total = 8
 
         // Act
@@ -851,10 +851,10 @@ public class GeometryContractTests
     public void Polyline_Clone_CreatesIndependentCopy()
     {
         // Arrange
-        var original = new Polyline(new[] { new Point2D(1.0, 1.0) });
+        var original = new Polyline2(new[] { new Point2(1.0, 1.0) });
 
         // Act
-        var clone = (Polyline)original.Clone();
+        var clone = (Polyline2)original.Clone();
 
         // Assert
         Assert.NotSame(original, clone);
@@ -866,11 +866,11 @@ public class GeometryContractTests
     public void Polyline_Clone_IndependentModification()
     {
         // Arrange
-        var original = new Polyline(new[] { new Point2D(1.0, 1.0) });
-        var clone = (Polyline)original.Clone();
+        var original = new Polyline2(new[] { new Point2(1.0, 1.0) });
+        var clone = (Polyline2)original.Clone();
 
         // Act - Modify the clone
-        clone.AddPoint(new Point2D(2.0, 2.0));
+        clone.AddPoint(new Point2(2.0, 2.0));
 
         // Assert - Original should be unchanged
         Assert.Equal(1, original.PointCount);
@@ -881,29 +881,29 @@ public class GeometryContractTests
     public void Polyline_ToString_FormatsCorrectly()
     {
         // Arrange
-        var polyline = Polyline.FromCoordinates(1.0, 2.0, 3.0, 4.0);
-        var emptyPolyline = new Polyline();
+        var polyline = Polyline2.FromCoordinates(1.0, 2.0, 3.0, 4.0);
+        var emptyPolyline = new Polyline2();
 
         // Act
         var formatted = polyline.ToString();
         var emptyFormatted = emptyPolyline.ToString();
 
         // Assert
-        Assert.StartsWith("Polyline([", formatted);
-        Assert.Contains("Point2D(1, 2)", formatted);
-        Assert.Contains("Point2D(3, 4)", formatted);
-        Assert.Equal("Polyline(Empty)", emptyFormatted);
+        Assert.StartsWith("Polyline2([", formatted);
+        Assert.Contains("Point2(1, 2)", formatted);
+        Assert.Contains("Point2(3, 4)", formatted);
+        Assert.Equal("Polyline2(Empty)", emptyFormatted);
     }
 
     [Fact]
     public void Polyline_Points_ReturnsReadOnlyCopy()
     {
         // Arrange
-        var polyline = Polyline.FromCoordinates(0.0, 0.0, 1.0, 1.0);
-        var points = polyline.Points;
+        var polyline = Polyline2.FromCoordinates(0.0, 0.0, 1.0, 1.0);
+        var points = polyline.PointsList;
 
         // Act & Assert - Points should be a copy/array, not the internal list
-        Assert.IsType<Point2D[]>(points);
+        Assert.IsType<Point2[]>(points);
         Assert.Equal(2, points.Count);
     }
 

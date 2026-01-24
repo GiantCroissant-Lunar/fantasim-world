@@ -1,7 +1,7 @@
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Xunit;
 
@@ -133,7 +133,7 @@ public class EventSchemaTests
             PlateId.NewId(),
             PlateId.NewId(),
             BoundaryType.Divergent,
-            new LineSegment(0, 0, 1, 1),
+            new Segment2(0, 0, 1, 1),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -151,7 +151,7 @@ public class EventSchemaTests
         var plateIdLeft = PlateId.NewId();
         var plateIdRight = PlateId.NewId();
         var boundaryType = BoundaryType.Convergent;
-        var geometry = Polyline.FromCoordinates(0, 0, 1, 1, 2, 0);
+        var geometry = Polyline2.FromCoordinates(0, 0, 1, 1, 2, 0);
 
         // Act
         var @event = TestEventFactory.BoundaryCreated(
@@ -185,7 +185,7 @@ public class EventSchemaTests
             PlateId.NewId(),
             PlateId.NewId(),
             BoundaryType.Transform,
-            new LineSegment(0, 0, 1, 1),
+            new Segment2(0, 0, 1, 1),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -210,7 +210,7 @@ public class EventSchemaTests
                 PlateId.NewId(),
                 PlateId.NewId(),
                 boundaryType,
-                new LineSegment(0, 0, 1, 1),
+                new Segment2(0, 0, 1, 1),
                 new CanonicalTick(0),
                 0L,
                 CreateValidStreamIdentity()
@@ -224,7 +224,7 @@ public class EventSchemaTests
     public void BoundaryCreatedEvent_Geometry_IsAccessible()
     {
         // Arrange
-        var geometry = new LineSegment(0, 0, 10, 10);
+        var geometry = new Segment2(0, 0, 10, 10);
 
         // Act
         var @event = TestEventFactory.BoundaryCreated(
@@ -240,7 +240,7 @@ public class EventSchemaTests
         );
 
         // Assert - Cast to concrete type to access specific properties
-        var lineSegment = (LineSegment)@event.Geometry;
+        var lineSegment = (Segment2)@event.Geometry;
         Assert.Equal(geometry, @event.Geometry);
         Assert.Equal(0.0, lineSegment.Start.X);
         Assert.Equal(0.0, lineSegment.Start.Y);
@@ -258,7 +258,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId(), BoundaryId.NewId() },
-            new Point2D(5, 5),
+            new Point2(5, 5),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -274,7 +274,7 @@ public class EventSchemaTests
         // Arrange
         var junctionId = JunctionId.NewId();
         var boundaryIds = new[] { BoundaryId.NewId(), BoundaryId.NewId() };
-        var location = new Point2D(10, 20);
+        var location = new Point2(10, 20);
 
         // Act
         var @event = TestEventFactory.JunctionCreated(
@@ -304,7 +304,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
-            new Point2D(0, 0),
+            new Point2(0, 0),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -330,7 +330,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             boundaryIds,
-            new Point2D(0, 0),
+            new Point2(0, 0),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -347,7 +347,7 @@ public class EventSchemaTests
     public void JunctionCreatedEvent_Location_IsAccessible()
     {
         // Arrange
-        var location = new Point2D(42.5, -17.3);
+        var location = new Point2(42.5, -17.3);
 
         // Act
         var @event = TestEventFactory.JunctionCreated(
@@ -465,7 +465,7 @@ public class EventSchemaTests
         var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
-            Polyline.FromCoordinates(0, 0, 1, 1, 2, 0),
+            Polyline2.FromCoordinates(0, 0, 1, 1, 2, 0),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -480,7 +480,7 @@ public class EventSchemaTests
     {
         // Arrange
         var boundaryId = BoundaryId.NewId();
-        var newGeometry = new LineSegment(0, 0, 100, 100);
+        var newGeometry = new Segment2(0, 0, 100, 100);
 
         // Act
         var @event = TestEventFactory.BoundaryGeometryUpdated(
@@ -506,7 +506,7 @@ public class EventSchemaTests
         var @event = TestEventFactory.BoundaryGeometryUpdated(
             Guid.NewGuid(),
             BoundaryId.NewId(),
-            new LineSegment(0, 0, 1, 1),
+            new Segment2(0, 0, 1, 1),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -520,7 +520,7 @@ public class EventSchemaTests
     public void BoundaryGeometryUpdatedEvent_NewGeometry_IsAccessible()
     {
         // Arrange
-        var newGeometry = Polyline.FromCoordinates(0, 0, 10, 10, 20, 0);
+        var newGeometry = Polyline2.FromCoordinates(0, 0, 10, 10, 20, 0);
 
         // Act
         var @event = TestEventFactory.BoundaryGeometryUpdated(
@@ -534,7 +534,7 @@ public class EventSchemaTests
 
         // Assert - Cast to concrete type to access specific properties
         Assert.Equal(newGeometry, @event.NewGeometry);
-        Assert.Equal(3, ((Polyline)@event.NewGeometry).PointCount);
+        Assert.Equal(3, ((Polyline2)@event.NewGeometry).PointCount);
     }
 
     #endregion
@@ -646,7 +646,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             JunctionId.NewId(),
             new[] { BoundaryId.NewId(), BoundaryId.NewId() },
-            new Point2D(10, 20),
+            new Point2(10, 20),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -668,7 +668,7 @@ public class EventSchemaTests
             Guid.NewGuid(),
             junctionId,
             newBoundaryIds,
-            new Point2D(15, 25),
+            new Point2(15, 25),
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
@@ -748,7 +748,7 @@ public class EventSchemaTests
     public void JunctionUpdatedEvent_NewLocation_IsAccessible()
     {
         // Arrange
-        var newLocation = new Point2D(100, 200);
+        var newLocation = new Point2(100, 200);
 
         // Act
         var @event = TestEventFactory.JunctionUpdated(
@@ -978,13 +978,13 @@ public class EventSchemaTests
         {
             TestEventFactory.PlateCreated(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity),
             TestEventFactory.BoundaryCreated(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
-                BoundaryType.Divergent, new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity),
+                BoundaryType.Divergent, new Segment2(0, 0, 1, 1), timestamp, sequence, streamIdentity),
             TestEventFactory.JunctionCreated(eventId, JunctionId.NewId(),
-                new[] { BoundaryId.NewId() }, new Point2D(0, 0), timestamp, sequence, streamIdentity),
+                new[] { BoundaryId.NewId() }, new Point2(0, 0), timestamp, sequence, streamIdentity),
             TestEventFactory.BoundaryTypeChanged(eventId, BoundaryId.NewId(),
                 BoundaryType.Divergent, BoundaryType.Convergent, timestamp, sequence, streamIdentity),
             TestEventFactory.BoundaryGeometryUpdated(eventId, BoundaryId.NewId(),
-                new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity),
+                new Segment2(0, 0, 1, 1), timestamp, sequence, streamIdentity),
             TestEventFactory.BoundaryRetired(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity),
             TestEventFactory.JunctionUpdated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, null, timestamp, sequence, streamIdentity),
@@ -1009,13 +1009,13 @@ public class EventSchemaTests
         {
             (TestEventFactory.PlateCreated(eventId, PlateId.NewId(), timestamp, sequence, streamIdentity), "PlateCreatedEvent"),
             (TestEventFactory.BoundaryCreated(eventId, BoundaryId.NewId(), PlateId.NewId(), PlateId.NewId(),
-                BoundaryType.Divergent, new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryCreatedEvent"),
+                BoundaryType.Divergent, new Segment2(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryCreatedEvent"),
             (TestEventFactory.JunctionCreated(eventId, JunctionId.NewId(),
-                new[] { BoundaryId.NewId() }, new Point2D(0, 0), timestamp, sequence, streamIdentity), "JunctionCreatedEvent"),
+                new[] { BoundaryId.NewId() }, new Point2(0, 0), timestamp, sequence, streamIdentity), "JunctionCreatedEvent"),
             (TestEventFactory.BoundaryTypeChanged(eventId, BoundaryId.NewId(),
                 BoundaryType.Divergent, BoundaryType.Convergent, timestamp, sequence, streamIdentity), "BoundaryTypeChangedEvent"),
             (TestEventFactory.BoundaryGeometryUpdated(eventId, BoundaryId.NewId(),
-                new LineSegment(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryGeometryUpdatedEvent"),
+                new Segment2(0, 0, 1, 1), timestamp, sequence, streamIdentity), "BoundaryGeometryUpdatedEvent"),
             (TestEventFactory.BoundaryRetired(eventId, BoundaryId.NewId(), "reason", timestamp, sequence, streamIdentity), "BoundaryRetiredEvent"),
             (TestEventFactory.JunctionUpdated(eventId, JunctionId.NewId(),
                 new[] { BoundaryId.NewId() }, null, timestamp, sequence, streamIdentity), "JunctionUpdatedEvent"),

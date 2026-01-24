@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -54,7 +54,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -65,7 +65,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Convergent,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -116,7 +116,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -127,7 +127,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Convergent,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -174,7 +174,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Transform,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -186,7 +186,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId1,
                 BoundaryType.Convergent,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -224,7 +224,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -235,7 +235,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Convergent,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -272,7 +272,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream
@@ -283,7 +283,7 @@ public class DerivedProductTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Convergent,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(4),
                 4,
                 _stream
@@ -331,7 +331,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream
@@ -381,7 +381,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream)
@@ -422,7 +422,7 @@ public class DerivedProductTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream)

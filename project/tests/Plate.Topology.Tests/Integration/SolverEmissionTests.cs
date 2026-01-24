@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -136,7 +136,7 @@ public class SolverEmissionTests : IDisposable
                 plateId,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 3,
                 stream),
@@ -144,7 +144,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-000000000002"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 FixedTick,
                 4,
                 stream)
@@ -263,7 +263,7 @@ public class SolverEmissionTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 2,
                 stream),
@@ -272,7 +272,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-00000000ff02"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 FixedTick,
                 3,
                 stream),
@@ -317,7 +317,7 @@ public class SolverEmissionTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 2,
                 stream),
@@ -326,7 +326,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-00000000ff12"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 FixedTick,
                 3,
                 stream),
@@ -388,7 +388,7 @@ public class SolverEmissionTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 3,
                 stream),
@@ -399,7 +399,7 @@ public class SolverEmissionTests : IDisposable
                 plateId2,
                 plateId3,
                 BoundaryType.Transform,
-                new LineSegment(1.0, 0.0, 2.0, 0.0),
+                new Segment2(1.0, 0.0, 2.0, 0.0),
                 FixedTick,
                 4,
                 stream),
@@ -408,7 +408,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-00000000ff22"),
                 junctionId,
                 [boundaryId1, boundaryId2],
-                new Point2D(1.0, 0.0),
+                new Point2(1.0, 0.0),
                 FixedTick,
                 5,
                 stream),
@@ -475,7 +475,7 @@ public class SolverEmissionTests : IDisposable
                 plateId1,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 FixedTick,
                 2,
                 stream),
@@ -484,7 +484,7 @@ public class SolverEmissionTests : IDisposable
                 Guid.Parse("40000000-0000-0000-0000-000000000002"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 FixedTick,
                 3,
                 stream)

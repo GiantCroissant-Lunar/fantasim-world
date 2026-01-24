@@ -1,8 +1,8 @@
 using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
-using Plate.Topology.Contracts.Geometry;
 using Plate.Topology.Contracts.Identity;
+using UnifyGeometry;
 
 namespace Plate.Topology.Contracts.Events;
 

@@ -6,7 +6,7 @@ using System;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 
 namespace Plate.Topology.Tests;
@@ -100,7 +100,7 @@ public static class TestEventFactory
         Guid eventId,
         JunctionId junctionId,
         BoundaryId[] boundaryIds,
-        Point2D location,
+        Point2 location,
         CanonicalTick tick,
         long sequence,
         TruthStreamIdentity streamIdentity)
@@ -111,7 +111,7 @@ public static class TestEventFactory
         Guid eventId,
         JunctionId junctionId,
         BoundaryId[] newBoundaryIds,
-        Point2D? newLocation,
+        Point2? newLocation,
         CanonicalTick tick,
         long sequence,
         TruthStreamIdentity streamIdentity)

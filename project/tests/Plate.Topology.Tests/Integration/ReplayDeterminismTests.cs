@@ -4,7 +4,7 @@ using System.Linq;
 using Plate.TimeDete.Time.Primitives;
 using Plate.Topology.Contracts.Entities;
 using Plate.Topology.Contracts.Events;
-using Plate.Topology.Contracts.Geometry;
+using UnifyGeometry;
 using Plate.Topology.Contracts.Identity;
 using Plate.Topology.Materializer;
 
@@ -107,7 +107,7 @@ public class ReplayDeterminismTests : IDisposable
                 plateIdLeft,
                 plateIdRight,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream1
@@ -214,7 +214,7 @@ public class ReplayDeterminismTests : IDisposable
                 plateId,
                 new PlateId(Guid.NewGuid()),
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream1
@@ -223,7 +223,7 @@ public class ReplayDeterminismTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream1
@@ -231,7 +231,7 @@ public class ReplayDeterminismTests : IDisposable
             TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
-                new LineSegment(0.0, 0.0, 2.0, 0.0),
+                new Segment2(0.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream1
@@ -412,7 +412,7 @@ public class ReplayDeterminismTests : IDisposable
                 plateId,
                 new PlateId(Guid.NewGuid()),
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(1),
                 1,
                 _stream1
@@ -421,7 +421,7 @@ public class ReplayDeterminismTests : IDisposable
                 Guid.Parse("21234567-89ab-cdef-0123-456789abcdef"),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream1
@@ -502,7 +502,7 @@ public class ReplayDeterminismTests : IDisposable
                 plateId,
                 plateId2,
                 BoundaryType.Transform,
-                new LineSegment(0.0, 0.0, 1.0, 0.0),
+                new Segment2(0.0, 0.0, 1.0, 0.0),
                 new CanonicalTick(2),
                 2,
                 _stream1
@@ -511,7 +511,7 @@ public class ReplayDeterminismTests : IDisposable
                 Guid.NewGuid(),
                 junctionId,
                 [boundaryId],
-                new Point2D(0.5, 0.0),
+                new Point2(0.5, 0.0),
                 new CanonicalTick(3),
                 3,
                 _stream1
@@ -528,7 +528,7 @@ public class ReplayDeterminismTests : IDisposable
             TestEventFactory.BoundaryGeometryUpdated(
                 Guid.NewGuid(),
                 boundaryId,
-                new LineSegment(0.0, 0.0, 2.0, 0.0),
+                new Segment2(0.0, 0.0, 2.0, 0.0),
                 new CanonicalTick(5),
                 5,
                 _stream1
