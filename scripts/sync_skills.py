@@ -53,11 +53,15 @@ RULES_TARGETS = {
     "cursor": Path(".cursor/rules"),
     "windsurf": Path(".windsurf/rules"),
 }
-# These get concatenated pointer files
+# These get concatenated pointer files (with @imports where supported)
 RULES_CONCAT_TARGETS = {
+    "claude": Path("CLAUDE.md"),
     "codex": Path("AGENTS.md"),
     "gemini": Path("GEMINI.md"),
 }
+
+# Memory/reflections source
+MEMORY_SOURCE = AGENT_DIR / "memory" / "reflections"
 
 # Commands/Workflows targets
 COMMANDS_SOURCE = AGENT_DIR / "commands"
@@ -228,36 +232,114 @@ When applying this rule, read and follow the complete instructions at:
 """
 
 
-def create_concat_rules_stub(tool: str, rules: list[tuple[str, str, str]]) -> str:
-    """Create a concatenated pointer file for AGENTS.md / GEMINI.md."""
+def create_concat_rules_stub(
+    tool: str,
+    rules: list[tuple[str, str, str]],
+    reflections: list[tuple[str, str]] | None = None,
+) -> str:
+    """Create a concatenated pointer file for CLAUDE.md / AGENTS.md / GEMINI.md.
+
+    Args:
+        tool: Target tool name (claude, codex, gemini)
+        rules: List of (filename, name, description) tuples
+        reflections: List of (filename, summary) tuples from memory
+    """
+    # Tools that support @import syntax
+    supports_imports = tool in ("claude", "gemini")
+
     lines = [
-        "# Project Rules",
+        "# Project Instructions",
         "",
-        "**This file is auto-generated. Edit rules in `.agent/rules/` instead.**",
+        "**This file is auto-generated. Edit sources in `.agent/` instead.**",
         "",
-        "The following rules are defined for this project. Each rule is maintained",
-        "in `.agent/rules/` as the source of truth.",
-        "",
-        "## Rules Index",
+        "Sources:",
+        "- Rules: `.agent/rules/`",
+        "- Reflections: `.agent/memory/reflections/`",
         "",
     ]
 
+    # Rules section
+    lines.append("## Rules")
+    lines.append("")
+
     for filename, name, description in rules:
-        lines.append(f"### {to_title_case(name)}")
-        lines.append("")
-        lines.append(f"**Source:** `.agent/rules/{filename}`")
-        lines.append("")
-        lines.append(f"{description}")
-        lines.append("")
-        if tool == "gemini":
-            # Gemini supports @imports
+        if supports_imports:
+            # Claude and Gemini support @imports
             lines.append(f"@.agent/rules/{filename}")
         else:
-            # Codex/others: include instruction to read source
+            # Codex: include instruction to read source
+            lines.append(f"### {to_title_case(name)}")
+            lines.append("")
+            lines.append(f"{description}")
+            lines.append("")
             lines.append(f"Read full rule: `.agent/rules/{filename}`")
         lines.append("")
 
+    # Reflections section (learnings from completed features)
+    if reflections:
+        lines.append("## Learnings from Past Work")
+        lines.append("")
+        lines.append("The following reflections capture learnings from completed features.")
+        lines.append("")
+
+        for filename, summary in reflections:
+            if supports_imports:
+                lines.append(f"@.agent/memory/reflections/{filename}")
+            else:
+                lines.append(f"### {filename.replace('.md', '').replace('-', ' ').title()}")
+                lines.append("")
+                lines.append(f"{summary}")
+                lines.append("")
+                lines.append(f"Read full reflection: `.agent/memory/reflections/{filename}`")
+            lines.append("")
+    else:
+        lines.append("## Learnings")
+        lines.append("")
+        lines.append("No reflections yet. Use `@reflect` after completing features to capture learnings.")
+        lines.append("")
+
     return "\n".join(lines)
+
+
+def collect_reflections() -> list[tuple[str, str]]:
+    """Collect reflections from memory, returning (filename, summary) tuples."""
+    reflections: list[tuple[str, str]] = []
+
+    if not MEMORY_SOURCE.exists():
+        return reflections
+
+    for ref_file in sorted(MEMORY_SOURCE.glob("*.md")):
+        # Skip index file
+        if ref_file.name == "index.md":
+            continue
+
+        try:
+            content = ref_file.read_text(encoding="utf-8")
+            # Extract summary (first paragraph after "## Summary" or first non-header line)
+            summary = ""
+            in_summary = False
+            for line in content.split("\n"):
+                if line.startswith("## Summary"):
+                    in_summary = True
+                    continue
+                if in_summary and line.strip() and not line.startswith("#"):
+                    summary = line.strip()
+                    break
+                if line.startswith("##") and in_summary:
+                    break
+
+            if not summary:
+                # Fallback: use first non-empty, non-header line
+                for line in content.split("\n"):
+                    if line.strip() and not line.startswith("#") and not line.startswith("---"):
+                        summary = line.strip()[:100]
+                        break
+
+            reflections.append((ref_file.name, summary))
+        except Exception:
+            pass
+
+    return reflections
 
 
 def sync_rules() -> int:
@@ -284,9 +366,14 @@ def sync_rules() -> int:
         print("  [SKIP] No rules found")
         return 0
 
+    # Collect reflections from memory
+    reflections_data = collect_reflections()
+    if reflections_data:
+        print(f"  Found {len(reflections_data)} reflections in memory")
+
     rule_count = 0
 
-    # Sync to directory-based targets (Claude, Cline, Windsurf)
+    # Sync to directory-based targets (Claude, Cline, Cursor, Windsurf)
     for tool, target_dir in RULES_TARGETS.items():
         ensure_dir(target_dir)
         clean_dir(target_dir)
@@ -304,11 +391,11 @@ def sync_rules() -> int:
             print(f"  [OK] {filename} -> {target_dir}")
             rule_count += 1
 
-    # Sync to concatenated targets (AGENTS.md, GEMINI.md)
+    # Sync to concatenated targets (CLAUDE.md, AGENTS.md, GEMINI.md)
     for tool, target_file in RULES_CONCAT_TARGETS.items():
-        stub_content = create_concat_rules_stub(tool, rules_data)
+        stub_content = create_concat_rules_stub(tool, rules_data, reflections_data)
         target_file.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {len(rules_data)} rules -> {target_file}")
+        print(f"  [OK] {len(rules_data)} rules + {len(reflections_data)} reflections -> {target_file}")
 
     return rule_count
 
