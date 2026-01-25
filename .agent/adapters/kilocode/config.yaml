@@ -1,0 +1,23 @@
+# Kilocode Adapter Configuration
+
+tool: kilocode
+display_name: Kilo Code
+
+# Rules configuration
+rules:
+  strategy: directory
+  target: .kilocode/rules
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .kilocode/skills
+  source: .agent/skills
+
+# Workflows configuration
+workflows:
+  enabled: true
+  target: .kilocode/workflows
+
+# No cleanup needed
+cleanup: []

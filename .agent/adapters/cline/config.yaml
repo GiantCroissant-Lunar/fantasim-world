@@ -1,0 +1,33 @@
+# Cline Adapter Configuration
+# Cline has a unique directory structure - see README.md for details.
+
+tool: cline
+display_name: Cline
+
+# Rules configuration
+# Cline uses .clinerules/ (root level, not subdirectory)
+rules:
+  strategy: directory
+  target: .clinerules
+  # Note: Cline rules go at root of .clinerules/, not in a subdirectory
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .cline/skills
+  source: .agent/skills
+
+# Commands/Workflows configuration
+# Cline calls these "workflows" and puts them in .clinerules/workflows/
+commands:
+  enabled: true
+  target: .clinerules/workflows
+
+# Hooks configuration
+# Cline supports hooks in .clinerules/hooks/
+hooks:
+  enabled: true
+  target: .clinerules/hooks
+
+# No cleanup needed - Cline structure is stable
+cleanup: []

@@ -1,0 +1,24 @@
+# Codex (GitHub Copilot) Adapter Configuration
+
+tool: codex
+display_name: GitHub Copilot / Codex
+
+# Rules configuration
+# Codex uses AGENTS.md (doesn't support @imports)
+rules:
+  strategy: concatenate
+  target: AGENTS.md
+  # Note: Codex doesn't support @imports, so rules are referenced by path
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .codex/skills
+  source: .agent/skills
+
+# Commands configuration
+commands:
+  enabled: false
+
+# No cleanup needed
+cleanup: []

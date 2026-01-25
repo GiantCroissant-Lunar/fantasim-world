@@ -1,0 +1,31 @@
+# Cursor Adapter Configuration
+
+tool: cursor
+display_name: Cursor
+
+# Rules configuration
+# Cursor uses .cursor/rules/ with .mdc extension
+rules:
+  strategy: directory
+  target: .cursor/rules
+  extension: .mdc  # Cursor uses MDC format
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .cursor/skills
+  source: .agent/skills
+
+# Commands configuration
+commands:
+  enabled: true
+  target: .cursor/commands
+
+# Hooks configuration
+# Cursor uses .cursor/hooks.json (not synced by default)
+hooks:
+  enabled: false
+  # Note: Cursor hooks use JSON config, not file-based
+
+# No cleanup needed
+cleanup: []

@@ -1,0 +1,39 @@
+# OpenCode Adapter Configuration
+# OpenCode has a unique structure with agents and permissions.
+
+tool: opencode
+display_name: OpenCode
+
+# Rules configuration
+# OpenCode doesn't use a rules directory - uses opencode.json
+rules:
+  strategy: none
+  # OpenCode reads instructions from opencode.json, not markdown files
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .opencode/skills
+  source: .agent/skills
+
+# Commands configuration
+# OpenCode uses commands defined in opencode.json
+commands:
+  enabled: false
+  # Commands are generated into opencode.json by sync_opencode.py
+
+# Agents configuration (OpenCode-specific)
+# Agent definitions live in .agent/adapters/opencode/agents/
+agents:
+  enabled: true
+  source: .agent/adapters/opencode/agents
+  # These are processed by sync_opencode.py to generate opencode.json
+
+# Permissions (OpenCode-specific)
+# Defined in .agent/adapters/opencode/permissions.yaml
+permissions:
+  enabled: true
+  source: .agent/adapters/opencode/permissions.yaml
+
+# No cleanup needed
+cleanup: []

@@ -1,0 +1,27 @@
+# Gemini Adapter Configuration
+
+tool: gemini
+display_name: Gemini
+
+# Rules configuration
+# Gemini uses GEMINI.md with @imports (similar to Claude)
+rules:
+  strategy: import
+  target: GEMINI.md
+  directory_target: null  # No separate rules directory
+
+# Skills configuration
+skills:
+  strategy: stub
+  target: .gemini/skills
+  source: .agent/skills
+
+# Commands configuration
+# Gemini uses TOML format for commands
+commands:
+  enabled: true
+  target: .gemini/commands
+  format: toml
+
+# No cleanup needed
+cleanup: []
