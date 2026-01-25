@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Corpus;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Solvers.Reference;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
@@ -31,7 +31,7 @@ public static class CorpusGenerator
     private static CorpusCase CreateTrivialCase(MessagePackSerializerOptions options)
     {
         var plateId = PlateId.NewId();
-        var snapshot = new PlateTopologySnapshot
+        var snapshot = new PlateMechanicsSnapshot
         {
             CurrentTimeS = 0,
             Plates = new[]
@@ -91,7 +91,7 @@ public static class CorpusGenerator
         var p2 = PlateId.NewId();
         var b1 = BoundaryId.NewId();
 
-        var snapshot = new PlateTopologySnapshot
+        var snapshot = new PlateMechanicsSnapshot
         {
             CurrentTimeS = 0,
             Plates = new[]

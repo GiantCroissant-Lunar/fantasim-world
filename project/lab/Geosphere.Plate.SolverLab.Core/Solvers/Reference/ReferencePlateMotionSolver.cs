@@ -1,8 +1,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Core.Solvers.Reference;
@@ -23,7 +22,7 @@ public sealed class ReferencePlateMotionSolver : IPlateMotionSolver
 
     public PlateMotionResult Calculate(PlateMotionInput input) => Calculate(input.Snapshot, input.TimeDeltaS);
 
-    public PlateMotionResult Calculate(PlateTopologySnapshot topology, float dt)
+    public PlateMotionResult Calculate(PlateMechanicsSnapshot topology, float dt)
     {
         var sw = Stopwatch.StartNew();
         var motions = new List<PlateMotion>();
@@ -56,7 +55,7 @@ public sealed class ReferencePlateMotionSolver : IPlateMotionSolver
         };
     }
 
-    private Vector3d CalculateNetForce(PlateSnapshot plate, PlateTopologySnapshot topology)
+    private Vector3d CalculateNetForce(PlateSnapshot plate, PlateMechanicsSnapshot topology)
     {
         var force = Vector3d.Zero;
 
@@ -137,13 +136,13 @@ public sealed class ReferencePlateMotionSolver : IPlateMotionSolver
         return Vector3d.Zero;
     }
 
-    private List<RiftEvent> DetectRifts(PlateTopologySnapshot topology, List<PlateMotion> motions)
+    private List<RiftEvent> DetectRifts(PlateMechanicsSnapshot topology, List<PlateMotion> motions)
     {
         // Placeholder
         return new List<RiftEvent>();
     }
 
-    private List<CollisionEvent> DetectCollisions(PlateTopologySnapshot topology, List<PlateMotion> motions)
+    private List<CollisionEvent> DetectCollisions(PlateMechanicsSnapshot topology, List<PlateMotion> motions)
     {
         // Placeholder
         return new List<CollisionEvent>();

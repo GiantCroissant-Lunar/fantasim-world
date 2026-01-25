@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Corpus;
 using MessagePack;
 

@@ -1,4 +1,4 @@
-using FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Core.Registry;
 

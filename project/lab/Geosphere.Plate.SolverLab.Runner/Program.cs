@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Benchmarking;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Benchmarking.Verifiers;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 using FantaSim.Geosphere.Plate.SolverLab.Core.Solvers.Reference;
 using FantaSim.Geosphere.Plate.Topology.Serializers;
 using FantaSim.Geosphere.Plate.SolverLabRunner;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions;
+using FantaSim.Geosphere.Plate.SolverLab.Core.Benchmarking; // Re-using existing, but ensuring types are found
+// using FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions; // No longer needed if ISolver is in Contracts.Simulation? 
+// Wait, ISolver is in Contracts.Simulation now.
 using MessagePack;
 
 Console.WriteLine("=== FantaSim Solver Lab - Plate Motion ===");

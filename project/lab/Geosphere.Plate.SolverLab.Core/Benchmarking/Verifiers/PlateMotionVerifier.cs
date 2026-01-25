@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Core.Benchmarking.Verifiers;
 
