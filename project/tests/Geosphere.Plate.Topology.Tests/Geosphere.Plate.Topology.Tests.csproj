@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
-    <ProjectReference Include="..\..\hosts\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj" />
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
   </ItemGroup>

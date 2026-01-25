@@ -2,6 +2,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
