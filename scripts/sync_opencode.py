@@ -16,9 +16,13 @@ from typing import Any
 AGENT_OPENCODE_DIR = Path(".agent/adapters/opencode")
 AGENT_OPENCODE_AGENTS_DIR = AGENT_OPENCODE_DIR / "agents"
 PERMISSIONS_FILE = AGENT_OPENCODE_DIR / "permissions.yaml"
+OH_MY_OPENCODE_JSONC = AGENT_OPENCODE_DIR / "oh-my-opencode.jsonc"
+OH_MY_OPENCODE_JSON = AGENT_OPENCODE_DIR / "oh-my-opencode.json"
 
 OPENCODE_DIR = Path(".opencode")
 OPENCODE_AGENTS_DIR = OPENCODE_DIR / "agents"
+OPENCODE_OH_MY_OPENCODE_JSONC = OPENCODE_DIR / "oh-my-opencode.jsonc"
+OPENCODE_OH_MY_OPENCODE_JSON = OPENCODE_DIR / "oh-my-opencode.json"
 OPENCODE_JSON = Path("opencode.json")
 
 
@@ -212,6 +216,11 @@ def main() -> int:
         if gitignore.exists():
             shutil.copy2(gitignore, OPENCODE_DIR / ".gitignore")
 
+        if OH_MY_OPENCODE_JSONC.exists():
+            shutil.copy2(OH_MY_OPENCODE_JSONC, OPENCODE_OH_MY_OPENCODE_JSONC)
+        elif OH_MY_OPENCODE_JSON.exists():
+            shutil.copy2(OH_MY_OPENCODE_JSON, OPENCODE_OH_MY_OPENCODE_JSON)
+
     # Always ensure node_modules is ignored at minimum
     ensure_file(OPENCODE_DIR / ".gitignore", "node_modules/\n")
 
@@ -220,7 +229,15 @@ def main() -> int:
 
     # Generate commands + skills into .opencode
     run_script("scripts/sync_commands.py")
-    run_script("scripts/sync_skills.py")
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/sync_skills.py",
+            "--skills",
+            "--tools=opencode",
+        ],
+        check=True,
+    )
 
     print("Synced .opencode (seed + commands + skills)")
     return 0

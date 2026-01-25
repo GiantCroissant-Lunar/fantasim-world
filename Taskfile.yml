@@ -23,17 +23,73 @@ tasks:
   agent:sync-all:
     desc: Sync all tool-specific directories from .agent
     cmds:
-      - python scripts/sync_rules.py
-      - python scripts/sync_skills.py
-      - python scripts/sync_workflows.py
-      - python scripts/sync_commands.py
+      - task: agent:sync:opencode
+      - task: agent:sync:windsurf
+      - task: agent:sync:claude
+      - task: agent:sync:cline
+      - task: agent:sync:kilocode
+      - task: agent:sync:codex
+      - task: agent:sync:cursor
+      - task: agent:sync:gemini
+
+  agent:sync:opencode:
+    desc: Sync OpenCode (.opencode + opencode.json) from .agent
+    cmds:
       - python scripts/sync_opencode.py
+
+  agent:sync:windsurf:
+    desc: Sync Windsurf (.windsurf) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=windsurf
+      - python scripts/sync_skills.py --skills --tools=windsurf
+      - python scripts/sync_skills.py --commands --tools=windsurf
+
+  agent:sync:claude:
+    desc: Sync Claude Code (.claude + CLAUDE.md) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=claude
+      - python scripts/sync_skills.py --skills --tools=claude
+
+  agent:sync:cline:
+    desc: Sync Cline (.clinerules + .cline) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=cline
+      - python scripts/sync_skills.py --skills --tools=cline
+      - python scripts/sync_skills.py --commands --tools=cline
+      - python scripts/sync_skills.py --hooks --tools=cline
+
+  agent:sync:kilocode:
+    desc: Sync Kilo Code (.kilocode) from .agent
+    cmds:
+      - python scripts/sync_workflows.py
+      - python scripts/sync_skills.py --rules --tools=kilocode
+      - python scripts/sync_skills.py --skills --tools=kilocode
+
+  agent:sync:codex:
+    desc: Sync Codex (AGENTS.md + .codex) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=codex
+      - python scripts/sync_skills.py --skills --tools=codex
+
+  agent:sync:cursor:
+    desc: Sync Cursor (.cursor) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=cursor
+      - python scripts/sync_skills.py --skills --tools=cursor
+      - python scripts/sync_skills.py --commands --tools=cursor
+
+  agent:sync:gemini:
+    desc: Sync Gemini (.gemini + GEMINI.md) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=gemini
+      - python scripts/sync_skills.py --skills --tools=gemini
+      - python scripts/sync_skills.py --commands --tools=gemini
 
   agent:sync-skills:
     desc: Sync skill stubs from .agent/skills to tool-specific directories
     aliases: ["agent:skills"]
     cmds:
-      - python scripts/sync_skills.py
+      - python scripts/sync_skills.py --skills
     sources:
       - .agent/skills/**/SKILL.md
     generates:

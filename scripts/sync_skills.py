@@ -30,7 +30,7 @@ import argparse
 import re
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 try:
     import yaml
@@ -67,6 +67,7 @@ RULES_TARGETS = {
     "claude": Path(".claude/rules"),
     "cline": Path(".clinerules"),
     "cursor": Path(".cursor/rules"),
+    "kilocode": Path(".kilocode/rules"),
     "windsurf": Path(".windsurf/rules"),
 }
 # These get concatenated pointer files (with @imports where supported)
@@ -131,6 +132,12 @@ def get_rules_strategy(tool: str) -> str:
     return config.get("rules", {}).get("strategy", "directory")
 
 
+def get_rules_extension(tool: str) -> str:
+    """Get rule file extension for a tool. Default is '.md'."""
+    config = load_adapter_config(tool)
+    return config.get("rules", {}).get("extension", ".md")
+
+
 def get_cleanup_paths(tool: str) -> list[str]:
     """Get list of paths to clean up for a tool."""
     config = load_adapter_config(tool)
@@ -187,6 +194,14 @@ def clean_dir(path: Path) -> None:
         if item.is_dir():
             shutil.rmtree(item)
         else:
+            item.unlink()
+
+
+def clean_files_in_dir(path: Path, pattern: str) -> None:
+    if not path.exists():
+        return
+    for item in path.glob(pattern):
+        if item.is_file():
             item.unlink()
 
 
@@ -296,6 +311,26 @@ def sync_skills() -> int:
         skill_count += 1
 
     return skill_count
+
+
+def _filter_skills_targets(tools: set[str] | None) -> list[Path]:
+    if not tools:
+        return SKILLS_TARGETS
+    return [
+        target_dir
+        for target_dir in SKILLS_TARGETS
+        if target_dir.parts and target_dir.parts[0].lstrip(".") in tools
+    ]
+
+
+def sync_skills_for_tools(tools: set[str] | None) -> int:
+    global SKILLS_TARGETS
+    original_targets = SKILLS_TARGETS
+    try:
+        SKILLS_TARGETS = _filter_skills_targets(tools)
+        return sync_skills()
+    finally:
+        SKILLS_TARGETS = original_targets
 
 
 # =============================================================================
@@ -477,7 +512,9 @@ def sync_rules() -> int:
             continue
 
         ensure_dir(target_dir)
-        clean_dir(target_dir)
+        ext = get_rules_extension(tool)
+        # Important: only remove rule files, not subdirectories (e.g., .clinerules/workflows)
+        clean_files_in_dir(target_dir, f"*{ext}")
         print(f"  -> {target_dir} (strategy: {strategy})")
 
         # Determine depth for relative paths
@@ -486,7 +523,8 @@ def sync_rules() -> int:
         for filename, name, description in rules_data:
             stub_content = create_rule_stub(filename, name, description, depth)
 
-            target_path = target_dir / filename
+            target_name = Path(filename).stem + ext
+            target_path = target_dir / target_name
             target_path.write_text(stub_content, encoding="utf-8")
 
             print(f"  [OK] {filename} -> {target_dir}")
@@ -576,59 +614,63 @@ def sync_commands() -> int:
     cmd_count = 0
 
     # Sync to Gemini commands (TOML format)
-    gemini_target = COMMANDS_TARGETS["gemini"]
-    ensure_dir(gemini_target)
-    clean_dir(gemini_target)
-    print(f"  -> {gemini_target}")
+    if "gemini" in COMMANDS_TARGETS:
+        gemini_target = COMMANDS_TARGETS["gemini"]
+        ensure_dir(gemini_target)
+        clean_dir(gemini_target)
+        print(f"  -> {gemini_target}")
 
-    for stem, filename, description in commands_data:
-        stub_content = create_gemini_command_stub(stem, description)
-        target_path = gemini_target / f"{stem}.toml"
-        target_path.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {filename} -> {target_path}")
-        cmd_count += 1
+        for stem, filename, description in commands_data:
+            stub_content = create_gemini_command_stub(stem, description)
+            target_path = gemini_target / f"{stem}.toml"
+            target_path.write_text(stub_content, encoding="utf-8")
+            print(f"  [OK] {filename} -> {target_path}")
+            cmd_count += 1
 
     # Sync to Cline workflows (MD format in .clinerules/workflows/)
-    cline_target = COMMANDS_TARGETS["cline"]
-    ensure_dir(cline_target)
-    clean_dir(cline_target)
-    print(f"  -> {cline_target}")
+    if "cline" in COMMANDS_TARGETS:
+        cline_target = COMMANDS_TARGETS["cline"]
+        ensure_dir(cline_target)
+        clean_dir(cline_target)
+        print(f"  -> {cline_target}")
 
-    depth = len(cline_target.parts)
-    for stem, filename, description in commands_data:
-        stub_content = create_workflow_stub(stem, description, depth)
-        target_path = cline_target / filename
-        target_path.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {filename} -> {target_path}")
-        cmd_count += 1
+        depth = len(cline_target.parts)
+        for stem, filename, description in commands_data:
+            stub_content = create_workflow_stub(stem, description, depth)
+            target_path = cline_target / filename
+            target_path.write_text(stub_content, encoding="utf-8")
+            print(f"  [OK] {filename} -> {target_path}")
+            cmd_count += 1
 
     # Sync to Cursor commands (MD format in .cursor/commands/)
-    cursor_target = COMMANDS_TARGETS["cursor"]
-    ensure_dir(cursor_target)
-    clean_dir(cursor_target)
-    print(f"  -> {cursor_target}")
+    if "cursor" in COMMANDS_TARGETS:
+        cursor_target = COMMANDS_TARGETS["cursor"]
+        ensure_dir(cursor_target)
+        clean_dir(cursor_target)
+        print(f"  -> {cursor_target}")
 
-    depth = len(cursor_target.parts)
-    for stem, filename, description in commands_data:
-        stub_content = create_workflow_stub(stem, description, depth)
-        target_path = cursor_target / filename
-        target_path.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {filename} -> {target_path}")
-        cmd_count += 1
+        depth = len(cursor_target.parts)
+        for stem, filename, description in commands_data:
+            stub_content = create_workflow_stub(stem, description, depth)
+            target_path = cursor_target / filename
+            target_path.write_text(stub_content, encoding="utf-8")
+            print(f"  [OK] {filename} -> {target_path}")
+            cmd_count += 1
 
     # Sync to Windsurf workflows (MD format)
-    windsurf_target = COMMANDS_TARGETS["windsurf"]
-    ensure_dir(windsurf_target)
-    clean_dir(windsurf_target)
-    print(f"  -> {windsurf_target}")
+    if "windsurf" in COMMANDS_TARGETS:
+        windsurf_target = COMMANDS_TARGETS["windsurf"]
+        ensure_dir(windsurf_target)
+        clean_dir(windsurf_target)
+        print(f"  -> {windsurf_target}")
 
-    depth = len(windsurf_target.parts)
-    for stem, filename, description in commands_data:
-        stub_content = create_workflow_stub(stem, description, depth)
-        target_path = windsurf_target / filename
-        target_path.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {filename} -> {target_path}")
-        cmd_count += 1
+        depth = len(windsurf_target.parts)
+        for stem, filename, description in commands_data:
+            stub_content = create_workflow_stub(stem, description, depth)
+            target_path = windsurf_target / filename
+            target_path.write_text(stub_content, encoding="utf-8")
+            print(f"  [OK] {filename} -> {target_path}")
+            cmd_count += 1
 
     return cmd_count
 
@@ -711,6 +753,48 @@ def sync_hooks() -> int:
     return hook_count
 
 
+T = TypeVar("T")
+
+
+def _filter_map_targets(targets: dict[str, T], tools: set[str] | None) -> dict[str, T]:
+    if not tools:
+        return targets
+    return {k: v for k, v in targets.items() if k in tools}
+
+
+def sync_rules_for_tools(tools: set[str] | None) -> int:
+    global RULES_TARGETS, RULES_CONCAT_TARGETS
+    original_targets = RULES_TARGETS
+    original_concat = RULES_CONCAT_TARGETS
+    try:
+        RULES_TARGETS = _filter_map_targets(RULES_TARGETS, tools)
+        RULES_CONCAT_TARGETS = _filter_map_targets(RULES_CONCAT_TARGETS, tools)
+        return sync_rules()
+    finally:
+        RULES_TARGETS = original_targets
+        RULES_CONCAT_TARGETS = original_concat
+
+
+def sync_commands_for_tools(tools: set[str] | None) -> int:
+    global COMMANDS_TARGETS
+    original_targets = COMMANDS_TARGETS
+    try:
+        COMMANDS_TARGETS = _filter_map_targets(COMMANDS_TARGETS, tools)
+        return sync_commands()
+    finally:
+        COMMANDS_TARGETS = original_targets
+
+
+def sync_hooks_for_tools(tools: set[str] | None) -> int:
+    global HOOKS_TARGETS
+    original_targets = HOOKS_TARGETS
+    try:
+        HOOKS_TARGETS = _filter_map_targets(HOOKS_TARGETS, tools)
+        return sync_hooks()
+    finally:
+        HOOKS_TARGETS = original_targets
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -736,6 +820,12 @@ def main():
     parser.add_argument("--commands", action="store_true", help="Sync commands/workflows only")
     parser.add_argument("--hooks", action="store_true", help="Sync hooks only")
     parser.add_argument("--cleanup", action="store_true", help="Run cleanup only")
+    parser.add_argument(
+        "--tools",
+        type=str,
+        default="",
+        help="Comma-separated list of tools to target (currently used for --skills). Example: opencode,windsurf",
+    )
     args = parser.parse_args()
 
     # If no specific flag, sync everything
@@ -747,17 +837,19 @@ def main():
         run_all_cleanups()
         return
 
+    tools = {t.strip() for t in args.tools.split(",") if t.strip()} or None
+
     if sync_all or args.skills:
-        total += sync_skills()
+        total += sync_skills_for_tools(tools)
 
     if sync_all or args.rules:
-        total += sync_rules()
+        total += sync_rules_for_tools(tools)
 
     if sync_all or args.commands:
-        total += sync_commands()
+        total += sync_commands_for_tools(tools)
 
     if sync_all or args.hooks:
-        total += sync_hooks()
+        total += sync_hooks_for_tools(tools)
 
     # Run cleanups at the end
     if sync_all:
