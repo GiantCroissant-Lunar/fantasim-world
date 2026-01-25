@@ -1,0 +1,53 @@
+# Claude Code Adapter Configuration
+# This file defines how .agent/ content is synced to Claude Code's expected locations.
+
+tool: claude
+display_name: Claude Code
+
+# Rules configuration
+rules:
+  # Strategy: "import" uses @ imports in CLAUDE.md (no separate files needed)
+  #           "copy" copies full content to target directory
+  #           "directory" creates pointer files in target directory
+  strategy: import
+
+  # Primary target - where rules are loaded from
+  # For "import" strategy, this is the file that contains @imports
+  target: CLAUDE.md
+
+  # Secondary target - not needed for "import" strategy
+  # Set to null to skip creating .claude/rules/ directory
+  directory_target: null
+
+  # Include reflections/learnings in the rules file
+  include_reflections: true
+  reflections_source: .agent/memory/reflections
+
+# Skills configuration
+skills:
+  # Strategy: "copy_full" copies complete skill content
+  #           "stub" creates pointer files (wastes tokens)
+  #           "symlink" creates symlinks (cross-platform issues)
+  strategy: copy_full
+
+  # Target directory for skills
+  target: .claude/skills
+
+  # Source directory
+  source: .agent/skills
+
+# Commands configuration (Claude Code doesn't use commands directly)
+commands:
+  enabled: false
+
+# Workflows configuration (Claude Code doesn't use workflows)
+workflows:
+  enabled: false
+
+# Hooks configuration (Claude Code doesn't use file-based hooks)
+hooks:
+  enabled: false
+
+# Files to clean up (legacy/deprecated paths)
+cleanup:
+  - .claude/rules  # Not needed when using import strategy

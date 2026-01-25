@@ -2,8 +2,9 @@
 """
 Sync agent configuration from .agent/ to tool-specific directories.
 
-Reads all configuration from .agent/ and creates pointer/stub files
-in tool-specific directories that reference the shared source.
+Reads adapter configs from .agent/adapters/<tool>/config.yaml to determine
+how to sync content for each tool. Falls back to default behavior if no
+adapter config exists.
 
 Syncs:
 - Skills: .agent/skills/ → .claude/skills/, .cline/skills/, .codex/skills/, .cursor/skills/, etc.
@@ -11,7 +12,10 @@ Syncs:
 - Commands/Workflows: .agent/commands/ → .cursor/commands/, .gemini/commands/, .windsurf/workflows/, .clinerules/workflows/
 - Hooks: .agent/hooks/ → .clinerules/hooks/ (Cline hooks)
 
-Note: Cursor hooks use JSON config (.cursor/hooks.json) - not synced automatically.
+Adapter configs can override default behavior:
+- rules.strategy: "import" (use @imports), "copy" (full content), "directory" (stub files)
+- skills.strategy: "copy_full" (full content), "stub" (pointer files)
+- cleanup: list of paths to remove (legacy/deprecated)
 
 Usage:
     python scripts/sync_skills.py            # Sync everything
@@ -24,13 +28,25 @@ Usage:
 
 import argparse
 import re
+import shutil
 from pathlib import Path
+from typing import Any
+
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
 
 # =============================================================================
 # Configuration
 # =============================================================================
 
 AGENT_DIR = Path(".agent")
+ADAPTERS_DIR = AGENT_DIR / "adapters"
+
+# Cache for loaded adapter configs
+_adapter_configs: dict[str, dict[str, Any]] = {}
 
 # Skills targets
 SKILLS_SOURCE = AGENT_DIR / "skills"
@@ -77,6 +93,61 @@ HOOKS_SOURCE = AGENT_DIR / "hooks"
 HOOKS_TARGETS = {
     "cline": Path(".clinerules/hooks"),
 }
+
+
+# =============================================================================
+# Adapter Config Loading
+# =============================================================================
+
+def load_adapter_config(tool: str) -> dict[str, Any]:
+    """Load adapter config for a tool from .agent/adapters/<tool>/config.yaml."""
+    if tool in _adapter_configs:
+        return _adapter_configs[tool]
+
+    config_path = ADAPTERS_DIR / tool / "config.yaml"
+    config: dict[str, Any] = {}
+
+    if config_path.exists() and HAS_YAML:
+        try:
+            with open(config_path, encoding="utf-8") as f:
+                config = yaml.safe_load(f) or {}
+            print(f"  [CONFIG] Loaded adapter config for {tool}")
+        except Exception as e:
+            print(f"  [WARN] Failed to load {config_path}: {e}")
+
+    _adapter_configs[tool] = config
+    return config
+
+
+def get_skills_strategy(tool: str) -> str:
+    """Get skills sync strategy for a tool. Default is 'stub'."""
+    config = load_adapter_config(tool)
+    return config.get("skills", {}).get("strategy", "stub")
+
+
+def get_rules_strategy(tool: str) -> str:
+    """Get rules sync strategy for a tool. Default is 'directory'."""
+    config = load_adapter_config(tool)
+    return config.get("rules", {}).get("strategy", "directory")
+
+
+def get_cleanup_paths(tool: str) -> list[str]:
+    """Get list of paths to clean up for a tool."""
+    config = load_adapter_config(tool)
+    return config.get("cleanup", [])
+
+
+def run_cleanup(tool: str) -> None:
+    """Run cleanup for deprecated/legacy paths specified in adapter config."""
+    cleanup_paths = get_cleanup_paths(tool)
+    for path_str in cleanup_paths:
+        path = Path(path_str)
+        if path.exists():
+            print(f"  [CLEANUP] Removing {path}")
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
 
 
 # =============================================================================
@@ -159,11 +230,19 @@ def sync_skills() -> int:
         print(f"  [SKIP] Source directory not found: {SKILLS_SOURCE}")
         return 0
 
+    # Determine strategy for each tool based on target directory name
+    tool_strategies: dict[str, str] = {}
+    for target_dir in SKILLS_TARGETS:
+        # Extract tool name from path (e.g., ".claude/skills" -> "claude")
+        tool = target_dir.parts[0].lstrip(".")
+        tool_strategies[str(target_dir)] = get_skills_strategy(tool)
+
     # Ensure target directories exist and clean them
     for target_dir in SKILLS_TARGETS:
         ensure_dir(target_dir)
         clean_dir(target_dir)
-        print(f"  -> {target_dir}")
+        strategy = tool_strategies.get(str(target_dir), "stub")
+        print(f"  -> {target_dir} (strategy: {strategy})")
 
     # Process each skill directory
     skill_count = 0
@@ -188,16 +267,29 @@ def sync_skills() -> int:
             print(f"  [SKIP] {skill_name} - no name in frontmatter")
             continue
 
-        # Create stub content
-        stub_content = create_skill_stub(skill_name, name, description)
-
-        # Write to each target directory
+        # Write to each target directory based on strategy
         for target_dir in SKILLS_TARGETS:
+            strategy = tool_strategies.get(str(target_dir), "stub")
             target_skill_dir = target_dir / skill_name
             ensure_dir(target_skill_dir)
 
             target_path = target_skill_dir / "SKILL.md"
-            target_path.write_text(stub_content, encoding="utf-8")
+
+            if strategy == "copy_full":
+                # Copy full content from source
+                target_path.write_text(content, encoding="utf-8")
+                # Also copy any additional files in the skill directory
+                for extra_file in skill_dir.iterdir():
+                    if extra_file.is_file() and extra_file.name != "SKILL.md":
+                        target_extra = target_skill_dir / extra_file.name
+                        target_extra.write_text(
+                            extra_file.read_text(encoding="utf-8"),
+                            encoding="utf-8"
+                        )
+            else:
+                # Create stub content (default)
+                stub_content = create_skill_stub(skill_name, name, description)
+                target_path.write_text(stub_content, encoding="utf-8")
 
             print(f"  [OK] {skill_name} -> {target_dir}")
 
@@ -375,9 +467,18 @@ def sync_rules() -> int:
 
     # Sync to directory-based targets (Claude, Cline, Cursor, Windsurf)
     for tool, target_dir in RULES_TARGETS.items():
+        strategy = get_rules_strategy(tool)
+
+        # Skip directory-based rules if strategy is "import" (uses @imports in main file)
+        if strategy == "import":
+            print(f"  -> {target_dir} [SKIP - using import strategy]")
+            # Run cleanup for this tool (removes legacy directory if exists)
+            run_cleanup(tool)
+            continue
+
         ensure_dir(target_dir)
         clean_dir(target_dir)
-        print(f"  -> {target_dir}")
+        print(f"  -> {target_dir} (strategy: {strategy})")
 
         # Determine depth for relative paths
         depth = len(target_dir.parts)
@@ -614,18 +715,37 @@ def sync_hooks() -> int:
 # Main
 # =============================================================================
 
+def run_all_cleanups() -> None:
+    """Run cleanup for all tools with adapter configs."""
+    if not ADAPTERS_DIR.exists():
+        return
+
+    print("\nRunning cleanups from adapter configs...")
+    for adapter_dir in ADAPTERS_DIR.iterdir():
+        if adapter_dir.is_dir():
+            tool = adapter_dir.name
+            cleanup_paths = get_cleanup_paths(tool)
+            if cleanup_paths:
+                run_cleanup(tool)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sync agent configuration to tool-specific directories")
     parser.add_argument("--skills", action="store_true", help="Sync skills only")
     parser.add_argument("--rules", action="store_true", help="Sync rules only")
     parser.add_argument("--commands", action="store_true", help="Sync commands/workflows only")
     parser.add_argument("--hooks", action="store_true", help="Sync hooks only")
+    parser.add_argument("--cleanup", action="store_true", help="Run cleanup only")
     args = parser.parse_args()
 
     # If no specific flag, sync everything
-    sync_all = not (args.skills or args.rules or args.commands or args.hooks)
+    sync_all = not (args.skills or args.rules or args.commands or args.hooks or args.cleanup)
 
     total = 0
+
+    if args.cleanup:
+        run_all_cleanups()
+        return
 
     if sync_all or args.skills:
         total += sync_skills()
@@ -638,6 +758,10 @@ def main():
 
     if sync_all or args.hooks:
         total += sync_hooks()
+
+    # Run cleanups at the end
+    if sync_all:
+        run_all_cleanups()
 
     print(f"\nSync complete!")
     print(f"Total items synced: {total}")
