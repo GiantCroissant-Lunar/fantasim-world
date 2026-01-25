@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using FantaSim.Geosphere.Plate.Topology.Contracts.Persistence;
+using UnifyStorage.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Materializer;
 
-public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
+public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
 {
     private sealed class ByteSequenceComparer : IComparer<byte[]>
     {
@@ -40,9 +40,9 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
 
     private readonly SortedList<byte[], byte[]> _data = new(ByteSequenceComparer.Instance);
 
-    public IOrderedKeyValueWriteBatch CreateWriteBatch() => new WriteBatchImpl();
+    public IWriteBatch CreateWriteBatch() => new WriteBatchImpl();
 
-    public void Write(IOrderedKeyValueWriteBatch batch)
+    public void Write(IWriteBatch batch)
     {
         ArgumentNullException.ThrowIfNull(batch);
 
@@ -51,71 +51,88 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
 
         foreach (var op in b.Ops)
         {
-            Put(op.Key, op.Value);
+            if (op.IsDelete)
+            {
+                Delete(op.Key);
+            }
+            else
+            {
+                Put(op.Key, op.Value!);
+            }
         }
     }
 
-    public void Put(byte[] key, byte[] value)
+    public void Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
     {
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(value);
+        if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-        var keyCopy = (byte[])key.Clone();
-        var valueCopy = (byte[])value.Clone();
+        var keyCopy = key.ToArray();
+        var valueCopy = value.ToArray();
 
         _data[keyCopy] = valueCopy;
     }
 
-    public bool TryGet(byte[] key, out byte[] value)
+    public void Delete(ReadOnlySpan<byte> key)
     {
-        ArgumentNullException.ThrowIfNull(key);
+        if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-        if (_data.TryGetValue(key, out var found))
+        var keyArray = key.ToArray();
+        _data.Remove(keyArray);
+    }
+
+    public bool TryGet(ReadOnlySpan<byte> key, Span<byte> buffer, out int written)
+    {
+        if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+
+        var keyArray = key.ToArray();
+        if (_data.TryGetValue(keyArray, out var found))
         {
-            value = (byte[])found.Clone();
+            if (found.Length > buffer.Length)
+            {
+                written = found.Length;
+                return false;
+            }
+
+            found.CopyTo(buffer);
+            written = found.Length;
             return true;
         }
 
-        value = Array.Empty<byte>();
+        written = 0;
         return false;
     }
 
-    public bool TryGet(byte[] key, Span<byte> destination, out int bytesWritten)
-    {
-        ArgumentNullException.ThrowIfNull(key);
-
-        if (!_data.TryGetValue(key, out var found))
-        {
-            bytesWritten = 0;
-            return false;
-        }
-
-        if (found.Length > destination.Length)
-            throw new ArgumentException("Destination buffer is too small.", nameof(destination));
-
-        found.CopyTo(destination);
-        bytesWritten = found.Length;
-        return true;
-    }
-
-    public IOrderedKeyValueIterator CreateIterator() => new IteratorImpl(_data);
+    public IKeyValueIterator CreateIterator() => new IteratorImpl(_data);
 
     public void Dispose()
     {
     }
 
-    private sealed class WriteBatchImpl : IOrderedKeyValueWriteBatch
+    private sealed class WriteBatchImpl : IWriteBatch
     {
-        public readonly List<(byte[] Key, byte[] Value)> Ops = new();
+        public readonly List<(byte[] Key, byte[]? Value, bool IsDelete)> Ops = new();
 
-        public void Put(byte[] key, ReadOnlySpan<byte> value)
+        public void Put(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
         {
-            ArgumentNullException.ThrowIfNull(key);
+            if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-            var keyCopy = (byte[])key.Clone();
+            var keyCopy = key.ToArray();
             var valueCopy = value.ToArray();
 
-            Ops.Add((keyCopy, valueCopy));
+            Ops.Add((keyCopy, valueCopy, false));
+        }
+
+        public void Delete(ReadOnlySpan<byte> key)
+        {
+            if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+
+            var keyCopy = key.ToArray();
+            Ops.Add((keyCopy, null, true));
+        }
+
+        public void Clear()
+        {
+            Ops.Clear();
         }
 
         public void Dispose()
@@ -124,7 +141,7 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
         }
     }
 
-    private sealed class IteratorImpl : IOrderedKeyValueIterator
+    private sealed class IteratorImpl : IKeyValueIterator
     {
         private readonly List<byte[]> _keys;
         private readonly List<byte[]> _values;
@@ -136,18 +153,19 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
             _comparer = data.Comparer;
             _keys = new List<byte[]>(data.Keys);
             _values = new List<byte[]>(data.Values);
-            _index = _keys.Count;
+            _index = _keys.Count; // Default to invalid
         }
 
         public bool Valid => _index >= 0 && _index < _keys.Count;
 
-        public ReadOnlyMemory<byte> Key => Valid ? _keys[_index] : ReadOnlyMemory<byte>.Empty;
+        public ReadOnlySpan<byte> Key => Valid ? _keys[_index] : ReadOnlySpan<byte>.Empty;
 
-        public ReadOnlyMemory<byte> Value => Valid ? _values[_index] : ReadOnlyMemory<byte>.Empty;
+        public ReadOnlySpan<byte> Value => Valid ? _values[_index] : ReadOnlySpan<byte>.Empty;
 
-        public void Seek(byte[] target)
+        public void Seek(ReadOnlySpan<byte> key)
         {
-            ArgumentNullException.ThrowIfNull(target);
+            if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+            var target = key.ToArray();
 
             // Binary search for first key >= target
             var lo = 0;
@@ -165,9 +183,10 @@ public sealed class InMemoryOrderedKeyValueStore : IOrderedKeyValueStore
             _index = lo;
         }
 
-        public void SeekForPrev(byte[] target)
+        public void SeekForPrev(ReadOnlySpan<byte> key)
         {
-            ArgumentNullException.ThrowIfNull(target);
+            if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+            var target = key.ToArray();
 
             // Binary search for last key <= target
             // First find the first key > target, then back up one

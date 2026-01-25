@@ -34,14 +34,14 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     private const string HeadSuffix = "Head";
     private const string SnapshotPrefix = "Snap:";
     private const string MetaCapsKey = "Meta:Caps";
-    private readonly IOrderedKeyValueStore _store;
+    private readonly IKeyValueStore _store;
     private readonly object _lock = new();
 
     /// <summary>
     /// Opens or creates an event store at the specified path.
     /// </summary>
     /// <param name="store">Ordered key-value store implementation.</param>
-    public PlateTopologyEventStore(IOrderedKeyValueStore store)
+    public PlateTopologyEventStore(IKeyValueStore store)
     {
         ArgumentNullException.ThrowIfNull(store);
         _store = store;
@@ -715,7 +715,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// This is typically called during the first append to a new stream
     /// when using TickMonotonicityPolicy.Reject.
     /// </summary>
-    private void SetCapabilitiesInBatch(IOrderedKeyValueWriteBatch batch, byte[] prefix, StreamCapabilities caps)
+    private void SetCapabilitiesInBatch(IWriteBatch batch, byte[] prefix, StreamCapabilities caps)
     {
         var capsKey = BuildMetaCapsKey(prefix);
         var capsBytes = caps.ToBytes();
