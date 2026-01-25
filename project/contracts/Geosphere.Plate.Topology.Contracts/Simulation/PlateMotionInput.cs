@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Immutable;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 
 public enum PlateType
 {
@@ -31,14 +30,14 @@ public readonly record struct BoundarySnapshot
     [Key(2)] public required PlateId PlateB { get; init; }
     [Key(3)] public required BoundaryType Type { get; init; }
     [Key(4)] public required PlateId SubductingPlate { get; init; } // If Convergent
-    // Geometry would be here, but using simplified representation for now or need to add it
+    // Geometry would be here, but using simplified representation for now
 }
 
 /// <summary>
-/// Immutable snapshot of plate topology for solver input.
+/// Immutable snapshot of plate topology mechanics for solver input.
 /// </summary>
 [MessagePackObject]
-public readonly record struct PlateTopologySnapshot
+public readonly record struct PlateMechanicsSnapshot
 {
     [Key(0)] public required PlateSnapshot[] Plates { get; init; }
     [Key(1)] public required BoundarySnapshot[] Boundaries { get; init; }
@@ -48,6 +47,6 @@ public readonly record struct PlateTopologySnapshot
 [MessagePackObject]
 public readonly record struct PlateMotionInput
 {
-    [Key(0)] public required PlateTopologySnapshot Snapshot { get; init; }
+    [Key(0)] public required PlateMechanicsSnapshot Snapshot { get; init; }
     [Key(1)] public required float TimeDeltaS { get; init; }
 }

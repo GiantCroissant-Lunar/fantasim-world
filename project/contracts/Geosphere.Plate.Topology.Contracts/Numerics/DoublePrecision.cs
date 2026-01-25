@@ -1,7 +1,7 @@
 using System;
 using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 
 [MessagePackObject]
 public readonly record struct Vector3d(

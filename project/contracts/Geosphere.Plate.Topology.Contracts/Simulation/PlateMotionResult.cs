@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Immutable;
-using FantaSim.Geosphere.Plate.SolverLab.Core.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.SolverLab.Core.Models.PlateMotion;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 
 [MessagePackObject]
 public readonly record struct PlateMotion

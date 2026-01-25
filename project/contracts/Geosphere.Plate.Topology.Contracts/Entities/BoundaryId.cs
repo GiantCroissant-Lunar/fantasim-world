@@ -1,4 +1,5 @@
 using Plate.TimeDete.Determinism.Abstractions;
+using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
@@ -10,6 +11,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 /// Once created, a BoundaryId persists through all topology changes and is never reused
 /// even after retirement.
 /// </summary>
+[MessagePackObject]
 public readonly record struct BoundaryId
 {
     /// <summary>
@@ -21,6 +23,7 @@ public readonly record struct BoundaryId
     /// Initializes a new instance of the BoundaryId struct with the specified UUID value.
     /// </summary>
     /// <param name="value">The UUID value.</param>
+    [SerializationConstructor]
     public BoundaryId(Guid value)
     {
         _value = value;
@@ -29,11 +32,13 @@ public readonly record struct BoundaryId
     /// <summary>
     /// Gets the underlying UUID value.
     /// </summary>
+    [Key(0)]
     public Guid Value => _value;
 
     /// <summary>
     /// Gets a value indicating whether this BoundaryId is empty/invalid.
     /// </summary>
+    [IgnoreMember]
     public bool IsEmpty => _value == Guid.Empty;
 
     /// <summary>

@@ -1,4 +1,5 @@
 using Plate.TimeDete.Determinism.Abstractions;
+using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
@@ -8,6 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 /// Once created, a PlateId persists through all topology changes and is never reused
 /// even after retirement. Implements UUIDv7 for sortability while maintaining uniqueness.
 /// </summary>
+[MessagePackObject]
 public readonly record struct PlateId
 {
     /// <summary>
@@ -19,6 +21,7 @@ public readonly record struct PlateId
     /// Initializes a new instance of the PlateId struct with the specified UUID value.
     /// </summary>
     /// <param name="value">The UUID value.</param>
+    [SerializationConstructor]
     public PlateId(Guid value)
     {
         _value = value;
@@ -27,11 +30,13 @@ public readonly record struct PlateId
     /// <summary>
     /// Gets the underlying UUID value.
     /// </summary>
+    [Key(0)]
     public Guid Value => _value;
 
     /// <summary>
     /// Gets a value indicating whether this PlateId is empty/invalid.
     /// </summary>
+    [IgnoreMember]
     public bool IsEmpty => _value == Guid.Empty;
 
     /// <summary>

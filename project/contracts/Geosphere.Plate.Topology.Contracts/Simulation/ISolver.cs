@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.SolverLab.Core.Abstractions;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 
 /// <summary>
 /// Generic interface for all pure solvers.
