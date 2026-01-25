@@ -38,8 +38,8 @@ Standardize plugin loading and service registration. This is the critical archit
 Establish the persistence layer using `UnifyStorage`.
 
 - [x] **Step 2.1**: Add references to `UnifyStorage.Abstractions` and `UnifySerialization.Abstractions`.
-- [ ] **Step 2.2**: Implement `IEventStore` using `UnifyStorage`.
-- [ ] **Step 2.3**: Rewrite `Geosphere.Plate.Topology.Serializers` to use `UnifySerialization`.
+- [x] **Step 2.2**: Implement `IEventStore` using `UnifyStorage`.
+- [x] **Step 2.3**: Rewrite `Geosphere.Plate.Topology.Serializers` to use `UnifySerialization`.
 
 ### Phase 3: Simulation Engine (ECS)
 

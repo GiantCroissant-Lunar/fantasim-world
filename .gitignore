@@ -9,6 +9,7 @@
 .gemini/
 .kilocode/
 .opencode/
+.sisyphus/
 .windsurf/
 AGENTS.md
 CLAUDE.md

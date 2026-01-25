@@ -482,43 +482,7 @@ public class EventStoreHashChainTests : IDisposable
         await store.AppendAsync(stream, events, CancellationToken.None);
 
         // Find and corrupt the second event (seq=1) by modifying bytes
-        // The key format is "S:{variant}:{branch}:L{l}:{domain}:M{m}:E:{seq}"
-        // We need to iterate and find the event key
-        using (var iterator = kv.CreateIterator())
-        {
-            // Seek to beginning and find event keys
-            iterator.Seek(System.Text.Encoding.UTF8.GetBytes("S:"));
-
-            var eventKeysFound = new List<byte[]>();
-            while (iterator.Valid)
-            {
-                var keyStr = System.Text.Encoding.UTF8.GetString(iterator.Key.Span[..Math.Min(iterator.Key.Length, 50)]);
-                if (keyStr.Contains("E:"))
-                {
-                    eventKeysFound.Add(iterator.Key.Span.ToArray());
-                }
-                iterator.Next();
-
-                // Safety: only look at first 10 keys
-                if (eventKeysFound.Count >= 3) break;
-            }
-
-            // Corrupt the second event (index 1)
-            if (eventKeysFound.Count >= 2)
-            {
-                var keyToCorrupt = eventKeysFound[1];
-                if (kv.TryGet(keyToCorrupt, out var originalValue))
-                {
-                    // Flip a bit in the middle of the value
-                    var corruptedValue = (byte[])originalValue.Clone();
-                    if (corruptedValue.Length > 10)
-                    {
-                        corruptedValue[corruptedValue.Length / 2] ^= 0xFF; // Flip all bits
-                    }
-                    kv.Put(keyToCorrupt, corruptedValue);
-                }
-            }
-        }
+        CorruptSecondEvent(kv);
 
         // Act & Assert - Reading should detect hash chain corruption
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -531,6 +495,52 @@ public class EventStoreHashChainTests : IDisposable
 
         // The error should indicate a hash mismatch
         Assert.Contains("hash", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void CorruptSecondEvent(InMemoryOrderedKeyValueStore kv)
+    {
+        // The key format is "S:{variant}:{branch}:L{l}:{domain}:M{m}:E:{seq}"
+        // We need to iterate and find the event key
+        using (var iterator = kv.CreateIterator())
+        {
+            // Seek to beginning and find event keys
+            iterator.Seek(System.Text.Encoding.UTF8.GetBytes("S:"));
+
+            var eventKeysFound = new List<byte[]>();
+            while (iterator.Valid)
+            {
+                // iterator.Key is ReadOnlySpan<byte>, no need for .Span
+                var keySpan = iterator.Key;
+                var keyStr = System.Text.Encoding.UTF8.GetString(keySpan[..Math.Min(keySpan.Length, 50)]);
+                if (keyStr.Contains("E:"))
+                {
+                    eventKeysFound.Add(keySpan.ToArray());
+                }
+                iterator.Next();
+
+                // Safety: only look at first 10 keys
+                if (eventKeysFound.Count >= 3) break;
+            }
+
+            // Corrupt the second event (index 1)
+            if (eventKeysFound.Count >= 2)
+            {
+                var keyToCorrupt = eventKeysFound[1];
+                var buffer = new byte[4096]; // Sufficiently large buffer
+                if (kv.TryGet(keyToCorrupt, buffer, out var written))
+                {
+                    var originalValue = buffer.AsSpan(0, written).ToArray();
+
+                    // Flip a bit in the middle of the value
+                    var corruptedValue = (byte[])originalValue.Clone();
+                    if (corruptedValue.Length > 10)
+                    {
+                        corruptedValue[corruptedValue.Length / 2] ^= 0xFF; // Flip all bits
+                    }
+                    kv.Put(keyToCorrupt, corruptedValue);
+                }
+            }
+        }
     }
 
     #endregion

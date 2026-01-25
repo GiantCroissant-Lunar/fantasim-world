@@ -102,6 +102,17 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
         return false;
     }
 
+    public bool TryGet(byte[] key, out byte[]? value)
+    {
+        if (_data.TryGetValue(key, out var v))
+        {
+            value = v;
+            return true;
+        }
+        value = null;
+        return false;
+    }
+
     public IKeyValueIterator CreateIterator() => new IteratorImpl(_data);
 
     public void Dispose()

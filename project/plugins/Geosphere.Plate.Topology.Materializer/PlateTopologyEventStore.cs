@@ -255,9 +255,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
             using var iterator = _store.CreateIterator();
             iterator.Seek(firstKey);
 
-            while (iterator.Valid && HasStreamPrefix(iterator.Key.Span, prefix))
+            while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
             {
-                bytesToYield.Add(iterator.Value.Span.ToArray());
+                bytesToYield.Add(iterator.Value.ToArray());
                 iterator.Next();
             }
         }
@@ -381,7 +381,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         {
             try
             {
-                bytes = _store.TryGet(snapshotKey, out var v) ? v : null;
+                bytes = ReadBytes(snapshotKey);
             }
             catch
             {
@@ -428,7 +428,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
             if (!iterator.Valid)
                 return Task.FromResult<PlateTopologySnapshot?>(null);
 
-            var foundKey = iterator.Key.Span;
+            var foundKey = iterator.Key;
 
             // Check if the found key starts with our snapshot prefix
             // (ensures we don't accidentally read a snapshot from another stream)
@@ -478,16 +478,13 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var lastSequence = BinaryPrimitives.ReadInt64BigEndian(headBuffer);
         var lastEventKey = BuildEventKey(prefix, lastSequence);
 
-        byte[] lastValue;
+        byte[]? lastValue;
         lock (_lock)
         {
-            if (!_store.TryGet(lastEventKey, out lastValue))
-            {
-                lastValue = Array.Empty<byte>();
-            }
+            lastValue = ReadBytes(lastEventKey);
         }
 
-        if (MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
+        if (lastValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
         {
             return lastRecord.Hash;
         }
@@ -504,16 +501,13 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         var previousEventKey = BuildEventKey(prefix, fromSequenceInclusive - 1);
 
-        byte[] previousValue;
+        byte[]? previousValue;
         lock (_lock)
         {
-            if (!_store.TryGet(previousEventKey, out previousValue))
-            {
-                previousValue = Array.Empty<byte>();
-            }
+            previousValue = ReadBytes(previousEventKey);
         }
 
-        if (MessagePackEventRecordSerializer.TryDeserializeRecord(previousValue, out var previousRecord))
+        if (previousValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(previousValue, out var previousRecord))
         {
             return previousRecord.Hash;
         }
@@ -657,29 +651,27 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var prefix = BuildStreamPrefix(stream);
         var capsKey = BuildMetaCapsKey(prefix);
 
-        byte[]? capsBytes;
         lock (_lock)
         {
-            capsBytes = _store.TryGet(capsKey, out var v) ? v : null;
+            var capsBytes = ReadBytes(capsKey);
+            if (capsBytes == null || capsBytes.Length < StreamCapabilities.StorageSize)
+                return ValueTask.FromResult(false);
+
+            var caps = StreamCapabilities.FromBytes(capsBytes);
+
+            // Guard: If monotone flag is set but RejectFromGenesis isn't, something is wrong
+            // This protects against corrupted metadata or future misuse
+            if (caps.IsTickMonotoneFromGenesis && !caps.IsTickPolicyRejectFromGenesis)
+            {
+                Trace.WriteLineIf(
+                    DiagnosticSwitches.CapabilityValidation.TraceWarning,
+                    $"[EventStore] Stream {stream} has TickMonotoneFromGenesis=true but TickPolicyRejectFromGenesis=false. " +
+                    "This is inconsistent - ignoring monotone flag for safety.");
+                return ValueTask.FromResult(false);
+            }
+
+            return ValueTask.FromResult(caps.IsTickMonotoneFromGenesis);
         }
-
-        if (capsBytes == null || capsBytes.Length < StreamCapabilities.StorageSize)
-            return ValueTask.FromResult(false);
-
-        var caps = StreamCapabilities.FromBytes(capsBytes);
-
-        // Guard: If monotone flag is set but RejectFromGenesis isn't, something is wrong
-        // This protects against corrupted metadata or future misuse
-        if (caps.IsTickMonotoneFromGenesis && !caps.IsTickPolicyRejectFromGenesis)
-        {
-            Trace.WriteLineIf(
-                DiagnosticSwitches.CapabilityValidation.TraceWarning,
-                $"[EventStore] Stream {stream} has TickMonotoneFromGenesis=true but TickPolicyRejectFromGenesis=false. " +
-                "This is inconsistent - ignoring monotone flag for safety.");
-            return ValueTask.FromResult(false);
-        }
-
-        return ValueTask.FromResult(caps.IsTickMonotoneFromGenesis);
     }
 
     /// <summary>
@@ -697,16 +689,15 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var prefix = BuildStreamPrefix(stream);
         var capsKey = BuildMetaCapsKey(prefix);
 
-        byte[]? capsBytes;
         lock (_lock)
         {
-            capsBytes = _store.TryGet(capsKey, out var v) ? v : null;
-        }
-
-        if (capsBytes == null || capsBytes.Length < StreamCapabilities.StorageSize)
+            var capsBytes = ReadBytes(capsKey);
+            if (capsBytes != null)
+            {
+                return StreamCapabilities.FromBytes(capsBytes);
+            }
             return StreamCapabilities.None;
-
-        return StreamCapabilities.FromBytes(capsBytes);
+        }
     }
 
     /// <summary>
@@ -715,7 +706,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// This is typically called during the first append to a new stream
     /// when using TickMonotonicityPolicy.Reject.
     /// </summary>
-    private void SetCapabilitiesInBatch(IOrderedKeyValueWriteBatch batch, byte[] prefix, StreamCapabilities caps)
+    private void SetCapabilitiesInBatch(IWriteBatch batch, byte[] prefix, StreamCapabilities caps)
     {
         var capsKey = BuildMetaCapsKey(prefix);
         var capsBytes = caps.ToBytes();
@@ -730,8 +721,34 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var headKey = BuildHeadKey(prefix);
         lock (_lock)
         {
-            return _store.TryGet(headKey, out _);
+            Span<byte> buffer = stackalloc byte[0];
+            int written;
+            return _store.TryGet(headKey, buffer, out written);
         }
+    }
+
+    private byte[]? ReadBytes(byte[] key)
+    {
+        // First try with a small stack buffer to get size
+        Span<byte> initialBuffer = stackalloc byte[1];
+        if (_store.TryGet(key, initialBuffer, out var written))
+        {
+            // Value fit in 1 byte (or was empty)
+            return initialBuffer.Slice(0, written).ToArray();
+        }
+
+        if (written > 0)
+        {
+            var result = new byte[written];
+            if (_store.TryGet(key, result, out var finalWritten))
+            {
+                return result;
+            }
+            // Should not happen if store is consistent under lock
+            throw new InvalidOperationException("Store state changed during read");
+        }
+
+        return null;
     }
 
     #endregion

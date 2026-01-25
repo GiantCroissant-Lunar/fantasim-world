@@ -7,7 +7,12 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Topology.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Topology.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Topology.Contracts</AssemblyName>
+    <UnifySerializationTargets>MessagePack</UnifySerializationTargets>
   </PropertyGroup>
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="UnifySerializationTargets" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />
@@ -15,6 +20,10 @@
     <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
     <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Generators\UnifySerialization.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" Version="3.1.4" />
   </ItemGroup>
 
 </Project>

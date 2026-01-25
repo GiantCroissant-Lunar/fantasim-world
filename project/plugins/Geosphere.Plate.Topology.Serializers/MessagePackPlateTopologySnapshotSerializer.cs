@@ -3,6 +3,8 @@ using System.Buffers;
 using MessagePack;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
+using UnifyGeometry;
 using PlateEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate;
 
 namespace FantaSim.Geosphere.Plate.Topology.Serializers;
@@ -11,8 +13,6 @@ public static class MessagePackPlateTopologySnapshotSerializer
 {
     public const int SchemaVersionV1 = 1;
 
-    private static readonly GeometryFormatter GeometryFormatter = new();
-
     public static byte[] Serialize(PlateTopologySnapshot snapshot)
     {
         var buffer = new ArrayBufferWriter<byte>();
@@ -20,7 +20,10 @@ public static class MessagePackPlateTopologySnapshotSerializer
 
         writer.WriteArrayHeader(7);
         writer.Write(SchemaVersionV1);
-        StreamIdentityHelper.Serialize(ref writer, snapshot.Key.Stream);
+
+        // Use shared Options to serialize TruthStreamIdentity
+        MessagePackSerializer.Serialize(ref writer, snapshot.Key.Stream, MessagePackEventSerializer.Options);
+
         writer.Write(snapshot.Key.Tick);
         writer.Write(snapshot.LastEventSequence);
 
@@ -43,7 +46,9 @@ public static class MessagePackPlateTopologySnapshotSerializer
         if (schemaVersion != SchemaVersionV1)
             throw new InvalidOperationException($"Unsupported snapshot schemaVersion: {schemaVersion}");
 
-        var stream = StreamIdentityHelper.Deserialize(ref reader);
+        // Use shared Options to deserialize TruthStreamIdentity
+        var stream = MessagePackSerializer.Deserialize<FantaSim.Geosphere.Plate.Topology.Contracts.Identity.TruthStreamIdentity>(ref reader, MessagePackEventSerializer.Options);
+
         var tick = reader.ReadInt64();
         var lastEventSequence = reader.ReadInt64();
 
@@ -108,7 +113,10 @@ public static class MessagePackPlateTopologySnapshotSerializer
             writer.Write(b.PlateIdLeft.Value.ToString());
             writer.Write(b.PlateIdRight.Value.ToString());
             writer.Write((byte)b.BoundaryType);
-            GeometryFormatter.Serialize(ref writer, b.Geometry, MessagePackSerializerOptions.Standard);
+
+            // Use shared Options for Geometry
+            MessagePackSerializer.Serialize(ref writer, b.Geometry, MessagePackEventSerializer.Options);
+
             writer.Write(b.IsRetired);
             if (b.RetirementReason is null)
                 writer.WriteNil();
@@ -132,7 +140,11 @@ public static class MessagePackPlateTopologySnapshotSerializer
             var plateLeft = new PlateId(Guid.Parse(reader.ReadString()!));
             var plateRight = new PlateId(Guid.Parse(reader.ReadString()!));
             var type = (BoundaryType)reader.ReadByte();
-            var geometry = GeometryFormatter.Deserialize(ref reader, MessagePackSerializerOptions.Standard);
+
+            // Use shared Options for Geometry
+            var geometry = MessagePackSerializer.Deserialize<IGeometry?>(ref reader, MessagePackEventSerializer.Options);
+            if (geometry == null) throw new InvalidOperationException("Boundary geometry cannot be null");
+
             var isRetired = reader.ReadBoolean();
 
             string? reason;

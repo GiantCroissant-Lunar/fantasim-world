@@ -24,6 +24,11 @@ public readonly record struct Domain
     }
 
     /// <summary>
+    /// Gets a value indicating whether this domain is empty/default.
+    /// </summary>
+    public bool IsEmpty => string.IsNullOrEmpty(_value);
+
+    /// <summary>
     /// Parses a domain identifier string into a Domain struct.
     /// Valid domain identifiers are non-empty and contain only alphanumeric characters, dots, and underscores.
     /// </summary>

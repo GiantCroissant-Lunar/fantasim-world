@@ -142,7 +142,7 @@ public class DomainTests
         var domain1 = Domain.Parse("geo.plates");
         var domain2 = Domain.Parse("geo.plates");
 
-        // Act & Assert
+        // Assert
         Assert.True(domain1.Equals(domain2));
         Assert.Equal(domain1.GetHashCode(), domain2.GetHashCode());
     }
@@ -154,7 +154,7 @@ public class DomainTests
         var domain1 = Domain.Parse("geo.plates");
         var domain2 = Domain.Parse("geo.rivers");
 
-        // Act & Assert
+        // Assert
         Assert.False(domain1.Equals(domain2));
     }
 
@@ -164,7 +164,7 @@ public class DomainTests
         // Arrange
         var domain = default(Domain);
 
-        // Act & Assert
+        // Assert
         Assert.False(domain.IsValid());
         Assert.Equal(string.Empty, domain.ToString());
     }
@@ -303,7 +303,7 @@ public class TruthStreamIdentityTests
         var result = identity.ToString();
 
         // Assert
-        Assert.Equal("science/main/L2/geo.plates/M0", result);
+        Assert.Equal("urn:fantasim:science:main:L2:geo.plates:M0", result);
     }
 
     [Fact]
@@ -533,8 +533,8 @@ public class TruthStreamIdentityTests
         var streamKey2 = identityWithoutPrefix.ToStreamKey();
 
         // Assert - Both should format identically with single 'M' prefix
-        Assert.Equal("science/main/L2/geo.plates/M0", toString1);
-        Assert.Equal("science/main/L2/geo.plates/M0", toString2);
+        Assert.Equal("urn:fantasim:science:main:L2:geo.plates:M0", toString1);
+        Assert.Equal("urn:fantasim:science:main:L2:geo.plates:M0", toString2);
         Assert.Equal(toString1, toString2);
 
         Assert.Equal("science:main:L2:geo.plates:M0", streamKey1);

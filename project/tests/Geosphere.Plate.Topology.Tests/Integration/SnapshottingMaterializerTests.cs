@@ -63,7 +63,7 @@ public sealed class SnapshottingMaterializerTests
             var prefix = Encoding.UTF8.GetBytes($"S:{stream.VariantId}:{stream.BranchId}:L{stream.LLevel}:{stream.Domain}:M{stream.Model}:");
             var key = BuildEventKey(prefix, 2);
 
-            if (!kv.TryGet(key, out var recordBytes) || recordBytes.Length == 0)
+            if (!kv.TryGet(key, out var recordBytes) || recordBytes == null || recordBytes.Length == 0)
                 throw new InvalidOperationException("Expected event record bytes to exist for sequence 2");
 
             recordBytes[^1] ^= 0xFF;
