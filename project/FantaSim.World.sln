@@ -1,23 +1,23 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Contracts", "contracts\Plate.Topology.Contracts\Plate.Topology.Contracts.csproj", "{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Topology.Contracts", "contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj", "{F53F24D4-7F00-4B35-98F6-6CFE59C51EBF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Materializer", "hosts\Plate.Topology.Materializer\Plate.Topology.Materializer.csproj", "{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Topology.Materializer", "hosts\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj", "{1E542BEB-AD2C-46BD-A5EE-D79AB2EA8F0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Serializers", "plugins\Plate.Topology.Serializers\Plate.Topology.Serializers.csproj", "{FD27E091-8076-4797-A1E9-92F267035C5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Topology.Serializers", "plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj", "{FD27E091-8076-4797-A1E9-92F267035C5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Topology.Tests", "tests\Plate.Topology.Tests\Plate.Topology.Tests.csproj", "{14951ACF-AA51-4424-A628-BBCDFC7F3C36}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Topology.Tests", "tests\Geosphere.Plate.Topology.Tests\Geosphere.Plate.Topology.Tests.csproj", "{14951ACF-AA51-4424-A628-BBCDFC7F3C36}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Runtime.Des.Tests", "tests\Plate.Runtime.Des.Tests\Plate.Runtime.Des.Tests.csproj", "{37CB7883-271A-4F47-B243-45F7FF1147C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Runtime.Des.Tests", "tests\Geosphere.Plate.Runtime.Des.Tests\Geosphere.Plate.Runtime.Des.Tests.csproj", "{37CB7883-271A-4F47-B243-45F7FF1147C0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hosts", "hosts", "{2F3EF1A3-B2B0-B28C-122D-FFB85167A4CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plate.Runtime.Des", "hosts\Plate.Runtime.Des\Plate.Runtime.Des.csproj", "{D2B7D1A3-092E-481C-862F-2EE4B3D4C961}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Runtime.Des", "hosts\Geosphere.Plate.Runtime.Des\Geosphere.Plate.Runtime.Des.csproj", "{D2B7D1A3-092E-481C-862F-2EE4B3D4C961}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unify-maths", "unify-maths", "{DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}"
 EndProject

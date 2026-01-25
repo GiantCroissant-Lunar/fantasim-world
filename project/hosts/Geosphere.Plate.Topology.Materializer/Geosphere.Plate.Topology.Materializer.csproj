@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.Abstractions\UnifyTopology.Graph.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.InMemory\UnifyTopology.Graph.InMemory.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Topology.Materializer</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Topology.Materializer</PackageId>
+    <AssemblyName>Geosphere.Plate.Topology.Materializer</AssemblyName>
+  </PropertyGroup>
+
+</Project>
