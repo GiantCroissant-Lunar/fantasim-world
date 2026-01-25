@@ -64,3 +64,5 @@ logs/
 build/nuke/.nuke/
 docs/_inbox/
 specs/
+
+ref-projects/
