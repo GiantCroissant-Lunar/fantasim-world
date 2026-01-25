@@ -2,6 +2,7 @@ using System;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using UnifySerialization.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 
@@ -20,15 +21,16 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 /// <param name="PreviousHash">Hash of the previous event in the chain (empty for genesis).</param>
 /// <param name="Hash">Cryptographic hash of this event (computed, not set by callers).</param>
+[UnifyModel]
 public readonly record struct PlateRetiredEvent(
-    Guid EventId,
-    PlateId PlateId,
-    string? Reason,
-    CanonicalTick Tick,
-    long Sequence,
-    TruthStreamIdentity StreamIdentity,
-    ReadOnlyMemory<byte> PreviousHash,
-    ReadOnlyMemory<byte> Hash
+    [property: UnifyProperty(0)] Guid EventId,
+    [property: UnifyProperty(1)] PlateId PlateId,
+    [property: UnifyProperty(7)] string? Reason,
+    [property: UnifyProperty(2)] CanonicalTick Tick,
+    [property: UnifyProperty(3)] long Sequence,
+    [property: UnifyProperty(4)] TruthStreamIdentity StreamIdentity,
+    [property: UnifyProperty(5)] ReadOnlyMemory<byte> PreviousHash,
+    [property: UnifyProperty(6)] ReadOnlyMemory<byte> Hash
 ) : IPlateTopologyEvent
 {
     /// <summary>

@@ -5,8 +5,8 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Capabilities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
-using FantaSim.Geosphere.Plate.Topology.Contracts.Persistence;
 using FantaSim.Geosphere.Plate.Topology.Serializers;
+using UnifyStorage.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Materializer;
 
@@ -715,7 +715,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// This is typically called during the first append to a new stream
     /// when using TickMonotonicityPolicy.Reject.
     /// </summary>
-    private void SetCapabilitiesInBatch(IWriteBatch batch, byte[] prefix, StreamCapabilities caps)
+    private void SetCapabilitiesInBatch(IOrderedKeyValueWriteBatch batch, byte[] prefix, StreamCapabilities caps)
     {
         var capsKey = BuildMetaCapsKey(prefix);
         var capsBytes = caps.ToBytes();

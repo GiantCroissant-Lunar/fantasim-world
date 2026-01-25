@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj" />
     <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.Abstractions\UnifyTopology.Graph.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\unify-topology\dotnet\src\UnifyTopology.Graph.InMemory\UnifyTopology.Graph.InMemory.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
