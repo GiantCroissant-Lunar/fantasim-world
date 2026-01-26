@@ -1,0 +1,79 @@
+<Project>
+  <PropertyGroup>
+    <PluginArchiRoot>$(MSBuildThisFileDirectory)..\..\plugin-archi\</PluginArchiRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\contracts\\'))">
+    <FantaSimProjectKind>Contracts</FantaSimProjectKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\plugins\\'))">
+    <FantaSimProjectKind>Plugins</FantaSimProjectKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\tests\\'))">
+    <FantaSimProjectKind>Tests</FantaSimProjectKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\samples\\'))">
+    <FantaSimProjectKind>Samples</FantaSimProjectKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\benchmarks\\'))">
+    <FantaSimProjectKind>Benchmarks</FantaSimProjectKind>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\hosts\\'))">
+    <FantaSimProjectKind>Hosts</FantaSimProjectKind>
+  </PropertyGroup>
+
+  <!-- netstandard2.1 compat: centralized IsExternalInit shim from fantasim-shared (if present) -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' and Exists('$(MSBuildThisFileDirectory)..\\..\\fantasim-shared\\project\\_compat\\IsExternalInit.cs')">
+    <DefineConstants>$(DefineConstants);FANTASIM_SHARED_COMPAT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' and Exists('$(MSBuildThisFileDirectory)..\\..\\fantasim-shared\\project\\_compat\\IsExternalInit.cs')">
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\fantasim-shared\project\_compat\IsExternalInit.cs" Link="IsExternalInit.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="FantaSimProjectKind" Value="$(FantaSimProjectKind)" Condition="'$(FantaSimProjectKind)' != ''" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(PluginArchiRoot)src\\PluginArchi.SourceGenerators.Proxy\\PluginArchi.SourceGenerators.Proxy.csproj')">
+    <ProjectReference Include="$(PluginArchiRoot)src\PluginArchi.SourceGenerators.Proxy\PluginArchi.SourceGenerators.Proxy.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(PluginArchiRoot)dotnet\\PluginArchi.Analyzers\\PluginArchi.Analyzers.csproj')">
+    <ProjectReference Include="$(PluginArchiRoot)dotnet\PluginArchi.Analyzers\PluginArchi.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PlateSharedRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\plate-shared'))</PlateSharedRoot>
+    <PlateSharedGenerators>$(PlateSharedRoot)\dotnet\source-generators</PlateSharedGenerators>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ServiceArchiRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\service-archi'))</ServiceArchiRoot>
+    <CrosscutFoundationRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\crosscut-foundation'))</CrosscutFoundationRoot>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(ServiceArchiRoot)\\dotnet\\ServiceArchi.SourceGen\\ServiceArchi.SourceGen.csproj')">
+    <ProjectReference Include="$(ServiceArchiRoot)\dotnet\ServiceArchi.SourceGen\ServiceArchi.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(CrosscutFoundationRoot)\\dotnet\\src\\UnifyDiagnostics.Generators\\UnifyDiagnostics.Generators.csproj')">
+    <ProjectReference Include="$(CrosscutFoundationRoot)\dotnet\src\UnifyDiagnostics.Generators\UnifyDiagnostics.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Import Project="$(PlateSharedGenerators)\AutoToString.Local.props" Condition="Exists('$(PlateSharedGenerators)\AutoToString.Local.props')" />
+  <Import Project="$(PlateSharedGenerators)\DisposePattern.Local.props" Condition="Exists('$(PlateSharedGenerators)\DisposePattern.Local.props')" />
+  <Import Project="$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props" Condition="Exists('$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props')" />
+  <Import Project="$(PlateSharedGenerators)\AutoProperties.Local.props" Condition="Exists('$(PlateSharedGenerators)\AutoProperties.Local.props')" />
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);MA0048</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Benchmarks'))">
+    <NoWarn>$(NoWarn);MA0051</NoWarn>
+  </PropertyGroup>
+</Project>

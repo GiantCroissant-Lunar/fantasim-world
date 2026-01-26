@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- Path to fantasim-shared -->
+    <FantaSimSharedRoot Condition="'$(FantaSimSharedRoot)' == ''">$(MSBuildThisFileDirectory)..\..\fantasim-shared\</FantaSimSharedRoot>
+  </PropertyGroup>
+
+  <!-- Import shared foundation (MUST be in .targets, not .props) -->
+  <Import Project="$(FantaSimSharedRoot)project\build\FantaSim.Shared.targets" />
+</Project>
