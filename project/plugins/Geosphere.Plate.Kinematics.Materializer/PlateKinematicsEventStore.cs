@@ -83,9 +83,9 @@ public sealed class PlateKinematicsEventStore : IKinematicsEventStore, IDisposab
             var eventBytes = MessagePackKinematicsEventSerializer.Serialize(evt);
 
             var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
-            var recordTick = evt.Sequence;
-            var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, recordTick, previousHash, eventBytes);
-            var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, recordTick, previousHash, hash, eventBytes);
+            var recordSequence = evt.Sequence;
+            var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, recordSequence, previousHash, eventBytes);
+            var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, recordSequence, previousHash, hash, eventBytes);
 
             batch.Put(eventKey, recordBytes);
             previousHash = hash;
@@ -294,8 +294,11 @@ public sealed class PlateKinematicsEventStore : IKinematicsEventStore, IDisposab
         Span<byte> buffer = stackalloc byte[8];
         int written;
 
-        if (!_store.TryGet(headKey, buffer, out written))
-            return null;
+        lock (_lock)
+        {
+            if (!_store.TryGet(headKey, buffer, out written))
+                return null;
+        }
 
         if (written != 8)
             throw new InvalidOperationException($"Head value must be 8 bytes, got {written}");

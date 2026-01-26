@@ -18,7 +18,7 @@ internal static class ReadOnlySequenceExtensions
         if (sequence.IsSingleSegment)
             return sequence.FirstSpan.ToArray();
 
-        var bytes = new byte[sequence.Length];
+        var bytes = new byte[checked((int)sequence.Length)];
         sequence.CopyTo(bytes);
         return bytes;
     }
