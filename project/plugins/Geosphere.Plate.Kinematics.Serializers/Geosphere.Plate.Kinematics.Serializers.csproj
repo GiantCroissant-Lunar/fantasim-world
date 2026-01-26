@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Geosphere.Plate.Kinematics.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Kinematics.Serializers</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Kinematics.Serializers</PackageId>
+    <AssemblyName>Geosphere.Plate.Kinematics.Serializers</AssemblyName>
+  </PropertyGroup>
+
+</Project>
