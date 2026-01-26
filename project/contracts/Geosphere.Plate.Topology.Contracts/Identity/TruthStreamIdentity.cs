@@ -30,7 +30,7 @@ public readonly record struct TruthStreamIdentity(
     /// Format: urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{Model}
     /// </summary>
     public override string ToString() =>
-        $"urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{(Model == "0" ? "M0" : Model)}";
+        $"urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{NormalizeModel(Model)}";
 
     /// <summary>
     /// Parses a URN string into a TruthStreamIdentity.
@@ -68,7 +68,8 @@ public readonly record struct TruthStreamIdentity(
             return false;
         }
 
-        identity = new TruthStreamIdentity(parts[0], parts[1], lLevel, domain, parts[4]);
+        var model = NormalizeModel(parts[4]);
+        identity = new TruthStreamIdentity(parts[0], parts[1], lLevel, domain, model);
         return true;
     }
 
@@ -77,7 +78,31 @@ public readonly record struct TruthStreamIdentity(
     /// Format: {VariantId}:{BranchId}:L{LLevel}:{Domain}:{Model}
     /// </summary>
     public string ToStreamKey() =>
-        $"{VariantId}:{BranchId}:L{LLevel}:{Domain}:{(Model == "0" ? "M0" : Model)}";
+        $"{VariantId}:{BranchId}:L{LLevel}:{Domain}:{NormalizeModel(Model)}";
+
+    private static string NormalizeModel(string model)
+    {
+        if (string.IsNullOrWhiteSpace(model))
+            return model;
+
+        var allDigits = true;
+        foreach (var c in model)
+        {
+            if (!char.IsDigit(c))
+            {
+                allDigits = false;
+                break;
+            }
+        }
+
+        if (allDigits)
+            return "M" + model;
+
+        if (model[0] == 'm')
+            return "M" + model.Substring(1);
+
+        return model;
+    }
 
     /// <summary>
     /// Validates that the identity components are well-formed.
