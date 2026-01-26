@@ -45,6 +45,14 @@ Rationale:
 - Prevent downcast failures and registry/DI mismatches.
 - Keep the boundary stable across reload.
 
+### R1b. Host-facing contracts must not be defined in plugin assemblies
+
+Any contract type that the host will reference across the ALC boundary must live in a host-owned contracts assembly (loaded in Default ALC). Plugins must only implement these contracts.
+
+Rationale:
+- The shared registry is keyed by `Type`. If a plugin defines the contract interface and registers it into the host registry, the registry key can keep the plugin ALC alive even after the instance is removed.
+- Moving host-facing contracts into `project/contracts/**` prevents this entire class of unload failures.
+
 ### R2. Plugins may use plugin-private DI
 
 Each plugin may build and own an internal DI container for its private object graph.
