@@ -35,6 +35,7 @@ task sync-skills
 | `@reflect` | Capture learnings after completion | After feature is merged |
 | `@persistence` | RocksDB + MessagePack patterns | When working with storage |
 | `@topology-first` | Plates domain truth boundaries | When working on plates code |
+| `@build` | Nuke build commands (auto-invoked) | When building, testing, or compiling |
 
 ## Skill Invocation
 
@@ -153,7 +154,9 @@ The skill will automatically be available to all supported tools via the junctio
 │   │   └── SKILL.md
 │   ├── persistence/
 │   │   └── SKILL.md
-│   └── topology-first/
+│   ├── topology-first/
+│   │   └── SKILL.md
+│   └── build/                   # Nuke build (auto-invoked)
 │       └── SKILL.md
 ├── memory/                      # Agent memory storage
 │   └── reflections/             # Feature learnings
