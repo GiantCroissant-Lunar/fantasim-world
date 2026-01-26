@@ -10,39 +10,39 @@ namespace FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 /// </summary>
 [MessagePackObject]
 public readonly record struct QuantizedEulerPoleRotation(
-    [property: Key(0)] int PoleLonMicroDeg,
-    [property: Key(1)] int PoleLatMicroDeg,
+    [property: Key(0)] int AxisAzimuthMicroDeg,
+    [property: Key(1)] int AxisElevationMicroDeg,
     [property: Key(2)] int AngleMicroDeg)
 {
     public const int MicroDegPerDeg = 1_000_000;
 
     public static QuantizedEulerPoleRotation Create(
-        int poleLonMicroDeg,
-        int poleLatMicroDeg,
+        int axisAzimuthMicroDeg,
+        int axisElevationMicroDeg,
         int angleMicroDeg)
     {
-        poleLonMicroDeg = WrapLonMicroDeg(poleLonMicroDeg);
-        poleLatMicroDeg = Math.Clamp(poleLatMicroDeg, -90 * MicroDegPerDeg, 90 * MicroDegPerDeg);
-        return new QuantizedEulerPoleRotation(poleLonMicroDeg, poleLatMicroDeg, angleMicroDeg);
+        axisAzimuthMicroDeg = WrapAzimuthMicroDeg(axisAzimuthMicroDeg);
+        axisElevationMicroDeg = Math.Clamp(axisElevationMicroDeg, -90 * MicroDegPerDeg, 90 * MicroDegPerDeg);
+        return new QuantizedEulerPoleRotation(axisAzimuthMicroDeg, axisElevationMicroDeg, angleMicroDeg);
     }
 
-    private static int WrapLonMicroDeg(int lon)
+    private static int WrapAzimuthMicroDeg(int azimuth)
     {
         // Wrap to [-180, 180] degrees.
         var full = 360 * MicroDegPerDeg;
         var half = 180 * MicroDegPerDeg;
 
-        var wrapped = lon % full;
+        var wrapped = azimuth % full;
         if (wrapped > half) wrapped -= full;
         if (wrapped < -half) wrapped += full;
         return wrapped;
     }
 
     [IgnoreMember]
-    public double PoleLonDeg => (double)PoleLonMicroDeg / MicroDegPerDeg;
+    public double AxisAzimuthDeg => (double)AxisAzimuthMicroDeg / MicroDegPerDeg;
 
     [IgnoreMember]
-    public double PoleLatDeg => (double)PoleLatMicroDeg / MicroDegPerDeg;
+    public double AxisElevationDeg => (double)AxisElevationMicroDeg / MicroDegPerDeg;
 
     [IgnoreMember]
     public double AngleDeg => (double)AngleMicroDeg / MicroDegPerDeg;

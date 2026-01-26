@@ -176,15 +176,15 @@ public sealed class PlateKinematicsState : IPlateKinematicsStateView
         {
             fraction = Math.Clamp(fraction, 0.0, 1.0);
 
-            var axis = EulerPoleToUnitVector(rot.PoleLonDeg, rot.PoleLatDeg);
+            var axis = EulerPoleToUnitVector(rot.AxisAzimuthDeg, rot.AxisElevationDeg);
             var angleRad = rot.AngleDeg * DegToRad * fraction;
             return Quaterniond.FromAxisAngle(axis, angleRad);
         }
 
-        private static Vector3d EulerPoleToUnitVector(double lonDeg, double latDeg)
+        private static Vector3d EulerPoleToUnitVector(double azimuthDeg, double elevationDeg)
         {
-            var lon = lonDeg * DegToRad;
-            var lat = latDeg * DegToRad;
+            var lon = azimuthDeg * DegToRad;
+            var lat = elevationDeg * DegToRad;
 
             var cosLat = Math.Cos(lat);
             return new Vector3d(
