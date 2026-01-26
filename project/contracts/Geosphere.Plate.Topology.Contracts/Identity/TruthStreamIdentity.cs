@@ -13,9 +13,9 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 /// </summary>
 /// <param name="VariantId">The world variant (e.g. "main", "experimental-1").</param>
 /// <param name="BranchId">The branch within the variant (e.g. "trunk", "scenario-a").</param>
-/// <param name="LLevel">The simulation L-level (L0=Physical, L1=Systemic, L2=Human).</param>
-/// <param name="Domain">The functional domain (e.g. "Geosphere", "Biosphere").</param>
-/// <param name="Model">The specific model identifier (e.g. "PlateTectonics", "Climate").</param>
+/// <param name="LLevel">The truth L-level (see RFC-086: L×R×M Axis Model; R is not part of stream identity).</param>
+/// <param name="Domain">Stable domain identifier for routing and storage (dot-notation, e.g. "geo.plates.topology").</param>
+/// <param name="Model">The model identifier (e.g. "M0").</param>
 [UnifyModel]
 public readonly record struct TruthStreamIdentity(
     [property: UnifyProperty(0)] string VariantId,
@@ -30,7 +30,7 @@ public readonly record struct TruthStreamIdentity(
     /// Format: urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{Model}
     /// </summary>
     public override string ToString() =>
-        $"urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{(Model == "0" ? "M0" : Model)}";
+        $"urn:fantasim:{VariantId}:{BranchId}:L{LLevel}:{Domain}:{NormalizeModel(Model)}";
 
     /// <summary>
     /// Parses a URN string into a TruthStreamIdentity.
@@ -68,7 +68,8 @@ public readonly record struct TruthStreamIdentity(
             return false;
         }
 
-        identity = new TruthStreamIdentity(parts[0], parts[1], lLevel, domain, parts[4]);
+        var model = NormalizeModel(parts[4]);
+        identity = new TruthStreamIdentity(parts[0], parts[1], lLevel, domain, model);
         return true;
     }
 
@@ -77,7 +78,31 @@ public readonly record struct TruthStreamIdentity(
     /// Format: {VariantId}:{BranchId}:L{LLevel}:{Domain}:{Model}
     /// </summary>
     public string ToStreamKey() =>
-        $"{VariantId}:{BranchId}:L{LLevel}:{Domain}:{(Model == "0" ? "M0" : Model)}";
+        $"{VariantId}:{BranchId}:L{LLevel}:{Domain}:{NormalizeModel(Model)}";
+
+    private static string NormalizeModel(string model)
+    {
+        if (string.IsNullOrWhiteSpace(model))
+            return model;
+
+        var allDigits = true;
+        foreach (var c in model)
+        {
+            if (!char.IsDigit(c))
+            {
+                allDigits = false;
+                break;
+            }
+        }
+
+        if (allDigits)
+            return "M" + model;
+
+        if (model[0] == 'm')
+            return "M" + model.Substring(1);
+
+        return model;
+    }
 
     /// <summary>
     /// Validates that the identity components are well-formed.
