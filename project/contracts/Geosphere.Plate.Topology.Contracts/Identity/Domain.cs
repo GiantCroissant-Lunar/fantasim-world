@@ -10,6 +10,10 @@ public readonly record struct Domain
 {
     private readonly string _value;
 
+    public static readonly Domain GeoPlatesTopology = Parse("geo.plates.topology");
+
+    public static readonly Domain GeoPlatesKinematics = Parse("geo.plates.kinematics");
+
     /// <summary>
     /// The domain identifier value (e.g., "geo.plates").
     /// </summary>
