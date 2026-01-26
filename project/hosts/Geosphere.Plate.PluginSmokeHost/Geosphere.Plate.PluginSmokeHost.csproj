@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.PluginSmokeHost</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+
+    <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Hosting\PluginArchi.Extensibility.Hosting.csproj" />
+
+    <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Core\ServiceArchi.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="Meziantou.Analyzer" />
+  </ItemGroup>
+
+</Project>
