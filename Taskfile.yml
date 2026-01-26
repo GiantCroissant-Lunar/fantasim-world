@@ -11,6 +11,24 @@ tasks:
       - task --list
 
   # =============================================================================
+  # Smoke Host Verification
+  # =============================================================================
+
+  smoke:verify:
+    desc: Build and run the plugin smoke host (fails if plugin ALC is not collectible)
+    cmds:
+      - dotnet build -c Release project/plugins/Geosphere.Plate.Runtime.Des/Geosphere.Plate.Runtime.Des.csproj
+      - dotnet build -c Release project/hosts/Geosphere.Plate.PluginSmokeHost/Geosphere.Plate.PluginSmokeHost.csproj
+      - dotnet run -c Release --project project/hosts/Geosphere.Plate.PluginSmokeHost/Geosphere.Plate.PluginSmokeHost.csproj
+
+  smoke:verify:hotreload:
+    desc: Same as smoke:verify but also runs ReloadPluginsAsync (set FANTASIM_SMOKEHOTRELOAD=1)
+    cmds:
+      - dotnet build -c Release project/plugins/Geosphere.Plate.Runtime.Des/Geosphere.Plate.Runtime.Des.csproj
+      - dotnet build -c Release project/hosts/Geosphere.Plate.PluginSmokeHost/Geosphere.Plate.PluginSmokeHost.csproj
+      - pwsh -NoProfile -Command '$env:FANTASIM_SMOKEHOTRELOAD="1"; dotnet run -c Release --project project/hosts/Geosphere.Plate.PluginSmokeHost/Geosphere.Plate.PluginSmokeHost.csproj'
+
+  # =============================================================================
   # Agent Configuration Sync
   # =============================================================================
 

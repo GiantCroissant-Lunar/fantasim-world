@@ -15,6 +15,9 @@ namespace FantaSim.Geosphere.Plate.Runtime.Des;
 [Plugin("fantasim.geosphere.plate.runtime.des", Name = "Geosphere DES Runtime", Tags = "geosphere,des,runtime,sim")]
 public sealed class GeosphereDesPlugin : ILifecyclePlugin
 {
+    private IRegistry? _registry;
+    private IDesRuntimeFactory? _factory;
+
     public IPluginDescriptor Descriptor { get; } = new PluginDescriptor
     {
         Id = "fantasim.geosphere.plate.runtime.des",
@@ -33,6 +36,8 @@ public sealed class GeosphereDesPlugin : ILifecyclePlugin
             return ValueTask.CompletedTask;
         }
 
+        _registry = registry;
+
         // 2. Resolve dependencies required for our factory
         var eventStore = context.Services.GetService<FantaSim.Geosphere.Plate.Topology.Contracts.Events.ITopologyEventStore>();
         var timeline = context.Services.GetService<FantaSim.Geosphere.Plate.Topology.Materializer.PlateTopologyTimeline>();
@@ -40,10 +45,10 @@ public sealed class GeosphereDesPlugin : ILifecyclePlugin
         if (eventStore != null && timeline != null)
         {
             // 3. Create and register the DesRuntimeFactory
-            var factory = new DesRuntimeFactory(eventStore, timeline);
+            _factory = new DesRuntimeFactory(eventStore, timeline);
 
             // Register as the singleton factory
-            registry.Register<IDesRuntimeFactory>(factory);
+            registry.Register<IDesRuntimeFactory>(_factory);
         }
 
         return ValueTask.CompletedTask;
@@ -51,6 +56,9 @@ public sealed class GeosphereDesPlugin : ILifecyclePlugin
 
     public ValueTask ShutdownAsync(CancellationToken ct = default)
     {
+        _registry?.UnregisterAll<IDesRuntimeFactory>();
+        _factory = null;
+        _registry = null;
         return ValueTask.CompletedTask;
     }
 }

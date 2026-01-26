@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Runtime.Des.Contracts\Geosphere.Plate.Runtime.Des.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />

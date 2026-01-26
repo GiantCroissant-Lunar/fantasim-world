@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Runtime.Des</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Runtime.Des.Contracts</PackageId>
+    <AssemblyName>Geosphere.Plate.Runtime.Des.Contracts</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
+  </ItemGroup>
+
+</Project>
