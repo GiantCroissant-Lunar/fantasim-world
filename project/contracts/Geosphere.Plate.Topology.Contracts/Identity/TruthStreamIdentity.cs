@@ -13,9 +13,9 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 /// </summary>
 /// <param name="VariantId">The world variant (e.g. "main", "experimental-1").</param>
 /// <param name="BranchId">The branch within the variant (e.g. "trunk", "scenario-a").</param>
-/// <param name="LLevel">The simulation L-level (L0=Physical, L1=Systemic, L2=Human).</param>
-/// <param name="Domain">The functional domain (e.g. "Geosphere", "Biosphere").</param>
-/// <param name="Model">The specific model identifier (e.g. "PlateTectonics", "Climate").</param>
+/// <param name="LLevel">The truth L-level (see RFC-086: L×R×M Axis Model; R is not part of stream identity).</param>
+/// <param name="Domain">Stable domain identifier for routing and storage (dot-notation, e.g. "geo.plates.topology").</param>
+/// <param name="Model">The model identifier (e.g. "M0").</param>
 [UnifyModel]
 public readonly record struct TruthStreamIdentity(
     [property: UnifyProperty(0)] string VariantId,
