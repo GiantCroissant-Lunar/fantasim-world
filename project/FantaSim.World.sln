@@ -45,11 +45,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DI.ConstructorInjection.Att
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGrid.Abstractions", "..\..\unify-grid\dotnet\src\UnifyGrid.Abstractions\UnifyGrid.Abstractions.csproj", "{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lab", "lab", "{88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hosts", "hosts", "{88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.SolverLab.Core", "lab\Geosphere.Plate.SolverLab.Core\Geosphere.Plate.SolverLab.Core.csproj", "{D594F733-3ED4-48B0-BA01-62FE99EC7DE2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.SolverLab.Core", "hosts\Geosphere.Plate.SolverLab.Core\Geosphere.Plate.SolverLab.Core.csproj", "{D594F733-3ED4-48B0-BA01-62FE99EC7DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.SolverLab.Runner", "lab\Geosphere.Plate.SolverLab.Runner\Geosphere.Plate.SolverLab.Runner.csproj", "{15787D9B-A9B7-46BD-946F-145E5A863E23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.SolverLab.Runner", "hosts\Geosphere.Plate.SolverLab.Runner\Geosphere.Plate.SolverLab.Runner.csproj", "{15787D9B-A9B7-46BD-946F-145E5A863E23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.PluginSmokeHost", "hosts\Geosphere.Plate.PluginSmokeHost\Geosphere.Plate.PluginSmokeHost.csproj", "{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -313,6 +315,18 @@ Global
 		{15787D9B-A9B7-46BD-946F-145E5A863E23}.Release|x64.Build.0 = Release|Any CPU
 		{15787D9B-A9B7-46BD-946F-145E5A863E23}.Release|x86.ActiveCfg = Release|Any CPU
 		{15787D9B-A9B7-46BD-946F-145E5A863E23}.Release|x86.Build.0 = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|x64.Build.0 = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Debug|x86.Build.0 = Debug|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|x64.ActiveCfg = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|x64.Build.0 = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|x86.ActiveCfg = Release|Any CPU
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -323,5 +337,6 @@ Global
 		{BA298AD0-11FD-4B4D-AE86-60473AA21A3B} = {DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}
 		{D594F733-3ED4-48B0-BA01-62FE99EC7DE2} = {88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}
 		{15787D9B-A9B7-46BD-946F-145E5A863E23} = {88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}
+		{A6B4B4C0-47A7-4B59-9F58-5FA5D99D7E3C} = {88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}
 	EndGlobalSection
 EndGlobal
