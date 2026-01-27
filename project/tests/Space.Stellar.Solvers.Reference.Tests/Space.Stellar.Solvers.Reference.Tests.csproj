@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\contracts\Space.Stellar.Contracts\Space.Stellar.Contracts.csproj" />
     <ProjectReference Include="..\..\plugins\Space.Stellar.Solvers.Reference\Space.Stellar.Solvers.Reference.csproj" />
+    <ProjectReference Include="..\..\contracts\Space.Stellar.Contracts\Space.Stellar.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

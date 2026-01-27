@@ -9,7 +9,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>FantaSim.Space.Stellar.Solvers.Reference</RootNamespace>
-    <PackageId>GiantCroissant.FantaSim.Space.Stellar.Solvers.Reference</PackageId>
     <AssemblyName>Space.Stellar.Solvers.Reference</AssemblyName>
   </PropertyGroup>
 
