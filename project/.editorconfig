@@ -1,0 +1,27 @@
+root = true
+
+[*.cs]
+charset = utf-8-bom
+indent_style = space
+indent_size = 4
+
+#############################
+# Meziantou.Analyzer hardening
+#############################
+# Critical (Error)
+dotnet_diagnostic.MA0155.severity = error
+dotnet_diagnostic.MA0009.severity = error
+dotnet_diagnostic.MA0039.severity = error
+
+# Best Practices (Warning)
+dotnet_diagnostic.MA0143.severity = warning
+dotnet_diagnostic.MA0053.severity = warning
+dotnet_diagnostic.MA0102.severity = warning
+dotnet_diagnostic.MA0134.severity = warning
+dotnet_diagnostic.MA0100.severity = warning
+dotnet_diagnostic.MA0042.severity = warning
+dotnet_diagnostic.MA0040.severity = warning
+dotnet_diagnostic.MA0131.severity = warning
+dotnet_diagnostic.MA0141.severity = warning
+dotnet_diagnostic.MA0158.severity = warning
+dotnet_diagnostic.MA0110.severity = warning

@@ -1,0 +1,13 @@
+# Test project overrides - Meziantou.Analyzer relaxations
+root = true
+
+[*.cs]
+# Relax analyzer rules for test projects
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.MA0051.severity = none
+dotnet_diagnostic.MA0003.severity = none
+dotnet_diagnostic.MA0048.severity = none
+dotnet_diagnostic.MA0042.severity = none
+dotnet_diagnostic.MA0045.severity = none
+dotnet_diagnostic.MA0001.severity = none
+dotnet_diagnostic.MA0011.severity = none

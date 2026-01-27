@@ -38,6 +38,10 @@ static bool TrySeedPluginDirectoryFromBuildOutput(string buildOutputDir, string 
         return false;
     }
 
+    var hostFiles = Directory.GetFiles(AppContext.BaseDirectory)
+        .Select(Path.GetFileName)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     var files = Directory.GetFiles(buildOutputDir)
         .Where(f =>
             f.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
@@ -51,7 +55,13 @@ static bool TrySeedPluginDirectoryFromBuildOutput(string buildOutputDir, string 
 
     foreach (var file in files)
     {
-        var dst = Path.Combine(pluginDir, Path.GetFileName(file));
+        var fileName = Path.GetFileName(file);
+        if (hostFiles.Contains(fileName))
+        {
+            continue;
+        }
+
+        var dst = Path.Combine(pluginDir, fileName);
         File.Copy(file, dst, overwrite: true);
     }
 
@@ -60,44 +70,74 @@ static bool TrySeedPluginDirectoryFromBuildOutput(string buildOutputDir, string 
 
 static bool TrySeedPluginDirectoryFromBuildOutputs(string projectDir, string pluginDir)
 {
-    var candidateDirs = new[]
+    var pluginNames = new[]
     {
-        Path.Combine(projectDir, "plugins", "Geosphere.Plate.Runtime.Des", "bin", "Release", "net8.0"),
-        Path.Combine(projectDir, "plugins", "Geosphere.Plate.Runtime.Des", "bin", "Debug", "net8.0")
+        "Geosphere.Plate.Runtime.Des",
+        "Space.Stellar.Solvers.Reference",
+        "Geosphere.Plate.Reconstruction.Solver",
+        "Geosphere.Plate.Kinematics.Serializers",
+        "Geosphere.Plate.Kinematics.Materializer",
+        "Geosphere.Plate.Topology.Serializers",
+        "Geosphere.Plate.Topology.Materializer"
     };
 
-    foreach (var dir in candidateDirs)
+    var anySeeded = false;
+
+    foreach (var name in pluginNames)
     {
-        if (TrySeedPluginDirectoryFromBuildOutput(dir, pluginDir))
+        var candidateDirs = new[]
         {
-            return true;
+            Path.Combine(projectDir, "plugins", name, "bin", "Release", "net8.0"),
+            Path.Combine(projectDir, "plugins", name, "bin", "Debug", "net8.0")
+        };
+
+        foreach (var dir in candidateDirs)
+        {
+            if (TrySeedPluginDirectoryFromBuildOutput(dir, pluginDir))
+            {
+                anySeeded = true;
+                break;
+            }
         }
     }
 
-    return false;
+    return anySeeded;
 }
 
-var services = new ServiceCollection();
-services.AddSingleton(loggerFactory);
-services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
-
 var registry = new ServiceArchi.Core.ServiceRegistry();
-services.AddSingleton<IRegistry>(registry);
-services.AddSingleton<ITopologyEventStore, NullTopologyEventStore>();
-services.AddSingleton<IPlateTopologySnapshotStore, NullPlateTopologySnapshotStore>();
-services.AddSingleton<PlateTopologyTimeline>();
+
+// We'll recreate the ServiceCollection for each iteration while keeping the
+// ServiceRegistry (registry) and loggerFactory singleton outside the loop.
 
 var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 var seeded = TrySeedPluginDirectoryFromBuildOutputs(projectDir, pluginDir);
 
 Assembly.Load("Geosphere.Plate.Topology.Materializer");
 
-var collected = RunAndVerifyUnload(services, logger, registry, pluginDir, seeded);
-logger.LogInformation("Plugin load context collected after shutdown: {Collected}", collected);
-
-if (!collected)
+var allCollected = true;
+for (var i = 0; i < 5; i++)
 {
-    Environment.ExitCode = 1;
+    logger.LogInformation("=== Iteration {Iteration}/5 ===", i + 1);
+
+    var services = new ServiceCollection();
+    services.AddSingleton(loggerFactory);
+    services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+
+    // Register the shared registry instance and other required services per-iteration
+    services.AddSingleton<IRegistry>(registry);
+    services.AddSingleton<ITopologyEventStore, NullTopologyEventStore>();
+    services.AddSingleton<IPlateTopologySnapshotStore, NullPlateTopologySnapshotStore>();
+    services.AddSingleton<PlateTopologyTimeline>();
+
+    var collected = RunAndVerifyUnload(services, logger, registry, pluginDir, seeded);
+    logger.LogInformation("Plugin load context collected after shutdown: {Collected}", collected);
+
+    if (!collected)
+    {
+        Environment.ExitCode = 1;
+        allCollected = false;
+        break;
+    }
 }
 
 [MethodImpl(MethodImplOptions.NoInlining)]
