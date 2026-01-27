@@ -76,7 +76,10 @@ public static class PlatesDatasetManifestValidator
     private static void ValidateCanonicalizationRules(CanonicalizationRules rules, List<DatasetValidationError> errors)
     {
         if (rules.Version <= 0)
+        {
             errors.Add(new DatasetValidationError("canonicalization_rules.version.invalid", "canonicalizationRules.version", "CanonicalizationRules.Version must be > 0."));
+            return;
+        }
 
         if (rules.Version != 1)
         {
