@@ -198,7 +198,7 @@ public sealed class DatasetIngestorTests
     {
         var source = GetSampleRoot(folderName);
 
-        var target = Path.Combine(Path.GetTempPath(), "fantasim-world-dataset-", Guid.NewGuid().ToString("N"));
+        var target = Path.Combine(Path.GetTempPath(), $"fantasim-world-dataset-{Guid.NewGuid():N}");
         Directory.CreateDirectory(target);
 
         CopyDirectory(source, target);
