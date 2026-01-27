@@ -327,6 +327,11 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 var fileBytes = File.ReadAllBytes(a.AbsolutePath);
                 fileSha256 = Sha256Hex.ComputeLowerHex(fileBytes);
             }
+            else
+            {
+                throw new FileNotFoundException(
+                    $"Asset file not found during ingest audit computation. The asset was resolved earlier but is now missing. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}");
+            }
 
             assetAudits.Add(new PlatesDatasetIngestAssetAudit(
                 a.AssetId,
