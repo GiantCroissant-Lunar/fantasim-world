@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Space.Stellar.Contracts\Space.Stellar.Contracts.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Space.Stellar.Solvers.Reference</RootNamespace>
+    <AssemblyName>Space.Stellar.Solvers.Reference</AssemblyName>
+  </PropertyGroup>
+
+</Project>
