@@ -379,6 +379,33 @@ public class EventSerializationTests
         Assert.Equal(bytes1, bytes2);
     }
 
+    [Fact]
+    public void Serialize_WithPoint3_ProducesDeterministicBytes()
+    {
+        var point = new Point3(1.0, 2.0, 3.0);
+        var boundaryId = CreateTestBoundaryId(Guid.NewGuid());
+        var @event = TestEventFactory.BoundaryGeometryUpdated(
+            TestEventId,
+            boundaryId,
+            point,
+            TestTick,
+            5L,
+            TestStreamIdentity
+        );
+
+        var bytes1 = MessagePackEventSerializer.Serialize(@event);
+        var bytes2 = MessagePackEventSerializer.Serialize(@event);
+
+        Assert.Equal(bytes1.Length, bytes2.Length);
+        Assert.Equal(bytes1, bytes2);
+
+        var deserialized = MessagePackEventSerializer.Deserialize<BoundaryGeometryUpdatedEvent>(bytes1);
+        var deserializedPoint = Assert.IsType<Point3>(deserialized.NewGeometry);
+        Assert.Equal(point.X, deserializedPoint.X);
+        Assert.Equal(point.Y, deserializedPoint.Y);
+        Assert.Equal(point.Z, deserializedPoint.Z);
+    }
+
     #endregion
 
     #region Polymorphic Deserialization Tests
