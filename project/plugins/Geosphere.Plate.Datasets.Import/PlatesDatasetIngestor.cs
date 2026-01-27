@@ -279,6 +279,11 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             throw new FileNotFoundException(
                 $"Manifest file not found: {manifestPath}", ex);
         }
+        catch (IOException ex)
+        {
+            throw new IOException(
+                $"I/O error reading manifest file: {manifestPath}", ex);
+        }
         
         var manifestFileSha256 = Sha256Hex.ComputeLowerHex(manifestBytes);
 
@@ -344,6 +349,18 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             {
                 throw new FileNotFoundException(
                     $"Asset file not found during ingest audit computation. The asset was resolved earlier but is now missing. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
+                    ex);
+            }
+            catch (IOException ex)
+            {
+                throw new IOException(
+                    $"I/O error reading asset file during ingest audit computation. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
+                    ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new UnauthorizedAccessException(
+                    $"Access denied to asset file during ingest audit computation. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
                     ex);
             }
 
@@ -415,6 +432,8 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
     /// <summary>
     /// Computes SHA256 hash of a file using streaming to avoid loading entire file into memory.
     /// </summary>
+    /// <param name="filePath">The path to the file to hash.</param>
+    /// <returns>A lowercase hexadecimal string representation of the SHA256 hash.</returns>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="IOException">Thrown when an I/O error occurs while reading the file.</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown when access to the file is denied.</exception>
