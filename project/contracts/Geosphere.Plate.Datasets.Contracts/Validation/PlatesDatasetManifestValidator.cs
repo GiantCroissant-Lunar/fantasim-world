@@ -76,7 +76,16 @@ public static class PlatesDatasetManifestValidator
     private static void ValidateCanonicalizationRules(CanonicalizationRules rules, List<DatasetValidationError> errors)
     {
         if (rules.Version <= 0)
+        {
             errors.Add(new DatasetValidationError("canonicalization_rules.version.invalid", "canonicalizationRules.version", "CanonicalizationRules.Version must be > 0."));
+            return;
+        }
+
+        if (rules.Version != 1)
+        {
+            errors.Add(new DatasetValidationError("canonicalization_rules.version.unsupported", "canonicalizationRules.version", "CanonicalizationRules.Version is not supported."));
+            return;
+        }
 
         if (string.IsNullOrWhiteSpace(rules.StableIdPolicyId))
             errors.Add(new DatasetValidationError("canonicalization_rules.stable_id_policy_id.required", "canonicalizationRules.stableIdPolicyId", "CanonicalizationRules.StableIdPolicyId is required."));
@@ -86,12 +95,6 @@ public static class PlatesDatasetManifestValidator
 
         if (string.IsNullOrWhiteSpace(rules.QuantizationPolicyId))
             errors.Add(new DatasetValidationError("canonicalization_rules.quantization_policy_id.required", "canonicalizationRules.quantizationPolicyId", "CanonicalizationRules.QuantizationPolicyId is required."));
-
-        if (rules.Version != 1)
-        {
-            errors.Add(new DatasetValidationError("canonicalization_rules.version.unsupported", "canonicalizationRules.version", "CanonicalizationRules.Version is not supported."));
-            return;
-        }
 
         if (!string.Equals(rules.StableIdPolicyId, StableIdPolicyIdV1, StringComparison.Ordinal))
             errors.Add(new DatasetValidationError("canonicalization_rules.stable_id_policy_id.invalid", "canonicalizationRules.stableIdPolicyId", "CanonicalizationRules.StableIdPolicyId is invalid."));
