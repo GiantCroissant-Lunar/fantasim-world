@@ -4,6 +4,7 @@ using FantaSim.Geosphere.Plate.Reconstruction.Solver;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using UnifyGeometry;
 using PlateEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate;
 using JunctionEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Junction;
@@ -59,6 +60,37 @@ public sealed class ReconstructedBoundariesTests
         Assert.Equal(boundary1.PlateIdLeft, r1[1].PlateIdProvenance);
     }
 
+    [Fact]
+    public void ReconstructBoundaries_RotatesPoint3Geometry_WhenKinematicsProvidesRotation()
+    {
+        var solver = new NaivePlateReconstructionSolver();
+
+        var plateA = new PlateId(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
+        var plateB = new PlateId(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
+
+        var boundary = new Boundary(
+            new BoundaryId(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+            plateA,
+            plateB,
+            BoundaryType.Divergent,
+            new Point3(1d, 0d, 0d),
+            false,
+            null);
+
+        var topo = new FakeTopologyState(Domain.Parse("geo.plates"), new[] { boundary });
+
+        var rotation = Quaterniond.FromAxisAngle(Vector3d.UnitZ, Math.PI / 2d);
+        var kin = new FakeKinematicsState(rotation);
+
+        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        Assert.Single(r);
+
+        var rotated = Assert.IsType<Point3>(r[0].Geometry);
+        Assert.True(Math.Abs(rotated.X) < 1e-9);
+        Assert.True(Math.Abs(rotated.Y - 1d) < 1e-9);
+        Assert.True(Math.Abs(rotated.Z) < 1e-9);
+    }
+
     private sealed class FakeTopologyState : IPlateTopologyStateView
     {
         private static readonly IReadOnlyDictionary<PlateId, PlateEntity> EmptyPlates =
@@ -88,13 +120,25 @@ public sealed class ReconstructedBoundariesTests
 
     private sealed class FakeKinematicsState : IPlateKinematicsStateView
     {
+        private readonly Quaterniond _rotation;
+
+        public FakeKinematicsState()
+            : this(Quaterniond.Identity)
+        {
+        }
+
+        public FakeKinematicsState(Quaterniond rotation)
+        {
+            _rotation = rotation;
+        }
+
         public TruthStreamIdentity Identity { get; } = new("science", "trunk", 2, Domain.Parse("geo.plates.kinematics"), "0");
 
         public long LastEventSequence { get; } = 0;
 
         public bool TryGetRotation(PlateId plateId, CanonicalTick tick, out FantaSim.Geosphere.Plate.Topology.Contracts.Numerics.Quaterniond rotation)
         {
-            rotation = FantaSim.Geosphere.Plate.Topology.Contracts.Numerics.Quaterniond.Identity;
+            rotation = _rotation;
             return true;
         }
     }
