@@ -1,0 +1,11 @@
+{
+  "datasetId": "test.dataset",
+  "bodyId": "test.body",
+  "timeMapping": {
+    "tickUnit": "CTU"
+  },
+  "featureSets": [],
+  "rasterSequences": [],
+  "motionModels": [],
+  "canonicalizationRules": { "version": 1 }
+}

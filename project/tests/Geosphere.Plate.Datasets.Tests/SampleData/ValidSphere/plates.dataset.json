@@ -1,0 +1,20 @@
+{
+  "datasetId": "test.dataset",
+  "bodyId": "test.body",
+  "bodyFrame": {
+    "shape": "sphere",
+    "radius": 1.0,
+    "unit": "m",
+    "angularConvention": "body_lonlat_degrees"
+  },
+  "timeMapping": {
+    "tickUnit": "CTU"
+  },
+  "featureSets": [
+    { "assetId": "b", "relativePath": "b.geojson", "format": "geojson" },
+    { "assetId": "a", "relativePath": "a.geojson", "format": "geojson" }
+  ],
+  "rasterSequences": [],
+  "motionModels": [],
+  "canonicalizationRules": { "version": 1 }
+}
