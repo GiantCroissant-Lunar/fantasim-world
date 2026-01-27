@@ -1,8 +1,10 @@
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Canonicalization;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Ingest;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Loading;
+using FantaSim.Geosphere.Plate.Datasets.Contracts.Manifest;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Validation;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Events;
@@ -10,6 +12,8 @@ using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using Plate.TimeDete.Time.Primitives;
+using Plate.TimeDete.Traceability.HashChain;
+using Plate.TimeDete.Traceability.Hashing;
 
 namespace FantaSim.Geosphere.Plate.Datasets.Import;
 
@@ -36,11 +40,14 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
         PlatesDatasetLoadOptions? loadOptions,
         CancellationToken cancellationToken)
     {
+        loadOptions ??= new PlatesDatasetLoadOptions();
+
         if (spec is null)
         {
             return new PlatesDatasetIngestResult(
                 null,
                 Array.Empty<TruthStreamIdentity>(),
+                null,
                 new[] { new DatasetValidationError("ingest_spec.required", "spec", "Ingest spec is required.") });
         }
 
@@ -50,6 +57,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             return new PlatesDatasetIngestResult(
                 loadResult.Dataset,
                 Array.Empty<TruthStreamIdentity>(),
+                null,
                 loadResult.Errors);
         }
 
@@ -57,17 +65,21 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
 
         if (spec.Mode == IngestMode.AssetOnly)
         {
+            var audit = BuildAudit(dataset, loadOptions.ManifestFileName, targets: Array.Empty<PlatesAssetIngestTarget>(), streams: Array.Empty<PlatesDatasetIngestStreamAudit>());
             return new PlatesDatasetIngestResult(
                 dataset,
                 Array.Empty<TruthStreamIdentity>(),
+                audit,
                 Array.Empty<DatasetValidationError>());
         }
 
         if (spec.Mode != IngestMode.Ingest)
         {
+            var audit = BuildAudit(dataset, loadOptions.ManifestFileName, targets: spec.Targets ?? Array.Empty<PlatesAssetIngestTarget>(), streams: Array.Empty<PlatesDatasetIngestStreamAudit>());
             return new PlatesDatasetIngestResult(
                 dataset,
                 Array.Empty<TruthStreamIdentity>(),
+                audit,
                 new[] { new DatasetValidationError("ingest_mode.invalid", "mode", "Ingest mode is invalid.") });
         }
 
@@ -192,20 +204,25 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
 
         if (errors.Count != 0)
         {
-            return new PlatesDatasetIngestResult(dataset, producedStreams, errors);
+            var audit = BuildAudit(dataset, loadOptions.ManifestFileName, targets, streams: Array.Empty<PlatesDatasetIngestStreamAudit>());
+            return new PlatesDatasetIngestResult(dataset, producedStreams, audit, errors);
         }
 
         if (_kinematicsEventStore is null)
         {
+            var audit = BuildAudit(dataset, loadOptions.ManifestFileName, targets, streams: Array.Empty<PlatesDatasetIngestStreamAudit>());
             return new PlatesDatasetIngestResult(
                 dataset,
                 producedStreams,
+                audit,
                 new[] { new DatasetValidationError("ingest.kinematics_store.required", "kinematicsEventStore", "A kinematics event store is required for ingest.") });
         }
 
         var orderedStreams = perStreamPlans.Keys
             .OrderBy(s => s.ToStreamKey(), StringComparer.Ordinal)
             .ToList();
+
+        var streamAudits = new List<PlatesDatasetIngestStreamAudit>();
 
         foreach (var stream in orderedStreams)
         {
@@ -225,10 +242,175 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 events.Add(plans[i].Create(evtId, seq));
             }
 
+            var eventIdDigest = ComputeEventIdDigest(events);
+            streamAudits.Add(new PlatesDatasetIngestStreamAudit(
+                stream.ToStreamKey(),
+                events.Count,
+                events.Count == 0 ? -1 : events[0].Sequence,
+                events.Count == 0 ? -1 : events[^1].Sequence,
+                eventIdDigest));
+
             await _kinematicsEventStore.AppendAsync(stream, events, cancellationToken);
         }
 
-        return new PlatesDatasetIngestResult(dataset, producedStreams, Array.Empty<DatasetValidationError>());
+        streamAudits.Sort(static (a, b) => string.Compare(a.StreamKey, b.StreamKey, StringComparison.Ordinal));
+
+        var finalAudit = BuildAudit(dataset, loadOptions.ManifestFileName, targets, streamAudits);
+        return new PlatesDatasetIngestResult(dataset, producedStreams, finalAudit, Array.Empty<DatasetValidationError>());
+    }
+
+    private static PlatesDatasetIngestAudit BuildAudit(
+        IPlatesDataset dataset,
+        string manifestFileName,
+        PlatesAssetIngestTarget[] targets,
+        IReadOnlyList<PlatesDatasetIngestStreamAudit> streams)
+    {
+        var manifestPath = Path.Combine(dataset.DatasetRootPath, manifestFileName);
+        var manifestBytes = File.ReadAllBytes(manifestPath);
+        var manifestFileSha256 = Sha256Hex.ComputeLowerHex(manifestBytes);
+
+        var manifest = dataset.Manifest;
+        var canonicalManifestObject = new
+        {
+            datasetId = manifest.DatasetId,
+            bodyId = manifest.BodyId,
+            bodyFrame = manifest.BodyFrame,
+            timeMapping = manifest.TimeMapping,
+            canonicalizationRules = manifest.CanonicalizationRules,
+            featureSets = (manifest.FeatureSets ?? Array.Empty<FeatureSetAsset>())
+                .OrderBy(a => a.AssetId, StringComparer.Ordinal)
+                .ThenBy(a => a.RelativePath, StringComparer.Ordinal)
+                .ThenBy(a => a.Format, StringComparer.Ordinal)
+                .ToArray(),
+            rasterSequences = (manifest.RasterSequences ?? Array.Empty<RasterSequenceAsset>())
+                .OrderBy(a => a.AssetId, StringComparer.Ordinal)
+                .ThenBy(a => a.RelativePath, StringComparer.Ordinal)
+                .ThenBy(a => a.Format, StringComparer.Ordinal)
+                .ToArray(),
+            motionModels = (manifest.MotionModels ?? Array.Empty<MotionModelAsset>())
+                .OrderBy(a => a.AssetId, StringComparer.Ordinal)
+                .ThenBy(a => a.RelativePath, StringComparer.Ordinal)
+                .ThenBy(a => a.Format, StringComparer.Ordinal)
+                .ToArray(),
+        };
+
+        var canonicalManifestJson = CanonicalJsonSerializer.Serialize(canonicalManifestObject);
+        var manifestCanonicalSha256 = Sha256Hex.ComputeLowerHex(canonicalManifestJson);
+
+        var assetMeta = new Dictionary<(PlatesAssetKind Kind, string AssetId), (string RelativePath, string Format)>();
+
+        var featureSets = dataset.Manifest.FeatureSets ?? Array.Empty<FeatureSetAsset>();
+        foreach (var fs in featureSets)
+            assetMeta[(PlatesAssetKind.FeatureSet, fs.AssetId)] = (fs.RelativePath, fs.Format);
+
+        var rasterSequences = dataset.Manifest.RasterSequences ?? Array.Empty<RasterSequenceAsset>();
+        foreach (var rs in rasterSequences)
+            assetMeta[(PlatesAssetKind.RasterSequence, rs.AssetId)] = (rs.RelativePath, rs.Format);
+
+        var motionModels = dataset.Manifest.MotionModels ?? Array.Empty<MotionModelAsset>();
+        foreach (var mm in motionModels)
+            assetMeta[(PlatesAssetKind.MotionModel, mm.AssetId)] = (mm.RelativePath, mm.Format);
+
+        var assets = dataset.Assets ?? Array.Empty<ResolvedAsset>();
+        var assetAudits = new List<PlatesDatasetIngestAssetAudit>(assets.Count);
+
+        foreach (var a in assets)
+        {
+            if (!assetMeta.TryGetValue((a.Kind, a.AssetId), out var meta))
+                meta = (Path.GetFileName(a.AbsolutePath) ?? string.Empty, a.Format);
+
+            var rel = (meta.RelativePath ?? string.Empty).Replace('\\', '/');
+
+            var fileSha256 = string.Empty;
+            if (File.Exists(a.AbsolutePath))
+            {
+                var fileBytes = File.ReadAllBytes(a.AbsolutePath);
+                fileSha256 = Sha256Hex.ComputeLowerHex(fileBytes);
+            }
+            else
+            {
+                throw new FileNotFoundException(
+                    $"Asset file not found during ingest audit computation. The asset was resolved earlier but is now missing. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}");
+            }
+
+            assetAudits.Add(new PlatesDatasetIngestAssetAudit(
+                a.AssetId,
+                a.Kind.ToString(),
+                rel,
+                meta.Format,
+                fileSha256));
+        }
+
+        assetAudits.Sort(static (a, b) =>
+        {
+            var c = string.Compare(a.Kind, b.Kind, StringComparison.Ordinal);
+            if (c != 0)
+                return c;
+            c = string.Compare(a.AssetId, b.AssetId, StringComparison.Ordinal);
+            if (c != 0)
+                return c;
+            return string.Compare(a.RelativePath, b.RelativePath, StringComparison.Ordinal);
+        });
+
+        var targetAudits = (targets ?? Array.Empty<PlatesAssetIngestTarget>())
+            .Where(t => t is not null)
+            .Select(t => new PlatesDatasetIngestTargetAudit(
+                t!.AssetId,
+                t.Kind.ToString(),
+                t.StreamIdentity.ToStreamKey()))
+            .OrderBy(t => t.Kind, StringComparer.Ordinal)
+            .ThenBy(t => t.AssetId, StringComparer.Ordinal)
+            .ThenBy(t => t.StreamKey, StringComparer.Ordinal)
+            .ToArray();
+
+        var rules = dataset.Manifest.CanonicalizationRules;
+
+        var payloadForAuditHash = new
+        {
+            datasetId = dataset.Manifest.DatasetId,
+            bodyId = dataset.Manifest.BodyId,
+            manifestFileName,
+            manifestFileSha256,
+            manifestCanonicalSha256,
+            stableIdPolicyId = rules.StableIdPolicyId,
+            assetOrderingPolicyId = rules.AssetOrderingPolicyId,
+            quantizationPolicyId = rules.QuantizationPolicyId,
+            assets = assetAudits,
+            targets = targetAudits,
+            streams = streams
+        };
+
+        var canonicalAuditJson = CanonicalJsonSerializer.Serialize(payloadForAuditHash);
+        var auditSha256 = Sha256Hex.ComputeLowerHex(Encoding.UTF8.GetBytes(canonicalAuditJson));
+
+        return new PlatesDatasetIngestAudit(
+            dataset.Manifest.DatasetId,
+            dataset.Manifest.BodyId,
+            manifestFileName,
+            manifestFileSha256,
+            manifestCanonicalSha256,
+            rules.StableIdPolicyId,
+            rules.AssetOrderingPolicyId,
+            rules.QuantizationPolicyId,
+            assetAudits.ToArray(),
+            targetAudits,
+            streams.ToArray(),
+            auditSha256);
+    }
+
+    private static string ComputeEventIdDigest(IReadOnlyList<IPlateKinematicsEvent> events)
+    {
+        var hasher = new Sha256HashChainHasher();
+        string? previous = null;
+
+        for (var i = 0; i < events.Count; i++)
+        {
+            var payload = $"{events[i].Sequence}:{events[i].EventId:D}";
+            var bytes = Encoding.UTF8.GetBytes(payload);
+            previous = HashChain.ComputeNextHash(hasher, bytes, previous);
+        }
+
+        return previous ?? Sha256Hex.ComputeLowerHex(Array.Empty<byte>());
     }
 
     private sealed class TruthStreamIdentityEqualityComparer : IEqualityComparer<TruthStreamIdentity>

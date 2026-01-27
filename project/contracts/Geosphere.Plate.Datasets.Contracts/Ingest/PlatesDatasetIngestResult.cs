@@ -7,6 +7,7 @@ namespace FantaSim.Geosphere.Plate.Datasets.Contracts.Ingest;
 public sealed record PlatesDatasetIngestResult(
     IPlatesDataset? Dataset,
     IReadOnlyList<TruthStreamIdentity> ProducedStreams,
+    PlatesDatasetIngestAudit? Audit,
     IReadOnlyList<DatasetValidationError> Errors)
 {
     public bool IsSuccess => Dataset is not null && Errors.Count == 0;
