@@ -56,8 +56,12 @@ public sealed class PlateKinematicsState : IPlateKinematicsStateView
     {
         _sortedSegmentsByPlate.Clear();
 
-        foreach (var (plateId, byId) in _segmentsByPlate)
+        var plates = _segmentsByPlate.Keys.ToList();
+        plates.Sort(static (a, b) => a.Value.CompareTo(b.Value));
+
+        foreach (var plateId in plates)
         {
+            var byId = _segmentsByPlate[plateId];
             var list = byId.Values.ToList();
             list.Sort(MotionSegmentComparer.Instance);
             _sortedSegmentsByPlate[plateId] = list;
