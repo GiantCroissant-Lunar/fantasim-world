@@ -1,5 +1,10 @@
-# Progress — 002-unify-geometry
-
+---
+title: "Progress — 002-unify-geometry"
+id: "progress-002-unify-geometry"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 This document tracks what has been implemented so far on the `002-unify-geometry` branch/worktree.
 
 ## Scope

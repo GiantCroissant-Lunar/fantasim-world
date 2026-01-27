@@ -1,5 +1,10 @@
-# Unified Agent Configuration System
-
+---
+title: "Unified Agent Configuration System"
+id: "readme"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 This document describes the unified agent configuration system that enables consistent AI assistant behavior across multiple tools from a single source of truth.
 
 ## Table of Contents

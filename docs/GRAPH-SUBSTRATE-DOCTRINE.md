@@ -1,5 +1,10 @@
-# Graph Substrate Doctrine
-
+---
+title: "Graph Substrate Doctrine"
+id: "graph-substrate-doctrine"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 This document defines how **graph-shaped data** is treated inside `fantasim-world`.
 
 ## Purpose

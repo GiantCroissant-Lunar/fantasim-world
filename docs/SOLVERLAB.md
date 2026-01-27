@@ -1,5 +1,10 @@
-# SolverLab (Benchmark Harness)
-
+---
+title: "SolverLab (Benchmark Harness)"
+id: "solverlab"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 ## Purpose
 
 SolverLab is a host-side benchmarking harness for solver experimentation:

@@ -1,5 +1,10 @@
-# FantaSim World - Unify Stack Adoption Plan
-
+---
+title: "FantaSim World - Unify Stack Adoption Plan"
+id: "adoptionplan"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 **Status**: Draft
 **Date**: 2026-01-25
 **Reference**: RFC-050 (FantaSim Architecture Evolution)

@@ -1,5 +1,10 @@
-# Handover: DES Runtime & Solver Evolution Strategy
-
+---
+title: "Handover: DES Runtime & Solver Evolution Strategy"
+id: "session-handover-2026-01-24-des-solver-evolution"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 **Date**: 2026-01-24
 **Topic**: Discrete Event Simulation (DES) Runtime & Solver Optimization Architecture
 **Branch**: `feature/des-runtime` (in both `fantasim-world` and `fantasim-hub`)

@@ -1,5 +1,10 @@
-# Plugin Hot-Reload Doctrine (v2)
-
+---
+title: "Plugin Hot-Reload Doctrine (v2)"
+id: "plugin-hot-reload-doctrine"
+description: ""
+date: "2026-01-28"
+tags: []
+---
 This document defines the rules and long-term architecture for plugin load/unload/reload across FantaSim applications.
 
 Scope:
