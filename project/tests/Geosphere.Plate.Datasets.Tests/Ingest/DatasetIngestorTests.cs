@@ -1,10 +1,17 @@
 using System.IO;
+using FantaSim.Geosphere.Plate.Datasets.Contracts.Canonicalization;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Ingest;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Loading;
 using FantaSim.Geosphere.Plate.Datasets.Import;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Events;
+using FantaSim.Geosphere.Plate.Kinematics.Materializer;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FluentAssertions;
+using Plate.TimeDete.Time.Primitives;
+using UnifyStorage.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Datasets.Tests.Ingest;
 
@@ -25,6 +32,66 @@ public sealed class DatasetIngestorTests
         r.Dataset.Should().NotBeNull();
         r.ProducedStreams.Should().BeEmpty();
         store.AppendCalls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task IngestAsync_ModeIngest_SegmentsV1MotionModel_MaterializesRotation()
+    {
+        var kv = new InMemoryOrderedKeyValueStore();
+        var store = new PlateKinematicsEventStore(kv);
+        var ingestor = new PlatesDatasetIngestor(new JsonPlatesDatasetLoader(), store);
+
+        var datasetRoot = GetSampleRoot("MotionModelSegmentsV1");
+        var stream = new TruthStreamIdentity("main", "trunk", 0, Domain.GeoPlatesKinematics, "M0");
+
+        var spec = new PlatesDatasetIngestSpec(
+            IngestMode.Ingest,
+            new[] { new PlatesAssetIngestTarget(PlatesAssetKind.MotionModel, "mm1", stream) });
+
+        var r = await ingestor.IngestAsync(datasetRoot, spec, null, CancellationToken.None);
+
+        r.IsSuccess.Should().BeTrue();
+        (await store.GetLastSequenceAsync(stream, CancellationToken.None)).Should().NotBeNull();
+
+        var plateId = new PlateId(DeterministicIdPolicy.DeriveStableId("test.dataset.motion", "mm1", "plate", "p1"));
+
+        var materializer = new PlateKinematicsMaterializer(store);
+        var state = await materializer.MaterializeAsync(stream);
+
+        state.TryGetRotation(plateId, new CanonicalTick(5), out var rotAt5).Should().BeTrue();
+        rotAt5.Should().NotBe(Quaterniond.Identity);
+    }
+
+    [Fact]
+    public async Task IngestAsync_ModeIngest_SegmentsV1MotionModel_PersistedBytesAreDeterministic()
+    {
+        static async Task<List<(byte[] Key, byte[] Value)>> RunOnceAsync()
+        {
+            var kv = new InMemoryOrderedKeyValueStore();
+            var store = new PlateKinematicsEventStore(kv);
+            var ingestor = new PlatesDatasetIngestor(new JsonPlatesDatasetLoader(), store);
+
+            var datasetRoot = GetSampleRoot("MotionModelSegmentsV1");
+            var stream = new TruthStreamIdentity("main", "trunk", 0, Domain.GeoPlatesKinematics, "M0");
+            var spec = new PlatesDatasetIngestSpec(
+                IngestMode.Ingest,
+                new[] { new PlatesAssetIngestTarget(PlatesAssetKind.MotionModel, "mm1", stream) });
+
+            var r = await ingestor.IngestAsync(datasetRoot, spec, null, CancellationToken.None);
+            r.IsSuccess.Should().BeTrue();
+
+            return DumpAll(kv);
+        }
+
+        var a = await RunOnceAsync();
+        var b = await RunOnceAsync();
+
+        a.Count.Should().Be(b.Count);
+        for (var i = 0; i < a.Count; i++)
+        {
+            a[i].Key.Should().Equal(b[i].Key);
+            a[i].Value.Should().Equal(b[i].Value);
+        }
     }
 
     [Fact]
@@ -51,6 +118,19 @@ public sealed class DatasetIngestorTests
     {
         var baseDir = AppContext.BaseDirectory;
         return Path.Combine(baseDir, "SampleData", folderName);
+    }
+
+    private static List<(byte[] Key, byte[] Value)> DumpAll(IKeyValueStore store)
+    {
+        var list = new List<(byte[] Key, byte[] Value)>();
+        using var it = store.CreateIterator();
+        it.Seek(new byte[] { 0 });
+        while (it.Valid)
+        {
+            list.Add((it.Key.ToArray(), it.Value.ToArray()));
+            it.Next();
+        }
+        return list;
     }
 
     private sealed class RecordingKinematicsEventStore : IKinematicsEventStore
