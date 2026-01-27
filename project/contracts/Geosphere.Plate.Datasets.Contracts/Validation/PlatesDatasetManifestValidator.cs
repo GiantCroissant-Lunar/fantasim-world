@@ -5,6 +5,10 @@ namespace FantaSim.Geosphere.Plate.Datasets.Contracts.Validation;
 
 public static class PlatesDatasetManifestValidator
 {
+    private const string StableIdPolicyIdV1 = "sha256-guid-v1";
+    private const string AssetOrderingPolicyIdV1 = "kind_assetId_path-v1";
+    private const string QuantizationPolicyIdV1 = "euler_microdegrees-v1";
+
     public static IReadOnlyList<DatasetValidationError> Validate(PlatesDatasetManifest manifest)
     {
         ArgumentNullException.ThrowIfNull(manifest);
@@ -42,6 +46,15 @@ public static class PlatesDatasetManifestValidator
             }
         }
 
+        if (manifest.CanonicalizationRules is null)
+        {
+            errors.Add(new DatasetValidationError("canonicalization_rules.required", "canonicalizationRules", "CanonicalizationRules is required."));
+        }
+        else
+        {
+            ValidateCanonicalizationRules(manifest.CanonicalizationRules, errors);
+        }
+
         ValidateAssets(manifest, errors);
 
         errors.Sort(static (a, b) =>
@@ -58,6 +71,36 @@ public static class PlatesDatasetManifestValidator
         });
 
         return errors;
+    }
+
+    private static void ValidateCanonicalizationRules(CanonicalizationRules rules, List<DatasetValidationError> errors)
+    {
+        if (rules.Version <= 0)
+            errors.Add(new DatasetValidationError("canonicalization_rules.version.invalid", "canonicalizationRules.version", "CanonicalizationRules.Version must be > 0."));
+
+        if (string.IsNullOrWhiteSpace(rules.StableIdPolicyId))
+            errors.Add(new DatasetValidationError("canonicalization_rules.stable_id_policy_id.required", "canonicalizationRules.stableIdPolicyId", "CanonicalizationRules.StableIdPolicyId is required."));
+
+        if (string.IsNullOrWhiteSpace(rules.AssetOrderingPolicyId))
+            errors.Add(new DatasetValidationError("canonicalization_rules.asset_ordering_policy_id.required", "canonicalizationRules.assetOrderingPolicyId", "CanonicalizationRules.AssetOrderingPolicyId is required."));
+
+        if (string.IsNullOrWhiteSpace(rules.QuantizationPolicyId))
+            errors.Add(new DatasetValidationError("canonicalization_rules.quantization_policy_id.required", "canonicalizationRules.quantizationPolicyId", "CanonicalizationRules.QuantizationPolicyId is required."));
+
+        if (rules.Version != 1)
+        {
+            errors.Add(new DatasetValidationError("canonicalization_rules.version.unsupported", "canonicalizationRules.version", "CanonicalizationRules.Version is not supported."));
+            return;
+        }
+
+        if (!string.Equals(rules.StableIdPolicyId, StableIdPolicyIdV1, StringComparison.Ordinal))
+            errors.Add(new DatasetValidationError("canonicalization_rules.stable_id_policy_id.invalid", "canonicalizationRules.stableIdPolicyId", "CanonicalizationRules.StableIdPolicyId is invalid."));
+
+        if (!string.Equals(rules.AssetOrderingPolicyId, AssetOrderingPolicyIdV1, StringComparison.Ordinal))
+            errors.Add(new DatasetValidationError("canonicalization_rules.asset_ordering_policy_id.invalid", "canonicalizationRules.assetOrderingPolicyId", "CanonicalizationRules.AssetOrderingPolicyId is invalid."));
+
+        if (!string.Equals(rules.QuantizationPolicyId, QuantizationPolicyIdV1, StringComparison.Ordinal))
+            errors.Add(new DatasetValidationError("canonicalization_rules.quantization_policy_id.invalid", "canonicalizationRules.quantizationPolicyId", "CanonicalizationRules.QuantizationPolicyId is invalid."));
     }
 
     private static void ValidateBodyFrame(BodyFrame bodyFrame, List<DatasetValidationError> errors)
