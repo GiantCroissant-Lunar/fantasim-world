@@ -9,6 +9,52 @@ public static class PlatesDatasetManifestValidator
     private const string AssetOrderingPolicyIdV1 = "kind_assetId_path-v1";
     private const string QuantizationPolicyIdV1 = "euler_microdegrees-v1";
 
+    /// <summary>
+    /// Allowed angular conventions for planet-agnostic coordinate systems.
+    /// RFC-V2-0032 requires explicit declaration; implicit Earth CRS is forbidden.
+    /// </summary>
+    private static readonly HashSet<string> AllowedAngularConventions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // v1 formats (existing usage)
+        "body_lonlat_degrees",
+        "body_lonlat_radians",
+        "body_cartesian",
+        // Versioned formats (recommended)
+        "body-lonlat-degrees-v1",
+        "body-lonlat-radians-v1",
+        "body-cartesian-v1",
+        "planetographic-lonlat-degrees-v1",
+        "planetocentric-lonlat-degrees-v1"
+    };
+
+    /// <summary>
+    /// Patterns that indicate implicit Earth CRS assumptions.
+    /// RFC-V2-0032 §2.1: MUST NOT assume WGS84, EPSG:4326, or any implicit Earth CRS.
+    /// </summary>
+    private static readonly string[] RejectedEarthCrsPatterns =
+    [
+        "epsg:",
+        "wgs84",
+        "wgs-84",
+        "crs84",
+        "crs-84",
+        "ogc:crs84",
+        "urn:ogc:",
+        "proj:"
+    ];
+
+    /// <summary>
+    /// Allowed unit identifiers for body frame dimensions.
+    /// </summary>
+    private static readonly HashSet<string> AllowedUnits = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "m",
+        "km",
+        "au",
+        "mi",
+        "nmi"
+    };
+
     public static IReadOnlyList<DatasetValidationError> Validate(PlatesDatasetManifest manifest)
     {
         ArgumentNullException.ThrowIfNull(manifest);
@@ -108,11 +154,51 @@ public static class PlatesDatasetManifestValidator
 
     private static void ValidateBodyFrame(BodyFrame bodyFrame, List<DatasetValidationError> errors)
     {
+        // Validate Unit (required + whitelist)
         if (string.IsNullOrWhiteSpace(bodyFrame.Unit))
+        {
             errors.Add(new DatasetValidationError("body_frame.unit.required", "bodyFrame.unit", "BodyFrame.Unit is required."));
+        }
+        else if (!AllowedUnits.Contains(bodyFrame.Unit))
+        {
+            errors.Add(new DatasetValidationError(
+                "body_frame.unit.invalid",
+                "bodyFrame.unit",
+                $"BodyFrame.Unit '{bodyFrame.Unit}' is not recognized. Allowed values: {string.Join(", ", AllowedUnits)}."));
+        }
 
+        // Validate AngularConvention (required + whitelist + reject Earth CRS)
         if (string.IsNullOrWhiteSpace(bodyFrame.AngularConvention))
+        {
             errors.Add(new DatasetValidationError("body_frame.angular_convention.required", "bodyFrame.angularConvention", "BodyFrame.AngularConvention is required."));
+        }
+        else
+        {
+            // RFC-V2-0032 §2.1: Reject implicit Earth CRS patterns
+            var conventionLower = bodyFrame.AngularConvention.ToLowerInvariant();
+            foreach (var pattern in RejectedEarthCrsPatterns)
+            {
+                if (conventionLower.Contains(pattern, StringComparison.Ordinal))
+                {
+                    errors.Add(new DatasetValidationError(
+                        "body_frame.angular_convention.earth_crs_rejected",
+                        "bodyFrame.angularConvention",
+                        $"BodyFrame.AngularConvention '{bodyFrame.AngularConvention}' appears to reference an implicit Earth CRS. " +
+                        "RFC-V2-0032 requires planet-agnostic coordinate declarations. Use an allowed convention instead."));
+                    break;
+                }
+            }
+
+            // Validate against allowed conventions whitelist
+            if (!AllowedAngularConventions.Contains(bodyFrame.AngularConvention))
+            {
+                errors.Add(new DatasetValidationError(
+                    "body_frame.angular_convention.invalid",
+                    "bodyFrame.angularConvention",
+                    $"BodyFrame.AngularConvention '{bodyFrame.AngularConvention}' is not recognized. " +
+                    $"Allowed values: {string.Join(", ", AllowedAngularConventions)}."));
+            }
+        }
 
         switch (bodyFrame.Shape)
         {
