@@ -1,0 +1,12 @@
+markdownlint.............................................................Failed
+- hook id: markdownlint
+- exit code: 1
+
+scripts/README-cleanup-inbox.md:9 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### 1. Analyze for Duplicates"]
+scripts/README-cleanup-inbox.md:20 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### 2. Review the Report"]
+scripts/README-cleanup-inbox.md:26 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### 3. Merge Files with Partial Duplication"]
+scripts/README-cleanup-inbox.md:130 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### Main Menu"]
+scripts/README-cleanup-inbox.md:135 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### Options for Similar Files"]
+scripts/README-cleanup-inbox.md:209 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### Issue: No duplicates found"]
+scripts/README-cleanup-inbox.md:213 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### Issue: Too many false positives"]
+scripts/README-cleanup-inbox.md:217 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below] [Context: "### Issue: Analysis file not found"]

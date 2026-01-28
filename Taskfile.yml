@@ -260,3 +260,83 @@ tasks:
     cmds:
       - >-
         pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode done -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
+
+  # =============================================================================
+  # Documentation Maintenance
+  # =============================================================================
+
+  docs:analyze-inbox:
+    desc: Analyze docs/_inbox for duplicates and similar content
+    summary: |
+      Intelligently analyzes all files in docs/_inbox to find:
+        - Exact duplicates (identical content)
+        - Partial duplicates (similar content with shared sections)
+        - Content similarity scores
+
+      Generates detailed reports in docs/_inbox/_analysis/
+    cmds:
+      - python scripts/analyze_inbox_duplicates.py
+
+  docs:analyze-inbox:threshold:
+    desc: Analyze with custom similarity threshold
+    summary: |
+      Same as docs:analyze-inbox but with custom threshold.
+
+      Usage: task docs:analyze-inbox:threshold THRESHOLD=0.5
+
+      Threshold range: 0.0 (no similarity) to 1.0 (identical)
+      Default: 0.3
+    cmds:
+      - python scripts/analyze_inbox_duplicates.py --threshold {{.THRESHOLD}}
+
+  docs:merge-duplicates:
+    desc: Intelligently merge files with partial duplication
+    summary: |
+      Smart merger that combines files with shared content:
+        - Detects duplicate sections
+        - Preserves unique content from each file
+        - Creates consolidated documents
+        - Removes redundant source files
+
+      Default: merges files with ≥40% line overlap
+      Run docs:analyze-inbox first to generate analysis.
+    cmds:
+      - python scripts/merge_duplicates.py
+
+  docs:merge-duplicates:dry-run:
+    desc: Preview merges without making changes
+    cmds:
+      - python scripts/merge_duplicates.py --dry-run
+
+  docs:merge-duplicates:threshold:
+    desc: Merge with custom overlap threshold
+    summary: |
+      Usage: task docs:merge-duplicates:threshold MIN_OVERLAP=0.6
+
+      Threshold: minimum line overlap to trigger merge (0.0-1.0)
+      - 0.4 (default): moderate overlap
+      - 0.6: high overlap
+      - 0.8: very high overlap
+    cmds:
+      - python scripts/merge_duplicates.py --min-overlap {{.MIN_OVERLAP}}
+
+  docs:organize-inbox:
+    desc: Organize docs/_inbox files into categorized subfolders
+    summary: |
+      Moves files in docs/_inbox root into subfolders:
+        - conversation-exports/
+        - discussions/
+        - implementations/
+        - refactoring/
+        - integrations/
+        - planning/
+        - maintenance/
+
+      Run AFTER docs:merge-duplicates for final organization.
+    cmds:
+      - python scripts/organize_inbox.py
+
+  docs:organize-inbox:dry-run:
+    desc: Preview inbox organization without moving files
+    cmds:
+      - python scripts/organize_inbox.py --dry-run
