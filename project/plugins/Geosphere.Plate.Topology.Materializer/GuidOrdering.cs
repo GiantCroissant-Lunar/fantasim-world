@@ -12,10 +12,8 @@ public static class GuidOrdering
         Span<byte> aLe = stackalloc byte[16];
         Span<byte> bLe = stackalloc byte[16];
 
-        if (!a.TryWriteBytes(aLe))
-            throw new InvalidOperationException("Failed to write Guid bytes.");
-        if (!b.TryWriteBytes(bLe))
-            throw new InvalidOperationException("Failed to write Guid bytes.");
+        a.TryWriteBytes(aLe);
+        b.TryWriteBytes(bLe);
 
         for (var i = 0; i < 16; i++)
         {
