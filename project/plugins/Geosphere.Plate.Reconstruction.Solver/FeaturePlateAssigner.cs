@@ -15,7 +15,6 @@ public sealed class FeaturePlateAssigner : IFeaturePlateAssigner
         ArgumentNullException.ThrowIfNull(partition);
 
         var sortedPartition = partition
-            .Where(p => p is not null)
             .OrderBy(p => p.PlateId.Value, Rfc4122GuidComparer.Instance)
             .ToArray();
 
@@ -79,10 +78,8 @@ public sealed class FeaturePlateAssigner : IFeaturePlateAssigner
             Span<byte> aLe = stackalloc byte[16];
             Span<byte> bLe = stackalloc byte[16];
 
-            if (!x.TryWriteBytes(aLe))
-                throw new InvalidOperationException("Failed to write Guid bytes.");
-            if (!y.TryWriteBytes(bLe))
-                throw new InvalidOperationException("Failed to write Guid bytes.");
+            x.TryWriteBytes(aLe);
+            y.TryWriteBytes(bLe);
 
             for (var i = 0; i < 16; i++)
             {
