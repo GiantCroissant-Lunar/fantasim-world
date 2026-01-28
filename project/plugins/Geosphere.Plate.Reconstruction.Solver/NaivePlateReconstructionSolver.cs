@@ -10,12 +10,30 @@ namespace FantaSim.Geosphere.Plate.Reconstruction.Solver;
 
 /// <summary>
 /// Minimal reconstruction solver implementation for RFC-V2-0024.
-///
-/// Current v0 behavior:
-/// - Uses topology slice boundaries at the provided tick (topology already time-cutoff materialized by caller).
-/// - Attaches single-plate provenance (left plate) per boundary.
-/// - Returns geometry without applying kinematic transforms (geometry rotation is future work once spherical geometry types land).
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>Geometry rotation:</b> Applies quaternion rotation to all 3D geometry types
+/// (Point3, Segment3, Polyline3). 2D geometry types are returned unchanged.
+/// </para>
+/// <para>
+/// <b>Topology assumptions:</b> Expects topology slice boundaries at the target tick
+/// (topology already time-cutoff materialized by caller). Retired boundaries are excluded.
+/// </para>
+/// <para>
+/// <b>Provenance policy:</b> Attaches single-plate provenance (left plate) per boundary.
+/// </para>
+/// <para>
+/// <b>Kinematics fallback policy:</b> If <c>kinematics.TryGetRotation()</c> returns false
+/// for a given plate at the target tick, the solver uses <see cref="Quaterniond.Identity"/>
+/// (no rotation). This means geometry is returned unchanged when kinematics data is missing.
+/// This behavior is deterministic and suitable for Solver Lab verification.
+/// </para>
+/// <para>
+/// <b>Determinism:</b> Output is ordered by BoundaryId/FeatureId using RFC4122 byte ordering
+/// for reproducible results across runs.
+/// </para>
+/// </remarks>
 public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver, IPlateFeatureReconstructionSolver
 {
     public IReadOnlyList<ReconstructedBoundary> ReconstructBoundaries(

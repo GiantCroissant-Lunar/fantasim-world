@@ -91,6 +91,82 @@ public sealed class ReconstructedBoundariesTests
         Assert.True(Math.Abs(rotated.Z) < 1e-9);
     }
 
+    /// <summary>
+    /// Verifies the documented fallback policy: when kinematics returns false (no rotation data),
+    /// the solver uses identity rotation (geometry unchanged). This is deterministic behavior
+    /// suitable for Solver Lab verification.
+    /// </summary>
+    [Fact]
+    public void ReconstructBoundaries_UsesIdentityRotation_WhenKinematicsReturnsFalse()
+    {
+        var solver = new NaivePlateReconstructionSolver();
+
+        var plateA = new PlateId(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
+        var plateB = new PlateId(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
+
+        var originalPoint = new Point3(1d, 2d, 3d);
+        var boundary = new Boundary(
+            new BoundaryId(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+            plateA,
+            plateB,
+            BoundaryType.Divergent,
+            originalPoint,
+            false,
+            null);
+
+        var topo = new FakeTopologyState(Domain.Parse("geo.plates"), new[] { boundary });
+
+        // Kinematics returns false (no rotation data available)
+        var kin = new FakeKinematicsState(returnsRotation: false);
+
+        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        Assert.Single(r);
+
+        // Geometry should be unchanged (identity rotation applied)
+        var result = Assert.IsType<Point3>(r[0].Geometry);
+        Assert.Equal(originalPoint.X, result.X);
+        Assert.Equal(originalPoint.Y, result.Y);
+        Assert.Equal(originalPoint.Z, result.Z);
+    }
+
+    /// <summary>
+    /// Verifies that retired boundaries are excluded from reconstruction output.
+    /// </summary>
+    [Fact]
+    public void ReconstructBoundaries_ExcludesRetiredBoundaries()
+    {
+        var solver = new NaivePlateReconstructionSolver();
+
+        var plateA = new PlateId(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
+        var plateB = new PlateId(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
+
+        var activeBoundary = new Boundary(
+            new BoundaryId(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+            plateA,
+            plateB,
+            BoundaryType.Divergent,
+            new Point3(1d, 0d, 0d),
+            IsRetired: false,
+            null);
+
+        var retiredBoundary = new Boundary(
+            new BoundaryId(Guid.Parse("22222222-2222-2222-2222-222222222222")),
+            plateA,
+            plateB,
+            BoundaryType.Convergent,
+            new Point3(2d, 0d, 0d),
+            IsRetired: true,
+            null);
+
+        var topo = new FakeTopologyState(Domain.Parse("geo.plates"), new[] { activeBoundary, retiredBoundary });
+        var kin = new FakeKinematicsState();
+
+        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+
+        Assert.Single(r);
+        Assert.Equal(activeBoundary.BoundaryId, r[0].BoundaryId);
+    }
+
     private sealed class FakeTopologyState : IPlateTopologyStateView
     {
         private static readonly IReadOnlyDictionary<PlateId, PlateEntity> EmptyPlates =
@@ -121,15 +197,27 @@ public sealed class ReconstructedBoundariesTests
     private sealed class FakeKinematicsState : IPlateKinematicsStateView
     {
         private readonly Quaterniond _rotation;
+        private readonly bool _returnsRotation;
 
         public FakeKinematicsState()
-            : this(Quaterniond.Identity)
+            : this(Quaterniond.Identity, returnsRotation: true)
         {
         }
 
         public FakeKinematicsState(Quaterniond rotation)
+            : this(rotation, returnsRotation: true)
+        {
+        }
+
+        public FakeKinematicsState(bool returnsRotation)
+            : this(Quaterniond.Identity, returnsRotation)
+        {
+        }
+
+        private FakeKinematicsState(Quaterniond rotation, bool returnsRotation)
         {
             _rotation = rotation;
+            _returnsRotation = returnsRotation;
         }
 
         public TruthStreamIdentity Identity { get; } = new("science", "trunk", 2, Domain.Parse("geo.plates.kinematics"), "0");
@@ -139,7 +227,7 @@ public sealed class ReconstructedBoundariesTests
         public bool TryGetRotation(PlateId plateId, CanonicalTick tick, out FantaSim.Geosphere.Plate.Topology.Contracts.Numerics.Quaterniond rotation)
         {
             rotation = _rotation;
-            return true;
+            return _returnsRotation;
         }
     }
 }
