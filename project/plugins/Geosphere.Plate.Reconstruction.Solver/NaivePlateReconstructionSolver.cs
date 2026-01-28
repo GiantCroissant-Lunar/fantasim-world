@@ -16,7 +16,7 @@ namespace FantaSim.Geosphere.Plate.Reconstruction.Solver;
 /// - Attaches single-plate provenance (left plate) per boundary.
 /// - Returns geometry without applying kinematic transforms (geometry rotation is future work once spherical geometry types land).
 /// </summary>
-public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver
+public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver, IPlateFeatureReconstructionSolver
 {
     public IReadOnlyList<ReconstructedBoundary> ReconstructBoundaries(
         IPlateTopologyStateView topology,
@@ -46,6 +46,38 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver
             .ToArray();
 
         return boundaries;
+    }
+
+    public IReadOnlyList<ReconstructedFeature> ReconstructFeatures(
+        IReadOnlyList<ReconstructableFeature> features,
+        IPlateKinematicsStateView kinematics,
+        CanonicalTick targetTick,
+        ReconstructionOptions? options = null)
+    {
+        ArgumentNullException.ThrowIfNull(features);
+        ArgumentNullException.ThrowIfNull(kinematics);
+
+        var reconstructed = features
+            .Where(f => f.PlateIdProvenance.HasValue)
+            .OrderBy(f => f.FeatureId.Value, Rfc4122GuidComparer.Instance)
+            .Select(f =>
+            {
+                var plateId = f.PlateIdProvenance!.Value;
+
+                var rotation = Quaterniond.Identity;
+                if (kinematics.TryGetRotation(plateId, targetTick, out var r))
+                    rotation = r;
+
+                var geometry = ApplyRotation(f.Geometry, rotation);
+
+                return new ReconstructedFeature(
+                    f.FeatureId,
+                    plateId,
+                    geometry);
+            })
+            .ToArray();
+
+        return reconstructed;
     }
 
     private static IGeometry ApplyRotation(IGeometry geometry, Quaterniond rotation)
@@ -118,5 +150,50 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver
             (a.W * b.Y) - (a.X * b.Z) + (a.Y * b.W) + (a.Z * b.X),
             (a.W * b.Z) + (a.X * b.Y) - (a.Y * b.X) + (a.Z * b.W),
             (a.W * b.W) - (a.X * b.X) - (a.Y * b.Y) - (a.Z * b.Z));
+    }
+
+    private sealed class Rfc4122GuidComparer : IComparer<Guid>
+    {
+        public static Rfc4122GuidComparer Instance { get; } = new();
+
+        public int Compare(Guid x, Guid y)
+        {
+            Span<byte> aLe = stackalloc byte[16];
+            Span<byte> bLe = stackalloc byte[16];
+
+            if (!x.TryWriteBytes(aLe))
+                throw new InvalidOperationException("Failed to write Guid bytes.");
+            if (!y.TryWriteBytes(bLe))
+                throw new InvalidOperationException("Failed to write Guid bytes.");
+
+            for (var i = 0; i < 16; i++)
+            {
+                var ab = GetRfc4122ByteAt(aLe, i);
+                var bb = GetRfc4122ByteAt(bLe, i);
+
+                if (ab < bb)
+                    return -1;
+                if (ab > bb)
+                    return 1;
+            }
+
+            return 0;
+        }
+
+        private static byte GetRfc4122ByteAt(ReadOnlySpan<byte> littleEndianGuidBytes, int index)
+        {
+            return index switch
+            {
+                0 => littleEndianGuidBytes[3],
+                1 => littleEndianGuidBytes[2],
+                2 => littleEndianGuidBytes[1],
+                3 => littleEndianGuidBytes[0],
+                4 => littleEndianGuidBytes[5],
+                5 => littleEndianGuidBytes[4],
+                6 => littleEndianGuidBytes[7],
+                7 => littleEndianGuidBytes[6],
+                _ => littleEndianGuidBytes[index]
+            };
+        }
     }
 }
