@@ -1,5 +1,6 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using MessagePack;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 
 namespace FantaSim.Geosphere.Plate.Velocity.Contracts;
 
@@ -28,6 +29,9 @@ public readonly record struct Velocity3d(
 
     /// <summary>Squared magnitude (avoids sqrt for comparisons).</summary>
     public double MagnitudeSquared() => X * X + Y * Y + Z * Z;
+
+    /// <summary>Dot product with a direction vector.</summary>
+    public double Dot(Vector3d direction) => X * direction.X + Y * direction.Y + Z * direction.Z;
 
     public static Velocity3d operator +(Velocity3d a, Velocity3d b)
         => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
