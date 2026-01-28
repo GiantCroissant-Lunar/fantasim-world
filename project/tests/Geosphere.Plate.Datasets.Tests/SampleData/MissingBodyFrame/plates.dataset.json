@@ -7,5 +7,10 @@
   "featureSets": [],
   "rasterSequences": [],
   "motionModels": [],
-  "canonicalizationRules": { "version": 1 }
+  "canonicalizationRules": {
+    "version": 1,
+    "stableIdPolicyId": "sha256-guid-v1",
+    "assetOrderingPolicyId": "kind_assetId_path-v1",
+    "quantizationPolicyId": "euler_microdegrees-v1"
+  }
 }
