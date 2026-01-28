@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Canonicalization;
@@ -266,7 +267,24 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
         IReadOnlyList<PlatesDatasetIngestStreamAudit> streams)
     {
         var manifestPath = Path.Combine(dataset.DatasetRootPath, manifestFileName);
-        var manifestBytes = File.ReadAllBytes(manifestPath);
+        
+        // Read manifest file once - manifest files are typically small (metadata only)
+        byte[] manifestBytes;
+        try
+        {
+            manifestBytes = File.ReadAllBytes(manifestPath);
+        }
+        catch (FileNotFoundException ex)
+        {
+            throw new FileNotFoundException(
+                $"Manifest file not found: {manifestPath}", ex);
+        }
+        catch (IOException ex)
+        {
+            throw new IOException(
+                $"I/O error reading manifest file: {manifestPath}", ex);
+        }
+        
         var manifestFileSha256 = Sha256Hex.ComputeLowerHex(manifestBytes);
 
         var manifest = dataset.Manifest;
@@ -321,16 +339,29 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
 
             var rel = (meta.RelativePath ?? string.Empty).Replace('\\', '/');
 
-            var fileSha256 = string.Empty;
-            if (File.Exists(a.AbsolutePath))
+            // Use streaming hash computation - will throw if file is missing or inaccessible
+            string fileSha256;
+            try
             {
-                var fileBytes = File.ReadAllBytes(a.AbsolutePath);
-                fileSha256 = Sha256Hex.ComputeLowerHex(fileBytes);
+                fileSha256 = ComputeFileSha256Streaming(a.AbsolutePath);
             }
-            else
+            catch (FileNotFoundException ex)
             {
                 throw new FileNotFoundException(
-                    $"Asset file not found during ingest audit computation. The asset was resolved earlier but is now missing. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}");
+                    $"Asset file not found during ingest audit computation. The asset was resolved earlier but is now missing. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
+                    ex);
+            }
+            catch (IOException ex)
+            {
+                throw new IOException(
+                    $"I/O error reading asset file during ingest audit computation. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
+                    ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                throw new UnauthorizedAccessException(
+                    $"Access denied to asset file during ingest audit computation. AssetId: {a.AssetId}, Kind: {a.Kind}, Path: {a.AbsolutePath}",
+                    ex);
             }
 
             assetAudits.Add(new PlatesDatasetIngestAssetAudit(
@@ -396,6 +427,22 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             targetAudits,
             streams.ToArray(),
             auditSha256);
+    }
+
+    /// <summary>
+    /// Computes SHA256 hash of a file using streaming to avoid loading entire file into memory.
+    /// </summary>
+    /// <param name="filePath">The path to the file to hash.</param>
+    /// <returns>A lowercase hexadecimal string representation of the SHA256 hash.</returns>
+    /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
+    /// <exception cref="IOException">Thrown when an I/O error occurs while reading the file.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown when access to the file is denied.</exception>
+    private static string ComputeFileSha256Streaming(string filePath)
+    {
+        using var stream = File.OpenRead(filePath);
+        using var sha256 = SHA256.Create();
+        var hashBytes = sha256.ComputeHash(stream);
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
     private static string ComputeEventIdDigest(IReadOnlyList<IPlateKinematicsEvent> events)
