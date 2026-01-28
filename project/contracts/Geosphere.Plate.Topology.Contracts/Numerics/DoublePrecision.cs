@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
@@ -16,6 +16,19 @@ public readonly record struct Vector3d(
 
     public double Length() => Math.Sqrt(X * X + Y * Y + Z * Z);
     public double LengthSquared() => X * X + Y * Y + Z * Z;
+
+    public double Dot(Vector3d other) => X * other.X + Y * other.Y + Z * other.Z;
+
+    public Vector3d Cross(Vector3d other) => new(
+        Y * other.Z - Z * other.Y,
+        Z * other.X - X * other.Z,
+        X * other.Y - Y * other.X);
+
+    public Vector3d Normalize()
+    {
+        var len = Length();
+        return len > double.Epsilon ? this / len : Zero;
+    }
 
     public static Vector3d operator +(Vector3d a, Vector3d b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
     public static Vector3d operator -(Vector3d a) => new(-a.X, -a.Y, -a.Z);

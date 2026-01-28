@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Polygonization.Tests</RootNamespace>
+    <AssemblyName>Geosphere.Plate.Polygonization.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Polygonization.Solver\Geosphere.Plate.Polygonization.Solver.csproj" />
+  </ItemGroup>
+
+</Project>

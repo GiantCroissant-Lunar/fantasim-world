@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Polygonization.Solver</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Polygonization.Solver</PackageId>
+    <AssemblyName>Geosphere.Plate.Polygonization.Solver</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+  </ItemGroup>
+
+</Project>

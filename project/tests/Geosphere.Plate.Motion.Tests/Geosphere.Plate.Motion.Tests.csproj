@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Motion.Tests</RootNamespace>
+    <AssemblyName>Geosphere.Plate.Motion.Tests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Motion.Contracts\Geosphere.Plate.Motion.Contracts.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Motion.Solver\Geosphere.Plate.Motion.Solver.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Velocity.Solver\Geosphere.Plate.Velocity.Solver.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
