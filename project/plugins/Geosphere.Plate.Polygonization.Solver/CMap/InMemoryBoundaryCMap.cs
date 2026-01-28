@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifyGeometry;
