@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "microsoft-learn": {
+      "type": "streamable-http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        ".."
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository", ".",
+        "--repository", "../fantasim-hub",
+        "--repository", "../plate-shared",
+        "--repository", "../time-dete",
+        "--repository", "../plugin-archi",
+        "--repository", "../service-archi",
+        "--repository", "../unify-ecs",
+        "--repository", "../unify-maths",
+        "--repository", "../unify-topology",
+        "--repository", "../unify-serialization",
+        "--repository", "../unify-storage",
+        "--repository", "../unify-build"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.38"
+      ]
+    }
+  }
+}
