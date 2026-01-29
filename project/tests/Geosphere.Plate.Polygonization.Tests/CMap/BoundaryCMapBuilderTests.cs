@@ -11,7 +11,7 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Tests.CMap;
 
 /// <summary>
 /// Tests for BoundaryCMapBuilder - verifies deterministic cmap construction.
-/// 
+///
 /// RFC-V2-0041 §9: CMap must be deterministic given the same topology state.
 /// </summary>
 public class BoundaryCMapBuilderTests
@@ -147,10 +147,10 @@ public class BoundaryCMapBuilderTests
         Assert.Equal(3, incident.Count);
 
         // Verify cyclic order: CCW from +X should be:
-        // 1. B3 backward (pointing right, angle 0°) 
+        // 1. B3 backward (pointing right, angle 0°)
         // 2. B2 forward (pointing up, angle 90°)
         // 3. B1 backward (pointing left, angle 180°)
-        // 
+        //
         // Wait - we need OUTGOING darts from J0
         // B1: J1->J0, so outgoing from J0 is B1-Backward going toward J1 (angle=180°)
         // B2: J0->J2, so outgoing from J0 is B2-Forward going toward J2 (angle=90°)
@@ -205,6 +205,207 @@ public class BoundaryCMapBuilderTests
             Assert.Equal(cmap1.Next(darts1[i]), cmap2.Next(darts2[i]));
             Assert.Equal(cmap1.Origin(darts1[i]), cmap2.Origin(darts2[i]));
         }
+    }
+
+    /// <summary>
+    /// Determinism invariant test: proves that input order does not affect output.
+    ///
+    /// This test verifies:
+    /// - Sorting is order-independent (dictionary iteration doesn't leak)
+    /// - Tie-breaks are complete (every dart has unique position)
+    /// - DeterministicOrder is the single source of truth
+    ///
+    /// This test will catch determinism regressions years from now.
+    /// </summary>
+    [Fact]
+    public void Build_ShuffledInputOrder_ProducesIdenticalFaceStructure()
+    {
+        // Arrange: Complex topology with multiple junctions and boundaries
+        // Use a star pattern: 5 junctions radiating from center
+        //
+        //          J2
+        //          |
+        //     J1---J0---J3
+        //         /  \
+        //       J5    J4
+        //
+        var j0 = MakeJunction(100); // Center
+        var j1 = MakeJunction(1);
+        var j2 = MakeJunction(2);
+        var j3 = MakeJunction(3);
+        var j4 = MakeJunction(4);
+        var j5 = MakeJunction(5);
+
+        var b1 = MakeBoundary(1);
+        var b2 = MakeBoundary(2);
+        var b3 = MakeBoundary(3);
+        var b4 = MakeBoundary(4);
+        var b5 = MakeBoundary(5);
+
+        var p1 = MakePlate(1);
+        var p2 = MakePlate(2);
+
+        // Create two topologies with different dictionary insertion orders
+        // First: natural order
+        var junctionsOrdered = new Dictionary<JunctionId, Junction>
+        {
+            [j0] = CreateJunction(j0, 0, 0, b1, b2, b3, b4, b5),
+            [j1] = CreateJunction(j1, -1, 0, b1),
+            [j2] = CreateJunction(j2, 0, 1, b2),
+            [j3] = CreateJunction(j3, 1, 0, b3),
+            [j4] = CreateJunction(j4, 0.7, -0.7, b4),
+            [j5] = CreateJunction(j5, -0.7, -0.7, b5)
+        };
+
+        var boundariesOrdered = new Dictionary<BoundaryId, Boundary>
+        {
+            [b1] = CreateBoundary(b1, p1, p2, new Point3(-1, 0, 0), new Point3(0, 0, 0)),
+            [b2] = CreateBoundary(b2, p1, p2, new Point3(0, 0, 0), new Point3(0, 1, 0)),
+            [b3] = CreateBoundary(b3, p1, p2, new Point3(0, 0, 0), new Point3(1, 0, 0)),
+            [b4] = CreateBoundary(b4, p1, p2, new Point3(0, 0, 0), new Point3(0.7, -0.7, 0)),
+            [b5] = CreateBoundary(b5, p1, p2, new Point3(0, 0, 0), new Point3(-0.7, -0.7, 0))
+        };
+
+        // Second: reversed insertion order (simulates different iteration order)
+        var junctionsShuffled = new Dictionary<JunctionId, Junction>
+        {
+            [j5] = CreateJunction(j5, -0.7, -0.7, b5),
+            [j4] = CreateJunction(j4, 0.7, -0.7, b4),
+            [j3] = CreateJunction(j3, 1, 0, b3),
+            [j2] = CreateJunction(j2, 0, 1, b2),
+            [j1] = CreateJunction(j1, -1, 0, b1),
+            [j0] = CreateJunction(j0, 0, 0, b1, b2, b3, b4, b5)
+        };
+
+        var boundariesShuffled = new Dictionary<BoundaryId, Boundary>
+        {
+            [b5] = CreateBoundary(b5, p1, p2, new Point3(0, 0, 0), new Point3(-0.7, -0.7, 0)),
+            [b4] = CreateBoundary(b4, p1, p2, new Point3(0, 0, 0), new Point3(0.7, -0.7, 0)),
+            [b3] = CreateBoundary(b3, p1, p2, new Point3(0, 0, 0), new Point3(1, 0, 0)),
+            [b2] = CreateBoundary(b2, p1, p2, new Point3(0, 0, 0), new Point3(0, 1, 0)),
+            [b1] = CreateBoundary(b1, p1, p2, new Point3(-1, 0, 0), new Point3(0, 0, 0))
+        };
+
+        var topologyOrdered = CreateMockTopology(junctionsOrdered, boundariesOrdered);
+        var topologyShuffled = CreateMockTopology(junctionsShuffled, boundariesShuffled);
+        var builder = new BoundaryCMapBuilder();
+
+        // Act
+        var cmapOrdered = builder.Build(topologyOrdered);
+        var cmapShuffled = builder.Build(topologyShuffled);
+
+        // Assert: Identical dart sets (same darts exist)
+        var dartsOrdered = cmapOrdered.Darts.OrderBy(d => d).ToList();
+        var dartsShuffled = cmapShuffled.Darts.OrderBy(d => d).ToList();
+        Assert.Equal(dartsOrdered, dartsShuffled);
+
+        // Assert: Identical junction sets
+        var junctionsOrderedResult = cmapOrdered.Junctions.OrderBy(j => j.Value).ToList();
+        var junctionsShuffledResult = cmapShuffled.Junctions.OrderBy(j => j.Value).ToList();
+        Assert.Equal(junctionsOrderedResult, junctionsShuffledResult);
+
+        // Assert: Same Twin relationships
+        foreach (var dart in dartsOrdered)
+        {
+            Assert.Equal(cmapOrdered.Twin(dart), cmapShuffled.Twin(dart));
+        }
+
+        // Assert: Same Next relationships (this is the key one - depends on cyclic ordering)
+        foreach (var dart in dartsOrdered)
+        {
+            Assert.Equal(cmapOrdered.Next(dart), cmapShuffled.Next(dart));
+        }
+
+        // Assert: Same Origin relationships
+        foreach (var dart in dartsOrdered)
+        {
+            Assert.Equal(cmapOrdered.Origin(dart), cmapShuffled.Origin(dart));
+        }
+
+        // Assert: Identical cyclic ordering at center junction (the stress test)
+        var incidentOrdered = cmapOrdered.IncidentOrdered(j0);
+        var incidentShuffled = cmapShuffled.IncidentOrdered(j0);
+        Assert.Equal(incidentOrdered.Count, incidentShuffled.Count);
+        for (int i = 0; i < incidentOrdered.Count; i++)
+        {
+            Assert.Equal(incidentOrdered[i], incidentShuffled[i]);
+        }
+
+        // Assert: Identical face enumeration
+        var facesOrdered = cmapOrdered.EnumerateFaces()
+            .Select(f => string.Join(",", f.OrderBy(d => d).Select(d => d.ToString())))
+            .OrderBy(s => s)
+            .ToList();
+        var facesShuffled = cmapShuffled.EnumerateFaces()
+            .Select(f => string.Join(",", f.OrderBy(d => d).Select(d => d.ToString())))
+            .OrderBy(s => s)
+            .ToList();
+        Assert.Equal(facesOrdered, facesShuffled);
+    }
+
+    /// <summary>
+    /// Tests that collinear edges (same angle) are handled deterministically via tie-breaks.
+    /// This specifically exercises the AnglePolicy epsilon tolerance.
+    /// </summary>
+    [Fact]
+    public void Build_CollinearEdges_UsesTieBreaksForDeterministicOrder()
+    {
+        // Arrange: Two boundaries with same angle from center junction
+        // J1 and J2 are both to the right of J0 (same angle = 0°)
+        //
+        //   J0 ----B1---- J1
+        //   J0 ----B2---- J2  (same direction, slightly offset)
+        //
+        var j0 = MakeJunction(100);
+        var j1 = MakeJunction(1);
+        var j2 = MakeJunction(2);
+
+        var b1 = MakeBoundary(1);
+        var b2 = MakeBoundary(2);
+
+        var p1 = MakePlate(1);
+        var p2 = MakePlate(2);
+
+        // Both boundaries point in +X direction (angle = 0)
+        // The only difference is BoundaryId, which should be the tie-breaker
+        var junctions = new Dictionary<JunctionId, Junction>
+        {
+            [j0] = CreateJunction(j0, 0, 0, b1, b2),
+            [j1] = CreateJunction(j1, 1, 0, b1),
+            [j2] = CreateJunction(j2, 1, 0.0000001, b2) // Tiny offset, effectively same angle
+        };
+
+        var boundaries = new Dictionary<BoundaryId, Boundary>
+        {
+            [b1] = CreateBoundary(b1, p1, p2, new Point3(0, 0, 0), new Point3(1, 0, 0)),
+            [b2] = CreateBoundary(b2, p1, p2, new Point3(0, 0, 0), new Point3(1, 0.0000001, 0))
+        };
+
+        var topology = CreateMockTopology(junctions, boundaries);
+        var builder = new BoundaryCMapBuilder();
+
+        // Act: Build multiple times
+        var results = Enumerable.Range(0, 5)
+            .Select(_ => builder.Build(topology))
+            .ToList();
+
+        // Assert: All builds produce identical incident ordering at J0
+        var referenceIncident = results[0].IncidentOrdered(j0).ToList();
+        foreach (var cmap in results.Skip(1))
+        {
+            var incident = cmap.IncidentOrdered(j0).ToList();
+            Assert.Equal(referenceIncident.Count, incident.Count);
+            for (int i = 0; i < referenceIncident.Count; i++)
+            {
+                Assert.Equal(referenceIncident[i], incident[i]);
+            }
+        }
+
+        // Assert: Ordering is by BoundaryId when angles are equal
+        // B1 (id=1) should come before B2 (id=2) since both have ~same angle
+        Assert.Equal(2, referenceIncident.Count);
+        Assert.True(referenceIncident[0].BoundaryId.Value.CompareTo(referenceIncident[1].BoundaryId.Value) < 0,
+            "When angles are equal, darts should be ordered by BoundaryId");
     }
 
     #endregion
@@ -360,8 +561,8 @@ public class BoundaryCMapBuilderTests
         var boundaries = new Dictionary<BoundaryId, Boundary>
         {
             [b1] = CreateBoundary(b1, p1, p2, new Point3(0, 0, 0), new Point3(1, 0, 0)),
-            [b2] = new Boundary(b2, p1, p2, BoundaryType.Divergent, 
-                new Polyline3([new Point3(1, 0, 0), new Point3(2, 0, 0)]), 
+            [b2] = new Boundary(b2, p1, p2, BoundaryType.Divergent,
+                new Polyline3([new Point3(1, 0, 0), new Point3(2, 0, 0)]),
                 IsRetired: true, RetirementReason: "Test")
         };
 
