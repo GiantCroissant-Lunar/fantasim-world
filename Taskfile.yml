@@ -10,6 +10,18 @@ tasks:
     cmds:
       - task --list
 
+  combine-cs:
+    desc: "Combine all C# source files under project/ into scripts/combined_all_cs.cs"
+    cmds:
+      - python scripts/combine_cs.py
+    silent: false
+
+  combine-cs-no-tests:
+    desc: "Combine C# source files excluding tests/"
+    cmds:
+      - python scripts/combine_cs.py --exclude-tests
+    silent: false
+
   # =============================================================================
   # Smoke Host Verification
   # =============================================================================
