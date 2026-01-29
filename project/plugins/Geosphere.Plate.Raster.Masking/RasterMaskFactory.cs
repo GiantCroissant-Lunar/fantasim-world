@@ -7,14 +7,18 @@ namespace FantaSim.Geosphere.Plate.Raster.Masking;
 
 /// <summary>
 /// Factory for creating masked raster sequences.
-/// RFC-V2-0028 compliant.
+/// RFC-V2-0028 §8.2.2 compliant - composition layer that bridges raster + plates domains.
 /// </summary>
-public sealed class RasterMaskFactory : IRasterMaskFactory
+/// <remarks>
+/// Implements both domain-agnostic <see cref="IRasterMaskFactory"/> and
+/// plate-specific <see cref="IPlateRasterMaskFactory"/>.
+/// </remarks>
+public sealed class RasterMaskFactory : IPlateRasterMaskFactory
 {
     private const double DefaultNoDataValue = double.NaN;
 
     /// <inheritdoc />
-    public IMaskedRasterSequence CreatePlateMaskedSequence(
+    public IPlateMaskedRasterSequence CreatePlateMaskedSequence(
         IRasterSequence source,
         PlatePolygonSet polygonSet,
         IReadOnlyCollection<PlateId>? specificPlates = null)
@@ -23,7 +27,7 @@ public sealed class RasterMaskFactory : IRasterMaskFactory
             throw new ArgumentNullException(nameof(source));
 
         var mask = new PlatePolygonRasterMask(polygonSet, specificPlates);
-        return new MaskedRasterSequence(source, mask, DefaultNoDataValue, polygonSet);
+        return new PlateMaskedRasterSequence(source, mask, DefaultNoDataValue, polygonSet, specificPlates);
     }
 
     /// <inheritdoc />
@@ -52,9 +56,7 @@ public sealed class RasterMaskFactory : IRasterMaskFactory
         return new MaskedRasterSequence(source, mask, DefaultNoDataValue);
     }
 
-    /// <summary>
-    /// Creates a masked sequence using a custom mask.
-    /// </summary>
+    /// <inheritdoc />
     public IMaskedRasterSequence CreateCustomMaskedSequence(
         IRasterSequence source,
         IRasterMask mask,

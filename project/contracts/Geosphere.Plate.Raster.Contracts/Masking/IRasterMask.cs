@@ -1,14 +1,27 @@
-﻿using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
-using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
-using MessagePack;
-using UnifyGeometry;
+﻿using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+
+/// <summary>
+/// Current schema version for mask specifications.
+/// Increment when the serialization format changes in a breaking way.
+/// </summary>
+public static class MaskSpecVersions
+{
+    /// <summary>
+    /// Version 1: Initial schema with Bounds and IncludeInterior.
+    /// </summary>
+    public const int BoundsMaskSpecV1 = 1;
+}
 
 /// <summary>
 /// A mask that can be applied to a raster frame.
 /// RFC-V2-0028 §3.3 - Cookie-cutting / masking.
 /// </summary>
+/// <remarks>
+/// This interface is domain-agnostic. Plate-specific masking implementations
+/// live in the composition layer (Geosphere.Plate.Raster.Masking plugin).
+/// </remarks>
 public interface IRasterMask
 {
     /// <summary>
@@ -26,44 +39,34 @@ public interface IRasterMask
 }
 
 /// <summary>
-/// Mask specification for plate polygon-based masking.
-/// </summary>
-[MessagePackObject]
-public readonly record struct PlatePolygonMaskSpec(
-    [property: Key(0)] PlateId PlateId,
-    [property: Key(1)] bool IncludeInterior,
-    [property: Key(2)] double BufferDegrees
-)
-{
-    /// <summary>
-    /// Mask that includes only the interior of the polygon.
-    /// </summary>
-    public static PlatePolygonMaskSpec Interior(PlateId plateId, double bufferDegrees = 0)
-        => new(plateId, true, bufferDegrees);
-
-    /// <summary>
-    /// Mask that excludes the interior (keeps exterior).
-    /// </summary>
-    public static PlatePolygonMaskSpec Exterior(PlateId plateId, double bufferDegrees = 0)
-        => new(plateId, false, bufferDegrees);
-}
-
-/// <summary>
 /// Mask specification using a geographic bounds rectangle.
+/// Domain-agnostic - suitable for any coordinate system.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This is a pure data record with no behavior - safe for serialization and caching.
+/// </para>
+/// <para>
+/// SchemaVersion is included to support cache invalidation when the spec format evolves.
+/// When computing cache keys, include SchemaVersion in the params hash.
+/// </para>
+/// </remarks>
 [MessagePackObject]
 public readonly record struct BoundsMaskSpec(
-    [property: Key(0)] RasterBounds Bounds,
-    [property: Key(1)] bool IncludeInterior
+    [property: Key(0)] int SchemaVersion,
+    [property: Key(1)] RasterBounds Bounds,
+    [property: Key(2)] bool IncludeInterior
 )
 {
     /// <summary>
     /// Mask that includes points inside the bounds.
     /// </summary>
-    public static BoundsMaskSpec Include(RasterBounds bounds) => new(bounds, true);
+    public static BoundsMaskSpec Include(RasterBounds bounds)
+        => new(MaskSpecVersions.BoundsMaskSpecV1, bounds, true);
 
     /// <summary>
     /// Mask that excludes points inside the bounds.
     /// </summary>
-    public static BoundsMaskSpec Exclude(RasterBounds bounds) => new(bounds, false);
+    public static BoundsMaskSpec Exclude(RasterBounds bounds)
+        => new(MaskSpecVersions.BoundsMaskSpecV1, bounds, false);
 }

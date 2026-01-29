@@ -10,8 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
-    <ProjectReference Include="..\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
+    <!-- NOTE: Raster contracts are domain-agnostic per RFC-V2-0028 §8.2.2.
+         Plate-specific dependencies (Polygonization, Topology) belong in the
+         composition layer (Geosphere.Plate.Raster.Masking plugin). -->
     <ProjectReference Include="..\Geosphere.Plate.Datasets.Contracts\Geosphere.Plate.Datasets.Contracts.csproj" />
   </ItemGroup>
 
