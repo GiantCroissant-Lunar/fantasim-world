@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace FantaSim.Geosphere.Plate.Topology.Materializer;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
+/// <summary>
+/// Deterministic Guid ordering helper using RFC 4122 byte order.
+/// </summary>
 public static class GuidOrdering
 {
     public static IComparer<Guid> Rfc4122Comparer { get; } = Comparer<Guid>.Create(CompareRfc4122);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using UnifyTopology.Graph;
 using UnifyTopology.Graph.InMemory;
 

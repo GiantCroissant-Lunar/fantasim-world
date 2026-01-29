@@ -79,8 +79,8 @@ public sealed class FiniteRotationPlateVelocitySolver : IPlateVelocitySolver
             return AngularVelocity3d.Zero;
 
         // Compute delta rotation: ΔR = R(t+dt) × R(t)⁻¹
-        var r0Inv = Inverse(r0);
-        var deltaR = Multiply(r1, r0Inv);
+        var r0Inv = r0.Inverse();
+        var deltaR = Quaterniond.Multiply(r1, r0Inv);
 
         // Extract axis-angle from delta rotation
         var (axis, angle) = ToAxisAngle(deltaR);
@@ -123,25 +123,4 @@ public sealed class FiniteRotationPlateVelocitySolver : IPlateVelocitySolver
         return (axis, angle);
     }
 
-    private static Quaterniond Inverse(Quaterniond q)
-    {
-        var norm = (q.X * q.X) + (q.Y * q.Y) + (q.Z * q.Z) + (q.W * q.W);
-        if (norm == 0d)
-            return Quaterniond.Identity;
-
-        var c = Conjugate(q);
-        return new Quaterniond(c.X / norm, c.Y / norm, c.Z / norm, c.W / norm);
-    }
-
-    private static Quaterniond Conjugate(Quaterniond q)
-        => new(-q.X, -q.Y, -q.Z, q.W);
-
-    private static Quaterniond Multiply(Quaterniond a, Quaterniond b)
-    {
-        return new Quaterniond(
-            (a.W * b.X) + (a.X * b.W) + (a.Y * b.Z) - (a.Z * b.Y),
-            (a.W * b.Y) - (a.X * b.Z) + (a.Y * b.W) + (a.Z * b.X),
-            (a.W * b.Z) + (a.X * b.Y) - (a.Y * b.X) + (a.Z * b.W),
-            (a.W * b.W) - (a.X * b.X) - (a.Y * b.Y) - (a.Z * b.Z));
-    }
 }

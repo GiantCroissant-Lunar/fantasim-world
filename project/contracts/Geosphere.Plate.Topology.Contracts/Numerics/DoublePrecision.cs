@@ -46,6 +46,28 @@ public readonly record struct Quaterniond(
 {
     public static Quaterniond Identity => new(0, 0, 0, 1);
 
+    public Quaterniond Conjugate()
+        => new(-X, -Y, -Z, W);
+
+    public Quaterniond Inverse()
+    {
+        var norm = (X * X) + (Y * Y) + (Z * Z) + (W * W);
+        if (norm == 0d)
+            return Identity;
+
+        var c = Conjugate();
+        return new Quaterniond(c.X / norm, c.Y / norm, c.Z / norm, c.W / norm);
+    }
+
+    public static Quaterniond Multiply(Quaterniond a, Quaterniond b)
+    {
+        return new Quaterniond(
+            (a.W * b.X) + (a.X * b.W) + (a.Y * b.Z) - (a.Z * b.Y),
+            (a.W * b.Y) - (a.X * b.Z) + (a.Y * b.W) + (a.Z * b.X),
+            (a.W * b.Z) + (a.X * b.Y) - (a.Y * b.X) + (a.Z * b.W),
+            (a.W * b.W) - (a.X * b.X) - (a.Y * b.Y) - (a.Z * b.Z));
+    }
+
     public static Quaterniond FromAxisAngle(Vector3d axis, double angle)
     {
         double halfAngle = angle * 0.5;

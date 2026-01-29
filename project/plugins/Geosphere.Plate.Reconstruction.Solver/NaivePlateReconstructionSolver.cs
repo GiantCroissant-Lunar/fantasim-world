@@ -3,6 +3,7 @@ using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Output;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using UnifyGeometry;
 
@@ -77,7 +78,7 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver,
 
         var reconstructed = features
             .Where(f => f.PlateIdProvenance.HasValue)
-            .OrderBy(f => f.FeatureId.Value, Rfc4122GuidComparer.Instance)
+            .OrderBy(f => f.FeatureId.Value, GuidOrdering.Rfc4122Comparer)
             .Select(f =>
             {
                 var plateId = f.PlateIdProvenance!.Value;
@@ -143,75 +144,8 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver,
     private static Vector3d RotateVector(Vector3d vector, Quaterniond rotation)
     {
         var v = new Quaterniond(vector.X, vector.Y, vector.Z, 0d);
-        var inv = Inverse(rotation);
-        var rotated = Multiply(Multiply(rotation, v), inv);
+        var inv = rotation.Inverse();
+        var rotated = Quaterniond.Multiply(Quaterniond.Multiply(rotation, v), inv);
         return new Vector3d(rotated.X, rotated.Y, rotated.Z);
-    }
-
-    private static Quaterniond Inverse(Quaterniond q)
-    {
-        var norm = (q.X * q.X) + (q.Y * q.Y) + (q.Z * q.Z) + (q.W * q.W);
-        if (norm == 0d)
-            return Quaterniond.Identity;
-
-        var c = Conjugate(q);
-        return new Quaterniond(c.X / norm, c.Y / norm, c.Z / norm, c.W / norm);
-    }
-
-    private static Quaterniond Conjugate(Quaterniond q)
-        => new(-q.X, -q.Y, -q.Z, q.W);
-
-    private static Quaterniond Multiply(Quaterniond a, Quaterniond b)
-    {
-        return new Quaterniond(
-            (a.W * b.X) + (a.X * b.W) + (a.Y * b.Z) - (a.Z * b.Y),
-            (a.W * b.Y) - (a.X * b.Z) + (a.Y * b.W) + (a.Z * b.X),
-            (a.W * b.Z) + (a.X * b.Y) - (a.Y * b.X) + (a.Z * b.W),
-            (a.W * b.W) - (a.X * b.X) - (a.Y * b.Y) - (a.Z * b.Z));
-    }
-
-    private sealed class Rfc4122GuidComparer : IComparer<Guid>
-    {
-        public static Rfc4122GuidComparer Instance { get; } = new();
-
-        public int Compare(Guid x, Guid y)
-        {
-            Span<byte> aLe = stackalloc byte[16];
-            Span<byte> bLe = stackalloc byte[16];
-
-            if (!x.TryWriteBytes(aLe))
-                throw new InvalidOperationException("Failed to write Guid bytes.");
-            if (!y.TryWriteBytes(bLe))
-                throw new InvalidOperationException("Failed to write Guid bytes.");
-
-            for (var i = 0; i < 16; i++)
-            {
-                var ab = GetRfc4122ByteAt(aLe, i);
-                var bb = GetRfc4122ByteAt(bLe, i);
-
-                if (ab < bb)
-                    return -1;
-                if (ab > bb)
-                    return 1;
-            }
-
-            return 0;
-        }
-
-        private static byte GetRfc4122ByteAt(ReadOnlySpan<byte> littleEndianGuidBytes, int index)
-        {
-            return index switch
-            {
-                0 => littleEndianGuidBytes[3],
-                1 => littleEndianGuidBytes[2],
-                2 => littleEndianGuidBytes[1],
-                3 => littleEndianGuidBytes[0],
-                4 => littleEndianGuidBytes[5],
-                5 => littleEndianGuidBytes[4],
-                6 => littleEndianGuidBytes[7],
-                7 => littleEndianGuidBytes[6],
-                _ => littleEndianGuidBytes[index]
-            };
-        }
     }
 }

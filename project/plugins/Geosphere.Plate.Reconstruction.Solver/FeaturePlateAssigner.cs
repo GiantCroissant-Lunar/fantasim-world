@@ -1,5 +1,6 @@
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using UnifyGeometry;
 using UnifyGeometry.Operations;
 
@@ -15,7 +16,7 @@ public sealed class FeaturePlateAssigner : IFeaturePlateAssigner
         ArgumentNullException.ThrowIfNull(partition);
 
         var sortedPartition = partition
-            .OrderBy(p => p.PlateId.Value, Rfc4122GuidComparer.Instance)
+            .OrderBy(p => p.PlateId.Value, GuidOrdering.Rfc4122Comparer)
             .ToArray();
 
         var output = new List<ReconstructableFeature>(features.Count);
@@ -69,46 +70,4 @@ public sealed class FeaturePlateAssigner : IFeaturePlateAssigner
         }
     }
 
-    private sealed class Rfc4122GuidComparer : IComparer<Guid>
-    {
-        public static Rfc4122GuidComparer Instance { get; } = new();
-
-        public int Compare(Guid x, Guid y)
-        {
-            Span<byte> aLe = stackalloc byte[16];
-            Span<byte> bLe = stackalloc byte[16];
-
-            x.TryWriteBytes(aLe);
-            y.TryWriteBytes(bLe);
-
-            for (var i = 0; i < 16; i++)
-            {
-                var ab = GetRfc4122ByteAt(aLe, i);
-                var bb = GetRfc4122ByteAt(bLe, i);
-
-                if (ab < bb)
-                    return -1;
-                if (ab > bb)
-                    return 1;
-            }
-
-            return 0;
-        }
-
-        private static byte GetRfc4122ByteAt(ReadOnlySpan<byte> littleEndianGuidBytes, int index)
-        {
-            return index switch
-            {
-                0 => littleEndianGuidBytes[3],
-                1 => littleEndianGuidBytes[2],
-                2 => littleEndianGuidBytes[1],
-                3 => littleEndianGuidBytes[0],
-                4 => littleEndianGuidBytes[5],
-                5 => littleEndianGuidBytes[4],
-                6 => littleEndianGuidBytes[7],
-                7 => littleEndianGuidBytes[6],
-                _ => littleEndianGuidBytes[index]
-            };
-        }
-    }
 }
