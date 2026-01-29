@@ -5,6 +5,7 @@ using UnifyGeometry;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Materializer;
 using FantaSim.Geosphere.Plate.Topology.Serializers;
+using FantaSim.Geosphere.Plate.Testing.Storage;
 
 namespace FantaSim.Geosphere.Plate.Topology.Tests.Integration;
 

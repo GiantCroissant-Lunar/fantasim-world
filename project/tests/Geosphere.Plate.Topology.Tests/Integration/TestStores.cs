@@ -1,4 +1,5 @@
 using FantaSim.Geosphere.Plate.Topology.Materializer;
+using FantaSim.Geosphere.Plate.Testing.Storage;
 
 namespace FantaSim.Geosphere.Plate.Topology.Tests.Integration;
 

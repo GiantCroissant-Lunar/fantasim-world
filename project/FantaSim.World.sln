@@ -121,6 +121,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Polygonizat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Contracts", "contracts\Geosphere.Plate.Raster.Contracts\Geosphere.Plate.Raster.Contracts.csproj", "{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Testing.Storage", "tests\Geosphere.Plate.Testing.Storage\Geosphere.Plate.Testing.Storage.csproj", "{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -779,6 +781,18 @@ Global
 		{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}.Release|x64.Build.0 = Release|Any CPU
 		{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}.Release|x86.ActiveCfg = Release|Any CPU
 		{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}.Release|x86.Build.0 = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|x64.Build.0 = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Debug|x86.Build.0 = Debug|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|x64.ActiveCfg = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|x64.Build.0 = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|x86.ActiveCfg = Release|Any CPU
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -811,5 +825,6 @@ Global
 		{639FBF99-6844-4B10-9FA3-33EED478C227} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{57FC851D-E38A-4172-90AE-4CBFD2712BAA} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B} = {A73F2606-6D4C-3EEE-1759-0E59DCFEF523}
+		{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

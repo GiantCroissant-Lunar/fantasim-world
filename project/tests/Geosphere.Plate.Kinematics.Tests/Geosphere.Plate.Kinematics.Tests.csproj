@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Kinematics.Materializer\Geosphere.Plate.Kinematics.Materializer.csproj" />
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Kinematics.Serializers\Geosphere.Plate.Kinematics.Serializers.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Testing.Storage\Geosphere.Plate.Testing.Storage.csproj" />
   </ItemGroup>
 
 </Project>

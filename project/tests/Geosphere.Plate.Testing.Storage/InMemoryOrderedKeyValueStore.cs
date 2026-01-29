@@ -2,8 +2,12 @@ using System;
 using System.Collections.Generic;
 using UnifyStorage.Abstractions;
 
-namespace FantaSim.Geosphere.Plate.Topology.Materializer;
+namespace FantaSim.Geosphere.Plate.Testing.Storage;
 
+/// <summary>
+/// Simple in-memory ordered KV store for tests.
+/// Implements <see cref="IKeyValueStore"/> for UnifyStorage-powered stores.
+/// </summary>
 public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
 {
     private sealed class ByteSequenceComparer : IComparer<byte[]>
@@ -30,11 +34,7 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
                     return 1;
             }
 
-            if (x.Length < y.Length)
-                return -1;
-            if (x.Length > y.Length)
-                return 1;
-            return 0;
+            return x.Length.CompareTo(y.Length);
         }
     }
 
@@ -52,13 +52,9 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
         foreach (var op in b.Ops)
         {
             if (op.IsDelete)
-            {
                 Delete(op.Key);
-            }
             else
-            {
                 Put(op.Key, op.Value!);
-            }
         }
     }
 
@@ -66,26 +62,21 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
     {
         if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-        var keyCopy = key.ToArray();
-        var valueCopy = value.ToArray();
-
-        _data[keyCopy] = valueCopy;
+        _data[key.ToArray()] = value.ToArray();
     }
 
     public void Delete(ReadOnlySpan<byte> key)
     {
         if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-        var keyArray = key.ToArray();
-        _data.Remove(keyArray);
+        _data.Remove(key.ToArray());
     }
 
     public bool TryGet(ReadOnlySpan<byte> key, Span<byte> buffer, out int written)
     {
         if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-        var keyArray = key.ToArray();
-        if (_data.TryGetValue(keyArray, out var found))
+        if (_data.TryGetValue(key.ToArray(), out var found))
         {
             if (found.Length > buffer.Length)
             {
@@ -109,6 +100,7 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
             value = v;
             return true;
         }
+
         value = null;
         return false;
     }
@@ -127,29 +119,19 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
         {
             if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-            var keyCopy = key.ToArray();
-            var valueCopy = value.ToArray();
-
-            Ops.Add((keyCopy, valueCopy, false));
+            Ops.Add((key.ToArray(), value.ToArray(), false));
         }
 
         public void Delete(ReadOnlySpan<byte> key)
         {
             if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
 
-            var keyCopy = key.ToArray();
-            Ops.Add((keyCopy, null, true));
+            Ops.Add((key.ToArray(), null, true));
         }
 
-        public void Clear()
-        {
-            Ops.Clear();
-        }
+        public void Clear() => Ops.Clear();
 
-        public void Dispose()
-        {
-            Ops.Clear();
-        }
+        public void Dispose() => Ops.Clear();
     }
 
     private sealed class IteratorImpl : IKeyValueIterator
@@ -164,7 +146,7 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
             _comparer = data.Comparer;
             _keys = new List<byte[]>(data.Keys);
             _values = new List<byte[]>(data.Values);
-            _index = _keys.Count; // Default to invalid
+            _index = _keys.Count;
         }
 
         public bool Valid => _index >= 0 && _index < _keys.Count;
@@ -176,9 +158,9 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
         public void Seek(ReadOnlySpan<byte> key)
         {
             if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+
             var target = key.ToArray();
 
-            // Binary search for first key >= target
             var lo = 0;
             var hi = _keys.Count;
             while (lo < hi)
@@ -197,10 +179,9 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
         public void SeekForPrev(ReadOnlySpan<byte> key)
         {
             if (key.IsEmpty) throw new ArgumentException("Key cannot be empty.", nameof(key));
+
             var target = key.ToArray();
 
-            // Binary search for last key <= target
-            // First find the first key > target, then back up one
             var lo = 0;
             var hi = _keys.Count;
             while (lo < hi)
@@ -213,7 +194,6 @@ public sealed class InMemoryOrderedKeyValueStore : IKeyValueStore
                     hi = mid;
             }
 
-            // lo is now the first key > target, so lo-1 is the last key <= target
             _index = lo - 1;
         }
 
