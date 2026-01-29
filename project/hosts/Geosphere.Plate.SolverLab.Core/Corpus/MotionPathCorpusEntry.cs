@@ -34,11 +34,15 @@ public sealed class MotionPathCorpusEntry
 /// <summary>
 /// Input parameters for motion path corpus cases.
 /// </summary>
+/// <remarks>
+/// NOTE: RotationAxis uses Point3 as a stand-in for Vector3d until UnifyGeometry adds Vector3d type.
+/// The Point3 here represents a direction vector (normalized axis of rotation).
+/// </remarks>
 [MessagePackObject]
 public readonly record struct MotionPathInput(
     [property: Key(0)] PlateId PlateId,
     [property: Key(1)] Point3 StartPoint,
-    [property: Key(2)] Vector3d RotationAxis,
+    [property: Key(2)] Point3 RotationAxis,  // TODO: Replace with Vector3d when available
     [property: Key(3)] double AngularRate,
     [property: Key(4)] int StepCount,
     [property: Key(5)] int StepTicks,
