@@ -12,6 +12,9 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
 
+    <!-- GeoTiff Support -->
+    <PackageVersion Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
+
     <!-- Code Analysis -->
     <PackageVersion Include="Meziantou.Analyzer" Version="1.0.734" />
   </ItemGroup>
