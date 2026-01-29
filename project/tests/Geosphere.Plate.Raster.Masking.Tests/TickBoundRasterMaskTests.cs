@@ -295,7 +295,8 @@ public sealed class TickBoundRasterMaskTests
             Width = width;
             Height = height;
             _fillValue = fillValue;
-            Bounds = new RasterBounds(0, 0, 1, 1); // Unit square
+            // RasterBounds: MinLon, MaxLon, MinLat, MaxLat
+            Bounds = new RasterBounds(0, 1, 0, 1); // Unit square: lon 0-1, lat 0-1
 
             // Fill with uniform value
             var values = new double[width * height];
