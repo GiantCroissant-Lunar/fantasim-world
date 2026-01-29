@@ -36,6 +36,9 @@ task sync-skills
 | `@persistence` | RocksDB + MessagePack patterns | When working with storage |
 | `@topology-first` | Plates domain truth boundaries | When working on plates code |
 | `@build` | Nuke build commands (auto-invoked) | When building, testing, or compiling |
+| `@changelog-generator` | Create user-friendly changelogs from git commits | When preparing release notes |
+| `@file-organizer` | Organize files and folders intelligently | When cleaning up directories |
+| `@skill-creator` | Guide for creating new skills | When building new agent skills |
 
 ## Skill Invocation
 
@@ -156,8 +159,19 @@ The skill will automatically be available to all supported tools via the junctio
 │   │   └── SKILL.md
 │   ├── topology-first/
 │   │   └── SKILL.md
-│   └── build/                   # Nuke build (auto-invoked)
-│       └── SKILL.md
+│   ├── build/                   # Nuke build (auto-invoked)
+│   │   └── SKILL.md
+│   ├── changelog-generator/     # Git changelog automation
+│   │   └── SKILL.md
+│   ├── file-organizer/          # File/folder organization
+│   │   └── SKILL.md
+│   └── skill-creator/           # Skill authoring guide
+│       ├── SKILL.md
+│       ├── LICENSE.txt
+│       └── scripts/
+│           ├── init_skill.py
+│           ├── package_skill.py
+│           └── quick_validate.py
 ├── memory/                      # Agent memory storage
 │   └── reflections/             # Feature learnings
 │       └── index.md             # Auto-maintained index
