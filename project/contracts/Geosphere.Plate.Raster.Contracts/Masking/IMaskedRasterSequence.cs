@@ -1,3 +1,4 @@
+﻿using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
@@ -12,12 +13,12 @@ public interface IMaskedRasterSequence : IRasterSequence
     /// The underlying (unmasked) raster sequence.
     /// </summary>
     IRasterSequence SourceSequence { get; }
-    
+
     /// <summary>
     /// The mask applied to each frame.
     /// </summary>
     IRasterMask Mask { get; }
-    
+
     /// <summary>
     /// The plate polygon set used for masking (if plate-based masking).
     /// Null for other mask types.
@@ -38,7 +39,7 @@ public interface IRasterMaskFactory
         IRasterSequence source,
         FantaSim.Geosphere.Plate.Polygonization.Contracts.Products.PlatePolygonSet polygonSet,
         IReadOnlyCollection<PlateId>? specificPlates = null);
-    
+
     /// <summary>
     /// Creates a masked sequence using geographic bounds.
     /// </summary>

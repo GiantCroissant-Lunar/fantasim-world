@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Raster.Contracts;
 
@@ -19,21 +19,25 @@ public readonly record struct RasterMetadata(
     /// <summary>
     /// Cell width in degrees.
     /// </summary>
+    [IgnoreMember]
     public double CellWidth => Bounds.Width / Width;
-    
+
     /// <summary>
     /// Cell height in degrees.
     /// </summary>
+    [IgnoreMember]
     public double CellHeight => Bounds.Height / Height;
-    
+
     /// <summary>
     /// Total number of cells.
     /// </summary>
+    [IgnoreMember]
     public int CellCount => Width * Height;
-    
+
     /// <summary>
     /// Size of each cell in bytes.
     /// </summary>
+    [IgnoreMember]
     public int BytesPerCell => DataType switch
     {
         RasterDataType.UInt8 or RasterDataType.Int8 => 1,
@@ -42,9 +46,10 @@ public readonly record struct RasterMetadata(
         RasterDataType.Float64 => 8,
         _ => 4
     };
-    
+
     /// <summary>
     /// Total size of raster data in bytes.
     /// </summary>
+    [IgnoreMember]
     public int DataSizeBytes => CellCount * BytesPerCell;
 }

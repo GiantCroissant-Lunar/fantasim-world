@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Geosphere.Plate.Raster.Contracts;
@@ -19,14 +19,15 @@ public readonly record struct RasterQueryResult(
     /// <summary>
     /// True if a valid result was found.
     /// </summary>
+    [IgnoreMember]
     public bool HasData => FrameData.HasValue;
-    
+
     /// <summary>
     /// Creates a result for an exact frame match (no interpolation).
     /// </summary>
     public static RasterQueryResult Exact(CanonicalTick tick, RasterFrameData data)
         => new(tick, tick, false, null, data);
-    
+
     /// <summary>
     /// Creates a result for an interpolated value between two frames.
     /// </summary>
@@ -36,7 +37,7 @@ public readonly record struct RasterQueryResult(
         double weight,
         RasterFrameData data)
         => new(targetTick, sourceFrameTick, true, weight, data);
-    
+
     /// <summary>
     /// Creates a "not found" result.
     /// </summary>

@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.Raster.Contracts;
@@ -17,26 +17,28 @@ public readonly record struct RasterBounds(
     /// <summary>
     /// Width of the bounds in degrees.
     /// </summary>
+    [IgnoreMember]
     public double Width => MaxLongitude - MinLongitude;
-    
+
     /// <summary>
     /// Height of the bounds in degrees.
     /// </summary>
+    [IgnoreMember]
     public double Height => MaxLatitude - MinLatitude;
-    
+
     /// <summary>
     /// Checks if a point is within these bounds.
     /// </summary>
     public bool Contains(double longitude, double latitude)
         => longitude >= MinLongitude && longitude <= MaxLongitude
         && latitude >= MinLatitude && latitude <= MaxLatitude;
-    
+
     /// <summary>
     /// Checks if a point is within these bounds.
     /// </summary>
     public bool Contains(Point2 point)
         => Contains(point.X, point.Y);
-    
+
     /// <summary>
     /// Global bounds (-180 to 180, -90 to 90).
     /// </summary>

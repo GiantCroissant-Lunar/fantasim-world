@@ -1,4 +1,5 @@
-using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
+﻿using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
 using UnifyGeometry;
 
@@ -17,7 +18,7 @@ public interface IRasterMask
     /// <param name="sourceFrame">The source raster frame to mask.</param>
     /// <param name="noDataValue">Value to use for masked-out pixels.</param>
     IRasterFrame ApplyMask(IRasterFrame sourceFrame, double noDataValue);
-    
+
     /// <summary>
     /// Checks if a point is inside the mask region.
     /// </summary>
@@ -39,7 +40,7 @@ public readonly record struct PlatePolygonMaskSpec(
     /// </summary>
     public static PlatePolygonMaskSpec Interior(PlateId plateId, double bufferDegrees = 0)
         => new(plateId, true, bufferDegrees);
-    
+
     /// <summary>
     /// Mask that excludes the interior (keeps exterior).
     /// </summary>
@@ -60,7 +61,7 @@ public readonly record struct BoundsMaskSpec(
     /// Mask that includes points inside the bounds.
     /// </summary>
     public static BoundsMaskSpec Include(RasterBounds bounds) => new(bounds, true);
-    
+
     /// <summary>
     /// Mask that excludes points inside the bounds.
     /// </summary>
