@@ -18,5 +18,6 @@
     <!-- Dependencies needed by test projects -->
     <PackageVersion Include="MessagePack" Version="3.1.4" />
     <PackageVersion Include="Meziantou.Analyzer" Version="1.0.734" />
+    <PackageVersion Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
   </ItemGroup>
 </Project>
