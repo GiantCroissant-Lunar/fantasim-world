@@ -1,4 +1,4 @@
-using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
+﻿using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Solvers;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;

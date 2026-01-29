@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Raster.Contracts;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
