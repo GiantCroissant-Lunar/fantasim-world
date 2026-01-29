@@ -58,6 +58,7 @@ SKILLS_TARGETS = [
     Path(".gemini/skills"),
     Path(".kilocode/skills"),
     Path(".opencode/skills"),
+    Path(".roo/skills"),
     Path(".windsurf/skills"),
 ]
 
@@ -68,6 +69,7 @@ RULES_TARGETS = {
     "cline": Path(".clinerules"),
     "cursor": Path(".cursor/rules"),
     "kilocode": Path(".kilocode/rules"),
+    "roo": Path(".roo/rules"),
     "windsurf": Path(".windsurf/rules"),
 }
 # These get concatenated pointer files (with @imports where supported)
@@ -86,6 +88,7 @@ COMMANDS_TARGETS = {
     "cline": Path(".clinerules/workflows"),
     "cursor": Path(".cursor/commands"),
     "gemini": Path(".gemini/commands"),
+    "roo": Path(".roo/commands"),
     "windsurf": Path(".windsurf/workflows"),
 }
 
@@ -668,6 +671,21 @@ def sync_commands() -> int:
         for stem, filename, description in commands_data:
             stub_content = create_workflow_stub(stem, description, depth)
             target_path = windsurf_target / filename
+            target_path.write_text(stub_content, encoding="utf-8")
+            print(f"  [OK] {filename} -> {target_path}")
+            cmd_count += 1
+
+    # Sync to Roo commands (MD format in .roo/commands/)
+    if "roo" in COMMANDS_TARGETS:
+        roo_target = COMMANDS_TARGETS["roo"]
+        ensure_dir(roo_target)
+        clean_dir(roo_target)
+        print(f"  -> {roo_target}")
+
+        depth = len(roo_target.parts)
+        for stem, filename, description in commands_data:
+            stub_content = create_workflow_stub(stem, description, depth)
+            target_path = roo_target / filename
             target_path.write_text(stub_content, encoding="utf-8")
             print(f"  [OK] {filename} -> {target_path}")
             cmd_count += 1

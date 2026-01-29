@@ -31,6 +31,7 @@ ADAPTERS_DIR = Path(".agent/adapters")
 # Note: Cline uses .clinerules/ (root) which is handled by sync_skills.py
 DIRECTORY_TARGETS = {
     "kilocode": Path(".kilocode/rules"),
+    "roo": Path(".roo/rules"),
     "windsurf": Path(".windsurf/rules"),
     "cursor": Path(".cursor/rules"),
 }
@@ -38,6 +39,7 @@ DIRECTORY_TARGETS = {
 # File extension per tool (most use .md, cursor uses .mdc)
 TOOL_EXTENSIONS = {
     "kilocode": ".md",
+    "roo": ".md",
     "windsurf": ".md",
     "cursor": ".mdc",
 }

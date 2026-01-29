@@ -34,6 +34,7 @@ Run `task agent:sync` to generate tool-specific files:
 | OpenCode | `.opencode/skills/` | - | `.opencode/commands/` |
 | Windsurf | `.windsurf/skills/` | `.windsurf/rules/` | `.windsurf/workflows/` |
 | Kilocode | `.kilocode/skills/` | `.kilocode/rules/` | `.kilocode/workflows/` |
+| Roo | `.roo/skills/` | `.roo/rules/` | `.roo/commands/` |
 
 **Note:** Each tool has an adapter config in `.agent/adapters/<tool>/config.yaml`.
 

@@ -1,0 +1,46 @@
+# Roo Code Adapter Configuration
+# https://docs.roocode.com
+
+tool: roo
+display_name: Roo Code
+
+# Rules configuration
+# Roo Code uses .roo/rules/ directory
+rules:
+  strategy: directory
+  target: .roo/rules
+
+# Skills configuration
+# Roo Code uses .roo/skills/{skill-name}/SKILL.md format
+# Note: Roo requires SKILL.md filename (not just any .md)
+skills:
+  strategy: copy_full
+  target: .roo/skills
+  source: .agent/skills
+  # Roo requires specific SKILL.md format with frontmatter:
+  # ---
+  # name: skill-name
+  # description: ...
+  # ---
+  skill_filename: SKILL.md
+
+# Commands configuration (slash commands)
+# Roo Code uses .roo/commands/ with markdown files
+# Frontmatter: description, argument-hint, mode (optional)
+commands:
+  enabled: true
+  target: .roo/commands
+  format: md
+
+# Workflows configuration
+# Roo doesn't have a separate workflows concept - uses commands
+workflows:
+  enabled: false
+
+# Hooks configuration
+# Roo doesn't have file-based hooks
+hooks:
+  enabled: false
+
+# No cleanup needed
+cleanup: []

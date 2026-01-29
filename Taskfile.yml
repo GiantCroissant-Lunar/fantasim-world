@@ -49,6 +49,7 @@ tasks:
       - task: agent:sync:codex
       - task: agent:sync:cursor
       - task: agent:sync:gemini
+      - task: agent:sync:roo
 
   agent:sync:opencode:
     desc: Sync OpenCode (.opencode + opencode.json) from .agent
@@ -103,6 +104,13 @@ tasks:
       - python scripts/sync_skills.py --skills --tools=gemini
       - python scripts/sync_skills.py --commands --tools=gemini
 
+  agent:sync:roo:
+    desc: Sync Roo Code (.roo) from .agent
+    cmds:
+      - python scripts/sync_skills.py --rules --tools=roo
+      - python scripts/sync_skills.py --skills --tools=roo
+      - python scripts/sync_skills.py --commands --tools=roo
+
   agent:sync-skills:
     desc: Sync skill stubs from .agent/skills to tool-specific directories
     aliases: ["agent:skills"]
@@ -115,6 +123,7 @@ tasks:
       - .cline/skills/**/SKILL.md
       - .kilocode/skills/**/SKILL.md
       - .opencode/skills/**/SKILL.md
+      - .roo/skills/**/SKILL.md
       - .windsurf/skills/**/SKILL.md
 
   agent:sync-commands:
@@ -148,6 +157,7 @@ tasks:
       - .agent/adapters/*/rules/*.md
     generates:
       - .kilocode/rules/*.md
+      - .roo/rules/*.md
       - .windsurf/rules/*.md
       - .cline/rules/*.md
       - .cursor/rules/*.mdc

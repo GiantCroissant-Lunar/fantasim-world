@@ -26,8 +26,11 @@ adapters/
 │   └── permissions.yaml
 ├── windsurf/
 │   └── config.yaml
-└── codex/
-    └── config.yaml
+├── codex/
+│   └── config.yaml
+└── roo/
+    ├── config.yaml
+    └── README.md
 ```
 
 ## Config Schema
@@ -128,3 +131,10 @@ python scripts/sync_skills.py --cleanup  # Run cleanups only
 
 - Supports `@` imports like Claude
 - Commands in TOML format
+
+### Roo
+
+- Uses `.roo/` directory structure
+- Skills require `SKILL.md` filename with name/description frontmatter
+- Supports mode-specific content via `-{modeSlug}` suffix directories
+- Commands become slash commands (filename = command name)
