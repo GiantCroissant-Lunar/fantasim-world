@@ -100,27 +100,50 @@ public sealed class InMemoryBoundaryCMap : IBoundaryCMap
     /// Sorts incident darts at each junction by angle (CCW from +X axis).
     /// Must be called after all darts are added.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Determinism Contract</b>: This method uses <see cref="DeterministicOrder"/> to guarantee
+    /// stable, reproducible ordering across runs and machines.
+    /// </para>
+    /// <para>
+    /// Sort key precedence (via DeterministicOrder.CompareDarts):
+    /// </para>
+    /// <list type="number">
+    ///   <item>Angle (with AnglePolicy epsilon tolerance)</item>
+    ///   <item>BoundaryDart composite key (BoundaryId → SegmentIndex → Direction)</item>
+    /// </list>
+    /// <para>
+    /// This ensures that when two darts have nearly the same angle (e.g., collinear boundaries),
+    /// the result is stable and reproducible. Without the tie-break, iteration order
+    /// could depend on hash map ordering, causing "same data, different faces" bugs.
+    /// </para>
+    /// </remarks>
     internal void SortIncidentsByAngle(Func<BoundaryDart, Point3> getDartDirection)
+        => SortIncidentsByAngle(getDartDirection, AnglePolicy.Default);
+
+    /// <summary>
+    /// Sorts incident darts at each junction by angle with explicit angle policy.
+    /// </summary>
+    /// <param name="getDartDirection">Function to get outgoing direction vector for a dart.</param>
+    /// <param name="anglePolicy">Policy for angle comparison (epsilon, quantization).</param>
+    internal void SortIncidentsByAngle(Func<BoundaryDart, Point3> getDartDirection, AnglePolicy anglePolicy)
     {
         foreach (var junction in _allJunctions)
         {
             if (!_incidentDarts.TryGetValue(junction, out var darts) || darts.Count == 0)
                 continue;
 
-            // Sort by angle, with BoundaryDart as tiebreaker
+            // Use DeterministicOrder for canonical, stable sorting
+            // This is the ONLY place dart ordering should happen
             darts.Sort((a, b) =>
             {
                 var dirA = getDartDirection(a);
                 var dirB = getDartDirection(b);
 
-                var angleA = Math.Atan2(dirA.Y, dirA.X);
-                var angleB = Math.Atan2(dirB.Y, dirB.X);
+                var angleA = DeterministicOrder.ComputeAngle(dirA.X, dirA.Y);
+                var angleB = DeterministicOrder.ComputeAngle(dirB.X, dirB.Y);
 
-                var angleCompare = angleA.CompareTo(angleB);
-                if (angleCompare != 0) return angleCompare;
-
-                // Tiebreaker: dart key
-                return a.CompareTo(b);
+                return DeterministicOrder.CompareDarts(anglePolicy, angleA, a, angleB, b);
             });
         }
     }

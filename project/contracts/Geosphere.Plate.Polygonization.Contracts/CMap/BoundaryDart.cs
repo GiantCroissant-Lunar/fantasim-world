@@ -11,10 +11,25 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 /// RFC-V2-0041 §11: Darts are the atomic primitives of the cmap.
 /// </summary>
 /// <remarks>
-/// Determinism: Darts are sortable by their composite key:
-/// 1. BoundaryId (GUID, lexicographic)
-/// 2. SegmentIndex (int, ascending)
-/// 3. Direction (Forward before Backward)
+/// <para>
+/// <b>Determinism Contract</b>: This struct implements <see cref="IComparable{T}"/>
+/// with a total ordering guarantee. The comparison is:
+/// </para>
+/// <list type="number">
+///   <item>BoundaryId (GUID, lexicographic byte comparison)</item>
+///   <item>SegmentIndex (int, ascending)</item>
+///   <item>Direction (Forward &lt; Backward)</item>
+/// </list>
+/// <para>
+/// This ordering is used as a tie-breaker when sorting darts by angle during
+/// face enumeration. Without stable tie-breaking, collinear boundaries or
+/// floating-point angle ties would cause non-deterministic face IDs.
+/// </para>
+/// <para>
+/// <b>Usage in angle sorting</b>: When multiple darts at a junction have the
+/// same angle (within floating-point tolerance), the sort falls back to
+/// <see cref="CompareTo"/> to ensure the same cyclic order across runs.
+/// </para>
 /// </remarks>
 public readonly record struct BoundaryDart : IComparable<BoundaryDart>
 {
