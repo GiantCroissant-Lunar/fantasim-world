@@ -110,7 +110,7 @@ public class SensitivityTests
 
     private static string ComputeFingerprint(string boundaryKind)
     {
-        var canonicalBytes = CanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
+        var canonicalBytes = DerivedCacheCanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
             sourceStream: "S:V1:Bmain:L0:Plates:M0:Events",
             boundaryKind: boundaryKind,
             lastSequence: 0,

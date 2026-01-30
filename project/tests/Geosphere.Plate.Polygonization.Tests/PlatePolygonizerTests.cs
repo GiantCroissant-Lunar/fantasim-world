@@ -5,6 +5,7 @@ using FantaSim.Geosphere.Plate.Polygonization.Solver;
 using FantaSim.Geosphere.Plate.Polygonization.Solver.CMap;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using NSubstitute;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
@@ -43,8 +44,12 @@ public class PlatePolygonizerTests
     private static PlateId MakePlate(int seed) =>
         new(new Guid(seed, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-    private static Junction CreateJunction(JunctionId id, double x, double y, params BoundaryId[] boundaryIds) =>
-        new(id, boundaryIds, new Point2(x, y), IsRetired: false, RetirementReason: null);
+    private static Junction CreateJunction(JunctionId id, double x, double y, params BoundaryId[] boundaryIds)
+    {
+        // Convert 2D test coords to SurfacePoint on unit sphere
+        var normal = UnitVector3d.FromComponents(x, y, 0) ?? UnitVector3d.UnitZ;
+        return new(id, boundaryIds.ToImmutableArray(), SurfacePoint.UnitSphere(normal), IsRetired: false, RetirementReason: null);
+    }
 
     private static Boundary CreateBoundary(
         BoundaryId id,
@@ -65,7 +70,7 @@ public class PlatePolygonizerTests
 
     /// <summary>
     /// Square loop with known Left/Right plates.
-    /// 
+    ///
     ///   J2----B2----J3
     ///   |           |
     ///   B1          B3
@@ -73,13 +78,13 @@ public class PlatePolygonizerTests
     ///   J1----B4----J4
     ///
     /// All boundaries have PlateIdLeft=P1, PlateIdRight=P2.
-    /// 
+    ///
     /// Face attribution uses "left side of directed darts" rule:
     /// - The face walking CCW around the square's exterior has darts pointing
     ///   in the same direction as boundaries, so LEFT = P1 → exterior = P1
     /// - The face walking CW around the square's interior has darts pointing
     ///   opposite to boundaries, so LEFT = P2 → interior = P2
-    /// 
+    ///
     /// After excluding the larger-area face (exterior), the interior polygon
     /// should be attributed to P2 (which is PlateIdRight of the boundaries).
     /// </summary>
@@ -150,7 +155,7 @@ public class PlatePolygonizerTests
     /// Two junctions with one boundary - tests that non-closed topologies
     /// result in no closed polygons (only a degenerate "face" that can't be
     /// consistently attributed).
-    /// 
+    ///
     /// In practice, real plate topologies should always be closed.
     /// </summary>
     [Fact]

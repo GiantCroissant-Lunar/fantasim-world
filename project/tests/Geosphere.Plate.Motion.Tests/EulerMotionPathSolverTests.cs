@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -74,6 +75,48 @@ public sealed class EulerMotionPathSolverTests
             path1.Samples[i].Position.Z.Should().Be(path2.Samples[i].Position.Z);
             path1.Samples[i].StepIndex.Should().Be(path2.Samples[i].StepIndex);
         }
+    }
+
+    [Fact]
+    public void ComputeMotionPath_IsByteIdentical_WhenSerialized()
+    {
+        // Arrange: RFC-V2-0035 §11 requires bit-identical determinism when serialized
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var startPoint = new Point3(1, 0, 0);
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(10);
+        var direction = IntegrationDirection.Forward;
+
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
+        var topology = new SinglePlateTopologyState(plateId);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerMotionPathSolver(velocitySolver);
+
+        // Act
+        var path1 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path2 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+
+        // Serialize each sample's numeric components as tuples (avoiding types without MessagePack formatters)
+        path1.Samples.Length.Should().Be(path2.Samples.Length);
+
+        for (int i = 0; i < path1.Samples.Length; i++)
+        {
+            var s1 = path1.Samples[i];
+            var s2 = path2.Samples[i];
+
+            // Create serializable tuples from the sample data
+            var tuple1 = (s1.Position.X, s1.Position.Y, s1.Position.Z, s1.Velocity.X, s1.Velocity.Y, s1.Velocity.Z, s1.StepIndex, s1.Tick.Value);
+            var tuple2 = (s2.Position.X, s2.Position.Y, s2.Position.Z, s2.Velocity.X, s2.Velocity.Y, s2.Velocity.Z, s2.StepIndex, s2.Tick.Value);
+
+            var bytes1 = MessagePackSerializer.Serialize(tuple1);
+            var bytes2 = MessagePackSerializer.Serialize(tuple2);
+            bytes1.Should().BeEquivalentTo(bytes2,
+                $"RFC-V2-0035 §11 requires byte-identical sample data (sample {i})");
+        }
+
+        // Also verify the overall structure matches
+        path1.PlateId.Value.Should().Be(path2.PlateId.Value);
+        path1.Direction.Should().Be(path2.Direction);
     }
 
     #endregion
@@ -481,6 +524,127 @@ public sealed class EulerMotionPathSolverTests
 
     #endregion
 
+    #region 9️⃣ Algorithm Conformance (Euler Recurrence Rule)
+
+    /// <summary>
+    /// RFC-V2-0035 §9.2 Conformance: Verifies the Euler recurrence rule:
+    ///   p(t + Δt) = NormalizeToBodySurface( p(t) + v(p,t) * Δt )
+    /// Uses a fake velocity solver returning a constant vector to verify
+    /// positions follow the expected recurrence for multiple steps.
+    /// </summary>
+    [Fact]
+    public void EulerRecurrence_PositionsFollowExpectedRecurrence_WithConstantVelocity()
+    {
+        // Arrange: Use a constant velocity solver (constant vector, no rotation)
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var startPoint = new Point3(1, 0, 0);  // On unit sphere
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(4);    // 4 steps
+        var direction = IntegrationDirection.Forward;
+        var stepTicks = 1;  // dt = 1
+
+        // Constant velocity: small tangent vector (won't leave unit sphere too much)
+        var constantVelocity = new Velocity3d(0.0, 0.1, 0.05);
+        var velocitySolver = new ConstantVelocitySolver(constantVelocity);
+        var topology = new SinglePlateTopologyState(plateId);
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.0); // Unused
+        var solver = new EulerMotionPathSolver(velocitySolver);
+
+        // Act
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+
+        // Assert: Manually compute expected positions using Euler recurrence
+        var expectedPositions = ComputeExpectedEulerPositions(startPoint, constantVelocity, stepTicks, 4);
+
+        path.Samples.Should().HaveCount(4);
+        for (int i = 0; i < path.Samples.Length; i++)
+        {
+            var sample = path.Samples[i];
+            var expected = expectedPositions[i];
+
+            sample.Position.X.Should().BeApproximately(expected.X, 1e-10,
+                $"Step {i}: Position.X should follow Euler recurrence");
+            sample.Position.Y.Should().BeApproximately(expected.Y, 1e-10,
+                $"Step {i}: Position.Y should follow Euler recurrence");
+            sample.Position.Z.Should().BeApproximately(expected.Z, 1e-10,
+                $"Step {i}: Position.Z should follow Euler recurrence");
+
+            // Verify tick advances by dt
+            sample.Tick.Value.Should().Be(i);
+            sample.StepIndex.Should().Be(i);
+        }
+    }
+
+    /// <summary>
+    /// RFC-V2-0035 §9.2 Conformance: Verifies sampling occurs BEFORE advancing time.
+    /// The first sample must be at startTick with the starting position.
+    /// </summary>
+    [Fact]
+    public void EulerRecurrence_FirstSampleIsAtStartTickBeforeAdvance()
+    {
+        // Arrange
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var startPoint = new Point3(1, 0, 0);
+        var startTick = new CanonicalTick(100);  // Non-zero start
+        var endTick = new CanonicalTick(103);
+        var direction = IntegrationDirection.Forward;
+
+        var constantVelocity = new Velocity3d(0.0, 0.1, 0.0);
+        var velocitySolver = new ConstantVelocitySolver(constantVelocity);
+        var topology = new SinglePlateTopologyState(plateId);
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.0);
+        var solver = new EulerMotionPathSolver(velocitySolver);
+
+        // Act
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+
+        // Assert: First sample must be at startTick with original position
+        var firstSample = path.Samples[0];
+        firstSample.Tick.Should().Be(startTick, "First sample must be at startTick");
+        firstSample.Position.X.Should().BeApproximately(startPoint.X, 1e-10);
+        firstSample.Position.Y.Should().BeApproximately(startPoint.Y, 1e-10);
+        firstSample.Position.Z.Should().BeApproximately(startPoint.Z, 1e-10);
+        firstSample.StepIndex.Should().Be(0, "First sample stepIndex must be 0");
+    }
+
+    /// <summary>
+    /// RFC-V2-0035 §9.2 Conformance: Verifies body surface normalization happens after each step.
+    /// The magnitude of each position should be 1.0 (unit sphere).
+    /// </summary>
+    [Fact]
+    public void EulerRecurrence_AllPositionsAreNormalizedToUnitSphere()
+    {
+        // Arrange: Use a velocity that would otherwise take points off sphere
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var startPoint = new Point3(1, 0, 0);
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(10);
+        var direction = IntegrationDirection.Forward;
+
+        // Large velocity to test normalization robustness
+        var constantVelocity = new Velocity3d(0.0, 0.5, 0.3);
+        var velocitySolver = new ConstantVelocitySolver(constantVelocity);
+        var topology = new SinglePlateTopologyState(plateId);
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.0);
+        var solver = new EulerMotionPathSolver(velocitySolver);
+
+        // Act
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+
+        // Assert: All positions must be on unit sphere
+        foreach (var sample in path.Samples)
+        {
+            var magnitude = Math.Sqrt(
+                sample.Position.X * sample.Position.X +
+                sample.Position.Y * sample.Position.Y +
+                sample.Position.Z * sample.Position.Z);
+            magnitude.Should().BeApproximately(1.0, 1e-10,
+                $"Position at step {sample.StepIndex} must be normalized to unit sphere");
+        }
+    }
+
+    #endregion
+
     #region Helper Methods
 
     /// <summary>
@@ -519,9 +683,78 @@ public sealed class EulerMotionPathSolverTests
         return new Point3(vx, vy, vz);
     }
 
+    /// <summary>
+    /// Computes expected Euler positions manually for conformance testing.
+    /// </summary>
+    private static Point3[] ComputeExpectedEulerPositions(Point3 start, Velocity3d velocity, int dt, int steps)
+    {
+        var positions = new Point3[steps];
+        var p = start;
+
+        for (int i = 0; i < steps; i++)
+        {
+            // Record sample at current position
+            positions[i] = p;
+
+            // Euler step: p' = p + v * dt
+            var px = p.X + velocity.X * dt;
+            var py = p.Y + velocity.Y * dt;
+            var pz = p.Z + velocity.Z * dt;
+
+            // Normalize to body surface (unit sphere)
+            var length = Math.Sqrt(px * px + py * py + pz * pz);
+            p = new Point3(px / length, py / length, pz / length);
+        }
+
+        return positions;
+    }
+
     #endregion
 
     #region Test Fakes
+
+    /// <summary>
+    /// Fake velocity solver that returns a constant velocity for any input.
+    /// Used for Euler conformance testing.
+    /// </summary>
+    private sealed class ConstantVelocitySolver : IPlateVelocitySolver
+    {
+        private readonly Velocity3d _constantVelocity;
+
+        public ConstantVelocitySolver(Velocity3d constantVelocity)
+        {
+            _constantVelocity = constantVelocity;
+        }
+
+        public Velocity3d GetAbsoluteVelocity(
+            IPlateKinematicsStateView kinematics,
+            PlateId plateId,
+            Vector3d position,
+            CanonicalTick tick)
+        {
+            return _constantVelocity;
+        }
+
+        public Velocity3d GetRelativeVelocity(
+            IPlateKinematicsStateView kinematics,
+            PlateId plateId,
+            PlateId referencePlateId,
+            Vector3d position,
+            CanonicalTick tick)
+        {
+            return _constantVelocity;
+        }
+
+        public AngularVelocity3d GetAngularVelocity(
+            IPlateKinematicsStateView kinematics,
+            PlateId plateId,
+            CanonicalTick tick)
+        {
+            // Constant linear velocity doesn't correspond to a rotation
+            return AngularVelocity3d.Zero;
+        }
+    }
+
 
     /// <summary>
     /// Kinematics state with constant rotation for a single plate.

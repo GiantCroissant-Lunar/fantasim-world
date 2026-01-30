@@ -130,7 +130,7 @@ public class DerivedArtifactHashTests
         var paramsHash = "76be8b528d0075f7aae98d6fa57a6d3c83ae480a8469e668d7b0af968995ac71";
 
         // Act
-        var canonicalBytes = CanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
+        var canonicalBytes = DerivedCacheCanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
             sourceStream,
             boundaryKind,
             lastSequence,

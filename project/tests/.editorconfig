@@ -11,3 +11,21 @@ dotnet_diagnostic.MA0042.severity = none
 dotnet_diagnostic.MA0045.severity = none
 dotnet_diagnostic.MA0001.severity = none
 dotnet_diagnostic.MA0011.severity = none
+
+# Additional relaxations for test projects
+dotnet_diagnostic.MA0005.severity = suggestion
+dotnet_diagnostic.MA0006.severity = suggestion
+dotnet_diagnostic.MA0008.severity = suggestion
+dotnet_diagnostic.MA0016.severity = suggestion
+dotnet_diagnostic.MA0074.severity = suggestion
+
+# Nullable warnings in tests
+dotnet_diagnostic.CS8602.severity = suggestion
+dotnet_diagnostic.CS8625.severity = suggestion
+dotnet_diagnostic.CS8629.severity = suggestion
+
+# Obsolete warnings in tests (tests may test obsolete APIs)
+dotnet_diagnostic.CS0618.severity = suggestion
+
+# xUnit analyzer suggestions
+dotnet_diagnostic.xUnit2013.severity = suggestion

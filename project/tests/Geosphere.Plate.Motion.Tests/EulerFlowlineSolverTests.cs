@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FluentAssertions;
+using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -411,6 +412,165 @@ public sealed class EulerFlowlineSolverTests
             // (allowing for some numerical variation)
             separation.Should().BeGreaterThan(0, $"separation at step {i} should be positive");
         }
+    }
+
+    #endregion
+
+    #region 6️⃣ Byte-Identical Determinism (RFC-V2-0035 §11)
+
+    [Fact]
+    public void ComputeFlowline_IsByteIdentical_WhenSerialized()
+    {
+        // Arrange: RFC-V2-0035 §11 requires bit-identical determinism
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var boundaryId = new BoundaryId(Guid.Parse("00000001-0000-0000-0000-000000000002"));
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(10);
+
+        var seed = CreateBoundarySample(new Vector3d(1, 0, 0), 0);
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
+        var topology = new SingleBoundaryTopologyState(boundaryId, plateId, plateId);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerFlowlineSolver(velocitySolver);
+
+        // Act
+        var flowline1 = solver.ComputeFlowline(
+            boundaryId, seed, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+        var flowline2 = solver.ComputeFlowline(
+            boundaryId, seed, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+
+        // Serialize each sample's numeric components as tuples (avoiding types without MessagePack formatters)
+        flowline1.Samples.Length.Should().Be(flowline2.Samples.Length);
+
+        for (int i = 0; i < flowline1.Samples.Length; i++)
+        {
+            var s1 = flowline1.Samples[i];
+            var s2 = flowline2.Samples[i];
+
+            // Create serializable tuples from the sample data
+            var tuple1 = (s1.Position.X, s1.Position.Y, s1.Position.Z, s1.Velocity.X, s1.Velocity.Y, s1.Velocity.Z, s1.StepIndex, s1.Tick.Value);
+            var tuple2 = (s2.Position.X, s2.Position.Y, s2.Position.Z, s2.Velocity.X, s2.Velocity.Y, s2.Velocity.Z, s2.StepIndex, s2.Tick.Value);
+
+            var bytes1 = MessagePackSerializer.Serialize(tuple1);
+            var bytes2 = MessagePackSerializer.Serialize(tuple2);
+            bytes1.Should().BeEquivalentTo(bytes2,
+                $"RFC-V2-0035 §11 requires byte-identical sample data (sample {i})");
+        }
+
+        // Also verify the overall structure matches
+        flowline1.BoundaryId.Value.Should().Be(flowline2.BoundaryId.Value);
+        flowline1.SeedIndex.Should().Be(flowline2.SeedIndex);
+        flowline1.Direction.Should().Be(flowline2.Direction);
+    }
+
+    [Fact]
+    public void ComputeFlowlinesForBoundary_IsByteIdentical_WhenSerialized()
+    {
+        // Arrange: Verify batch determinism at byte level
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var boundaryId = new BoundaryId(Guid.Parse("00000001-0000-0000-0000-000000000002"));
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(5);
+
+        var samples = new List<BoundaryVelocitySample>
+        {
+            CreateBoundarySample(new Vector3d(1, 0, 0), 0),
+            CreateBoundarySample(new Vector3d(0.9, 0.1, 0), 1),
+            CreateBoundarySample(new Vector3d(0.8, 0.2, 0), 2)
+        };
+
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
+        var topology = new SingleBoundaryTopologyState(boundaryId, plateId, plateId);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerFlowlineSolver(velocitySolver);
+
+        // Act
+        var flowlines1 = solver.ComputeFlowlinesForBoundary(
+            boundaryId, samples, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+        var flowlines2 = solver.ComputeFlowlinesForBoundary(
+            boundaryId, samples, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+
+        // Verify each flowline's samples are byte-identical (using serializable tuples)
+        flowlines1.Length.Should().Be(flowlines2.Length);
+
+        for (int f = 0; f < flowlines1.Length; f++)
+        {
+            flowlines1[f].Samples.Length.Should().Be(flowlines2[f].Samples.Length,
+                $"flowline {f} should have same sample count");
+
+            for (int s = 0; s < flowlines1[f].Samples.Length; s++)
+            {
+                var s1 = flowlines1[f].Samples[s];
+                var s2 = flowlines2[f].Samples[s];
+
+                // Create serializable tuples from the sample data
+                var tuple1 = (s1.Position.X, s1.Position.Y, s1.Position.Z, s1.Velocity.X, s1.Velocity.Y, s1.Velocity.Z, s1.StepIndex, s1.Tick.Value);
+                var tuple2 = (s2.Position.X, s2.Position.Y, s2.Position.Z, s2.Velocity.X, s2.Velocity.Y, s2.Velocity.Z, s2.StepIndex, s2.Tick.Value);
+
+                var bytes1 = MessagePackSerializer.Serialize(tuple1);
+                var bytes2 = MessagePackSerializer.Serialize(tuple2);
+                bytes1.Should().BeEquivalentTo(bytes2,
+                    $"RFC-V2-0035 §11 requires byte-identical sample data (flowline {f}, sample {s})");
+            }
+        }
+    }
+
+    [Fact]
+    public void ComputeFlowlinesForBoundary_OrderingIsDeterministic_WhenInputOrderVaries()
+    {
+        // Arrange: RFC-V2-0035 §10.3 requires deterministic ordering
+        // Output order should follow input order (by sample index)
+        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var boundaryId = new BoundaryId(Guid.Parse("00000001-0000-0000-0000-000000000002"));
+        var startTick = new CanonicalTick(0);
+        var endTick = new CanonicalTick(3);
+
+        // Samples with out-of-sequence indices
+        var samples1 = new List<BoundaryVelocitySample>
+        {
+            CreateBoundarySample(new Vector3d(1, 0, 0), 5),
+            CreateBoundarySample(new Vector3d(0.9, 0.1, 0), 1),
+            CreateBoundarySample(new Vector3d(0.8, 0.2, 0), 9)
+        };
+
+        // Same samples in different list order
+        var samples2 = new List<BoundaryVelocitySample>
+        {
+            CreateBoundarySample(new Vector3d(0.9, 0.1, 0), 1),
+            CreateBoundarySample(new Vector3d(0.8, 0.2, 0), 9),
+            CreateBoundarySample(new Vector3d(1, 0, 0), 5)
+        };
+
+        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
+        var topology = new SingleBoundaryTopologyState(boundaryId, plateId, plateId);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerFlowlineSolver(velocitySolver);
+
+        // Act
+        var flowlines1 = solver.ComputeFlowlinesForBoundary(
+            boundaryId, samples1, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+        var flowlines2 = solver.ComputeFlowlinesForBoundary(
+            boundaryId, samples2, PlateSide.Left, startTick, endTick,
+            IntegrationDirection.Forward, topology, kinematics);
+
+        // Assert: Output order matches input list order (preserves caller's order)
+        flowlines1.Length.Should().Be(3);
+        flowlines2.Length.Should().Be(3);
+
+        // flowlines1 order: 5, 1, 9
+        flowlines1[0].SeedIndex.Should().Be(5);
+        flowlines1[1].SeedIndex.Should().Be(1);
+        flowlines1[2].SeedIndex.Should().Be(9);
+
+        // flowlines2 order: 1, 9, 5
+        flowlines2[0].SeedIndex.Should().Be(1);
+        flowlines2[1].SeedIndex.Should().Be(9);
+        flowlines2[2].SeedIndex.Should().Be(5);
     }
 
     #endregion
