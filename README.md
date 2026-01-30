@@ -1,6 +1,6 @@
 # FantaSim.World
 
-[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/pr/reviews/github/GiantCroissant-Lunar/fantasim-world)](https://coderabbit.ai)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/GiantCroissant-Lunar/fantasim-world)](https://coderabbit.ai)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CSharp](https://img.shields.io/badge/language-C%23-512BD4.svg)](https://learn.microsoft.com/en-us/dotnet/csharp)
 
