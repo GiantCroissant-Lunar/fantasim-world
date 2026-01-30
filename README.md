@@ -1,9 +1,7 @@
 # FantaSim.World
 
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/pr/reviews/github/GiantCroissant-Lunar/fantasim-world)](https://coderabbit.ai)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Spec-Driven](https://img.shields.io/badge/development-spec--driven-brightgreen.svg)](https://github.com/speckit/speckit)
-[![RocksDB](https://img.shields.io/badge/persistence-RocksDB-orange.svg)](https://rocksdb.org)
-[![MessagePack](https://img.shields.io/badge/encoding-MessagePack-blue.svg)](https://msgpack.org)
 [![CSharp](https://img.shields.io/badge/language-C%23-512BD4.svg)](https://learn.microsoft.com/en-us/dotnet/csharp)
 
 A clean restart of the FantaSim.World project - a simulation framework built with topology-first architecture and spec-driven development.
