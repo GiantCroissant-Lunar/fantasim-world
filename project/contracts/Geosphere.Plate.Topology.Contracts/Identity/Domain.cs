@@ -1,3 +1,6 @@
+using System;
+using System.Runtime.InteropServices;
+
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
 /// <summary>
@@ -6,6 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 /// Domains SHOULD be stable and specific (e.g., "geo.plates").
 /// Domain identifiers are case-sensitive and must follow a dot-notation convention.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct Domain
 {
     private readonly string _value;
@@ -52,7 +56,7 @@ public readonly record struct Domain
         }
 
         // Prevent consecutive dots or leading/trailing dots
-        if (value.Contains("..") || value.StartsWith('.') || value.EndsWith('.'))
+        if (value.IndexOf("..", StringComparison.Ordinal) >= 0 || value.StartsWith('.') || value.EndsWith('.'))
             throw new ArgumentException("Domain identifier cannot contain consecutive dots, or start/end with a dot.", nameof(value));
 
         return new Domain(value);
@@ -106,7 +110,7 @@ public readonly record struct Domain
         }
 
         // Check for consecutive dots or leading/trailing dots
-        if (_value.Contains("..") || _value.StartsWith('.') || _value.EndsWith('.'))
+        if (_value.IndexOf("..", StringComparison.Ordinal) >= 0 || _value.StartsWith('.') || _value.EndsWith('.'))
             return false;
 
         return true;
