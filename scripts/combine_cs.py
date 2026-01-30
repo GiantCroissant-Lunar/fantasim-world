@@ -107,7 +107,7 @@ def main() -> int:
         # Read file content - try multiple encodings
         content = None
         encodings = ["utf-8", "utf-8-sig", "windows-1252", "latin-1", "iso-8859-1"]
-        
+
         try:
             for encoding in encodings:
                 try:
@@ -117,7 +117,7 @@ def main() -> int:
                     break
                 except UnicodeDecodeError:
                     continue
-            
+
             if content is None:
                 print(f"Warning: Skipping file - could not decode with any encoding: {rel_path}")
                 skipped_count += 1
