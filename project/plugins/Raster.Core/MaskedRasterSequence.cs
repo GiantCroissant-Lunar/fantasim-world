@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Masking;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core;
+namespace FantaSim.Raster.Core;
 
 /// <summary>
 /// A raster sequence that applies masking to frames from a source sequence.

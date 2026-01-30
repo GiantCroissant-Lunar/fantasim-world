@@ -1,7 +1,7 @@
-﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+﻿using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Masking;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core.Operations;
+namespace FantaSim.Raster.Core.Operations;
 
 /// <summary>
 /// Applies a mask to a raster frame.

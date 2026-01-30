@@ -1,6 +1,6 @@
-﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
+﻿using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core.Operations;
+namespace FantaSim.Raster.Core.Operations;
 
 /// <summary>
 /// Resamples a raster frame to a different resolution.

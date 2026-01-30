@@ -1,6 +1,6 @@
-﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
+﻿using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core.Operations;
+namespace FantaSim.Raster.Core.Operations;
 
 /// <summary>
 /// Crops a raster frame to a specified bounding box.

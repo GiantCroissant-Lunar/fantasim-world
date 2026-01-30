@@ -1,7 +1,7 @@
 ﻿using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core;
+namespace FantaSim.Raster.Core;
 
 /// <summary>
 /// A raster frame backed by an in-memory array of doubles.

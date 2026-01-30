@@ -1,7 +1,7 @@
-﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
+﻿using FantaSim.Raster.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Core;
+namespace FantaSim.Raster.Core;
 
 /// <summary>
 /// Simple raster frame wrapper for query results and temporary frame data.
