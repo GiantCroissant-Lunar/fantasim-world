@@ -1,4 +1,4 @@
-using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+﻿using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 
@@ -52,6 +52,21 @@ public sealed class AppendOptions
     /// Default is <see cref="TickMonotonicityPolicy.Allow"/>.
     /// </summary>
     public TickMonotonicityPolicy TickPolicy { get; init; } = TickMonotonicityPolicy.Allow;
+
+    /// <summary>
+    /// Optional expected head precondition for optimistic concurrency control.
+    ///
+    /// When set, the append will fail with <see cref="ConcurrencyConflictException"/>
+    /// if the actual stream head doesn't match this precondition.
+    ///
+    /// Use <see cref="HeadPrecondition.Empty"/> for appending to a new/empty stream.
+    /// Use <see cref="StreamHead.ToPrecondition"/> from <see cref="ITopologyEventStore.GetHeadAsync"/>
+    /// for appending to an existing stream.
+    ///
+    /// When null (default), no concurrency check is performed. This is backward-compatible
+    /// but not recommended for production use with concurrent writers.
+    /// </summary>
+    public HeadPrecondition? ExpectedHead { get; init; }
 }
 
 /// <summary>
@@ -173,6 +188,35 @@ public interface ITopologyEventStore
     /// The highest Sequence number, or null if the stream is empty or does not exist.
     /// </returns>
     Task<long?> GetLastSequenceAsync(
+        TruthStreamIdentity stream,
+        CancellationToken cancellationToken
+    );
+
+    /// <summary>
+    /// Gets the current head state (sequence, hash, tick) of a stream per RFC-V2-0004.
+    ///
+    /// Use this method to obtain the precondition for optimistic concurrency control.
+    /// The returned <see cref="StreamHead"/> can be converted to a <see cref="HeadPrecondition"/>
+    /// via <see cref="StreamHead.ToPrecondition"/> and passed to <see cref="AppendOptions.ExpectedHead"/>.
+    ///
+    /// Design rationale (RFC-V2-0004/0005 review):
+    /// - Returns sequence, hash, AND tick for full head metadata
+    /// - Hash comparison catches corruption scenarios
+    /// - Per-stream locking in implementation ensures read-modify-write atomicity in-process
+    /// </summary>
+    /// <param name="stream">
+    /// The truth stream identity to query.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// The current head state, or <see cref="StreamHead.Empty"/> if stream doesn't exist.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the stream head metadata is corrupted.
+    /// </exception>
+    Task<StreamHead> GetHeadAsync(
         TruthStreamIdentity stream,
         CancellationToken cancellationToken
     );
