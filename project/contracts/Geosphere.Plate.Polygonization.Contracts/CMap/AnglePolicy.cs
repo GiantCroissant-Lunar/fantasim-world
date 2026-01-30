@@ -1,4 +1,6 @@
-﻿namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
+using System.Runtime.InteropServices;
+
+namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 
 /// <summary>
 /// Policy for comparing angles in a deterministic, stable manner.
@@ -18,6 +20,7 @@
 /// floating-point representation differences.
 /// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct AnglePolicy
 {
     /// <summary>
