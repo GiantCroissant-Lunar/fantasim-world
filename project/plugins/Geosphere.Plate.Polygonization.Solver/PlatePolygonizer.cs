@@ -84,7 +84,10 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
         // Identify outside face (largest absolute area)
         var outsideFaceIndex = FindOutsideFaceIndex(attributedFaces);
 
-        // Group by PlateId (excluding outside face)
+        // Determine winding convention from options
+        var winding = options.Value.Winding;
+
+        // Group by PlateId (excluding outside face), canonicalizing rings
         var polygonsByPlate = new Dictionary<PlateId, List<Polyline3>>();
         for (int i = 0; i < attributedFaces.Count; i++)
         {
@@ -98,24 +101,37 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
                 rings = new List<Polyline3>();
                 polygonsByPlate[plateId] = rings;
             }
-            rings.Add(ring);
+
+            // Canonicalize ring per RFC-V2-0041 §9.3
+            // Note: Winding is set here but may be adjusted by HoleAssigner based on outer/hole classification
+            var canonicalized = RingCanonicalizer.Canonicalize(ring, winding);
+            rings.Add(canonicalized);
         }
 
-        // Build PlatePolygons (first ring is outer, rest are holes)
-        // Note: proper outer/hole determination requires area sign analysis
+        // Build PlatePolygons using RFC-V2-0041 §9.4 hole assignment
         var polygons = new List<PlatePolygon>();
         foreach (var (plateId, rings) in polygonsByPlate)
         {
             if (rings.Count == 0) continue;
 
-            // For MVP, use first ring as outer, rest as holes
-            // TODO: Use signed area to properly identify outer vs holes
-            var outer = rings[0];
-            var holes = rings.Count > 1
-                ? rings.Skip(1).ToImmutableArray()
-                : ImmutableArray<Polyline3>.Empty;
+            // Classify rings into outer/holes using signed area and point-in-polygon
+            var groups = HoleAssigner.AssignHoles(rings, winding);
 
-            polygons.Add(new PlatePolygon(plateId, outer, holes));
+            foreach (var group in groups)
+            {
+                // Re-canonicalize: outer gets target winding, holes get opposite
+                var outerWinding = winding;
+                var holeWinding = winding == WindingConvention.CounterClockwise
+                    ? WindingConvention.Clockwise
+                    : WindingConvention.CounterClockwise;
+
+                var canonicalOuter = RingCanonicalizer.Canonicalize(group.OuterRing, outerWinding);
+                var canonicalHoles = group.Holes
+                    .Select(h => RingCanonicalizer.Canonicalize(h, holeWinding))
+                    .ToImmutableArray();
+
+                polygons.Add(new PlatePolygon(plateId, canonicalOuter, canonicalHoles));
+            }
         }
 
         // Sort by PlateId for determinism

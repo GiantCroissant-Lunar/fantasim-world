@@ -1,4 +1,5 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Capabilities;
@@ -36,6 +37,17 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     private const string MetaCapsKey = "Meta:Caps";
     private readonly IKeyValueStore _store;
     private readonly object _lock = new();
+
+    /// <summary>
+    /// Per-stream locks for optimistic concurrency control.
+    /// Uses SemaphoreSlim(1,1) to allow async/await patterns.
+    ///
+    /// Design note (RFC-V2-0005 review):
+    /// This dictionary can grow unbounded with many streams. For production
+    /// use with high stream counts, consider a bounded cache with LRU eviction
+    /// or periodic cleanup of streams with no recent activity.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _streamLocks = new();
 
     /// <summary>
     /// Opens or creates an event store at the specified path.
@@ -81,6 +93,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// - Allow: tick can decrease without any action (default)
     /// - Warn: tick decrease logs a warning but allows append
     /// - Reject: tick decrease throws InvalidOperationException
+    ///
+    /// Per RFC-V2-0005, uses per-stream locking for optimistic concurrency.
+    /// When ExpectedHead is set, verifies current head matches before append.
     /// </summary>
     /// <exception cref="ArgumentException">
     /// If events don't match stream identity or sequences are not monotonic.
@@ -88,7 +103,10 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// <exception cref="InvalidOperationException">
     /// If stream identity is not valid, or if tick decreases and policy is Reject.
     /// </exception>
-    public Task AppendAsync(
+    /// <exception cref="ConcurrencyConflictException">
+    /// If ExpectedHead is set and actual head doesn't match.
+    /// </exception>
+    public async Task AppendAsync(
         TruthStreamIdentity stream,
         IEnumerable<IPlateTopologyEvent> events,
         AppendOptions options,
@@ -108,7 +126,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         var eventsList = events.ToList();
         if (eventsList.Count == 0)
-            return Task.CompletedTask;
+            return;
 
         // Validate all events belong to the same stream
         foreach (var evt in eventsList)
@@ -135,50 +153,85 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         // Apply tick monotonicity policy
         ApplyTickMonotonicityPolicy(eventsList, options.TickPolicy);
 
-        // Build batch atomically
+        // Build stream prefix first - used for both locking and storage operations
         var prefix = BuildStreamPrefix(stream);
-        using var batch = _store.CreateWriteBatch();
 
-        // Check if this is a genesis append (brand new stream)
-        var isGenesisAppend = !StreamExists(prefix);
+        // Get or create per-stream lock using prefix as stable key
+        // (stream.ToString() format could change; prefix is the canonical identity)
+        var streamKey = Convert.ToBase64String(prefix);
+        var streamLock = _streamLocks.GetOrAdd(streamKey, _ => new SemaphoreSlim(1, 1));
 
-        var previousHash = GetPreviousHashForAppend(prefix);
-
-        foreach (var evt in eventsList)
+        await streamLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            var eventKey = BuildEventKey(prefix, evt.Sequence);
-            var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
+            // Build batch atomically (prefix already computed above for lock key)
+            using var batch = _store.CreateWriteBatch();
 
-            var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
-            var tick = evt.Sequence;
-            var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
-            var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
+            // Check if this is a genesis append (brand new stream)
+            var isGenesisAppend = !StreamExists(prefix);
 
-            batch.Put(eventKey, recordBytes);
-            previousHash = hash;
+            // Optimistic concurrency check per RFC-V2-0004 (storage/append semantics)
+            if (options.ExpectedHead.HasValue)
+            {
+                var actualHead = GetHeadInternal(prefix, stream);
+                var expected = options.ExpectedHead.Value;
+
+                if (actualHead.Sequence != expected.Sequence ||
+                    !actualHead.HashSpan.SequenceEqual(expected.HashSpan))
+                {
+                    throw new ConcurrencyConflictException(
+                        stream,
+                        expected,
+                        actualHead.ToPrecondition(),
+                        $"Concurrency conflict on stream '{stream}': expected seq={expected.Sequence}, " +
+                        $"actual seq={actualHead.Sequence}. Hash mismatch={!actualHead.HashSpan.SequenceEqual(expected.HashSpan)}");
+                }
+            }
+
+            var previousHash = GetPreviousHashForAppend(prefix);
+            byte[] lastHash = previousHash;
+            long lastTick = -1;
+
+            foreach (var evt in eventsList)
+            {
+                var eventKey = BuildEventKey(prefix, evt.Sequence);
+                var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
+
+                var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+                // RFC-V2-0005: Use actual tick from event, not sequence
+                var tick = evt.Tick.Value;
+                var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
+                var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
+
+                batch.Put(eventKey, recordBytes);
+                previousHash = hash;
+                lastHash = hash;
+                lastTick = tick;
+            }
+
+            // Update head per RFC-V2-0004: store {lastSeq, lastHash, lastTick}
+            var headKey = BuildHeadKey(prefix);
+            var lastSequence = eventsList[^1].Sequence;
+            var headBytes = HeadRecordSerializer.Serialize(lastSequence, lastHash, lastTick);
+            batch.Put(headKey, headBytes);
+
+            // For genesis appends with Reject policy, mark stream as tick-monotone
+            // This is the ONLY safe time to set this flag - at stream creation with strict policy
+            if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+            {
+                SetCapabilitiesInBatch(batch, prefix, StreamCapabilities.GenesisWithRejectPolicy);
+            }
+
+            // Write batch atomically
+            lock (_lock)
+            {
+                _store.Write(batch);
+            }
         }
-
-        // Update last sequence
-        var headKey = BuildHeadKey(prefix);
-        var lastSequence = eventsList[^1].Sequence;
-        Span<byte> headBytes = stackalloc byte[8];
-        BinaryPrimitives.WriteInt64BigEndian(headBytes, lastSequence);
-        batch.Put(headKey, headBytes);
-
-        // For genesis appends with Reject policy, mark stream as tick-monotone
-        // This is the ONLY safe time to set this flag - at stream creation with strict policy
-        if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+        finally
         {
-            SetCapabilitiesInBatch(batch, prefix, StreamCapabilities.GenesisWithRejectPolicy);
+            streamLock.Release();
         }
-
-        // Write batch atomically
-        lock (_lock)
-        {
-            _store.Write(batch);
-        }
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -331,6 +384,95 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         // Decode big-endian uint64 to long
         var value = BinaryPrimitives.ReadInt64BigEndian(buffer);
         return Task.FromResult<long?>(value);
+    }
+
+    /// <summary>
+    /// Gets the current head state (sequence, hash, tick) of a stream per RFC-V2-0004.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// If stream identity is not valid or if head metadata is corrupted.
+    /// </exception>
+    public Task<StreamHead> GetHeadAsync(
+        TruthStreamIdentity stream,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+
+        if (!stream.IsValid())
+        {
+            throw new InvalidOperationException(
+                $"TruthStreamIdentity is not valid: {stream}. " +
+                "Ensure VariantId, BranchId, Model are non-empty, LLevel >= 0, and Domain is well-formed.");
+        }
+
+        var prefix = BuildStreamPrefix(stream);
+        return Task.FromResult(GetHeadInternal(prefix, stream));
+    }
+
+    /// <summary>
+    /// Internal helper to get stream head without validation.
+    /// Used by both GetHeadAsync and AppendAsync precondition check.
+    ///
+    /// Per RFC-V2-0004, head metadata stores {lastSeq, lastHash, lastTick}.
+    /// Supports legacy 8-byte format (sequence only) for migration.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if head exists but is corrupted or references a missing event.
+    /// This is a hard invariant violation that should not be masked.
+    /// </exception>
+    private StreamHead GetHeadInternal(byte[] prefix, TruthStreamIdentity? streamForDiagnostics = null)
+    {
+        var headKey = BuildHeadKey(prefix);
+
+        byte[]? headData;
+        lock (_lock)
+        {
+            headData = ReadBytes(headKey);
+        }
+
+        if (headData == null)
+        {
+            return StreamHead.Empty;
+        }
+
+        // Try new RFC-V2-0004 format first: {lastSeq, lastHash, lastTick}
+        if (HeadRecordSerializer.TryDeserialize(headData, out var lastSeq, out var lastHash, out var lastTick))
+        {
+            return new StreamHead(lastSeq, lastHash, lastTick);
+        }
+
+        // Fall back to legacy 8-byte format (sequence only) for migration
+        if (HeadRecordSerializer.IsLegacyFormat(headData))
+        {
+            var legacySeq = HeadRecordSerializer.ReadLegacySequence(headData);
+            var lastEventKey = BuildEventKey(prefix, legacySeq);
+
+            byte[]? lastValue;
+            lock (_lock)
+            {
+                lastValue = ReadBytes(lastEventKey);
+            }
+
+            if (lastValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
+            {
+                // Legacy format doesn't store tick in head, use tick from event record
+                return new StreamHead(legacySeq, lastRecord.Hash, lastRecord.Tick);
+            }
+
+            // Head exists but event is missing - this is CORRUPTION, not "empty stream"
+            var streamInfo = streamForDiagnostics?.ToString() ?? Encoding.UTF8.GetString(prefix);
+            throw new InvalidOperationException(
+                $"Event store corruption detected: Head metadata exists for stream '{streamInfo}' " +
+                $"with lastSeq={legacySeq}, but the corresponding event record is missing or unreadable. " +
+                "This indicates data corruption or incomplete write. Manual repair may be required.");
+        }
+
+        // Unknown head format - also corruption
+        var streamInfoUnknown = streamForDiagnostics?.ToString() ?? Encoding.UTF8.GetString(prefix);
+        throw new InvalidOperationException(
+            $"Event store corruption detected: Head metadata for stream '{streamInfoUnknown}' " +
+            $"has unexpected format (length={headData.Length} bytes). " +
+            "Expected RFC-V2-0004 format or legacy 8-byte sequence.");
     }
 
     public Task SaveSnapshotAsync(PlateTopologySnapshot snapshot, CancellationToken cancellationToken)
