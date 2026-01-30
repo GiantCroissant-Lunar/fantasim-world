@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Plate.TimeDete.Time.Primitives;
+using TimeDete = Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -13,6 +13,9 @@ using MessagePack;
 using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Runner;
+
+using CanonicalTick = TimeDete.CanonicalTick;
+using Topology = FantaSim.Geosphere.Plate.Topology.Contracts;
 
 /// <summary>
 /// Generates Solver Lab corpus cases for RFC-V2-0035 Flowline analysis.
@@ -60,8 +63,8 @@ public static class FlowlineCorpusGenerator
         // Integration parameters
         const int stepCount = 10;
         const int stepTicks = 1;
-        var startTick = new CanonicalTick(1000);
-        var endTick = new CanonicalTick(startTick.Value + (stepCount * stepTicks));
+        var startTick = new TimeDete.CanonicalTick(1000);
+        var endTick = new TimeDete.CanonicalTick(startTick.Value + (stepCount * stepTicks));
         var direction = IntegrationDirection.Forward;
 
         // Create boundary: simple ridge at equator
@@ -86,12 +89,12 @@ public static class FlowlineCorpusGenerator
 
         // Create mock state views
         var topology = new MockTopologyStateView(
-            new Dictionary<PlateId, Plate>
+            new Dictionary<PlateId, Topology.Entities.Plate>
             {
-                [leftPlateId] = new Plate(leftPlateId, false, null),
-                [rightPlateId] = new Plate(rightPlateId, false, null)
+                [leftPlateId] = new Topology.Entities.Plate(leftPlateId, false, null),
+                [rightPlateId] = new Topology.Entities.Plate(rightPlateId, false, null)
             },
-            new Dictionary<BoundaryId, Boundary>
+            new Dictionary<BoundaryId, Topology.Entities.Boundary>
             {
                 [boundaryId] = boundary
             });
@@ -117,7 +120,7 @@ public static class FlowlineCorpusGenerator
             direction,
             topology,
             kinematics,
-            new MotionIntegrationSpec(StepTicks: stepTicks, MaxSteps: stepCount));
+            new MotionIntegrationSpec(stepTicks, stepCount));
 
         // Create input structure
         var input = new FlowlineInput(
@@ -156,14 +159,14 @@ public static class FlowlineCorpusGenerator
     /// <summary>
     /// Creates a Boundary with the specified parameters.
     /// </summary>
-    private static Boundary CreateBoundary(
+    private static Topology.Entities.Boundary CreateBoundary(
         BoundaryId id,
         PlateId leftPlateId,
         PlateId rightPlateId,
         BoundaryType type,
         Polyline3 geometry)
     {
-        return new Boundary(id, leftPlateId, rightPlateId, type, geometry, false, null);
+        return new Topology.Entities.Boundary(id, leftPlateId, rightPlateId, type, geometry, false, null);
     }
 
     /// <summary>

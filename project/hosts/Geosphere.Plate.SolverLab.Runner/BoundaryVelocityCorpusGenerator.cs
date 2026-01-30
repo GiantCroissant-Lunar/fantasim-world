@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Plate.TimeDete.Time.Primitives;
+using TimeDete = Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -13,12 +13,14 @@ using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Runner;
 
+using CanonicalTick = TimeDete.CanonicalTick;
+
 /// <summary>
 /// Generates Solver Lab corpus cases for RFC-V2-0034 Boundary Velocity analysis.
 /// </summary>
 public static class BoundaryVelocityCorpusGenerator
 {
-    private static readonly CanonicalTick DefaultTick = new(1000);
+    private static readonly TimeDete.CanonicalTick DefaultTick = new TimeDete.CanonicalTick(1000);
     private static readonly BoundarySamplingSpec DefaultSampling = new(32, SamplingMode.ArcLength, true);
 
     /// <summary>
@@ -65,10 +67,10 @@ public static class BoundaryVelocityCorpusGenerator
             CreateGreatCircleArc(0.0, -30.0, 0.0, 30.0));
 
         // Create mock state views
-        var topology = new MockTopologyStateView(new Dictionary<PlateId, Plate>
+        var topology = new MockTopologyStateView(new Dictionary<PlateId, Topology.Contracts.Entities.Plate>
         {
-            [plateId1] = new Plate(plateId1, false, null),
-            [plateId2] = new Plate(plateId2, false, null)
+            [plateId1] = new Topology.Contracts.Entities.Plate(plateId1, false, null),
+            [plateId2] = new Topology.Contracts.Entities.Plate(plateId2, false, null)
         }, new Dictionary<BoundaryId, Boundary>
         {
             [boundaryId] = boundary
@@ -137,10 +139,10 @@ public static class BoundaryVelocityCorpusGenerator
             CreateGreatCircleArc(90.0, -30.0, 90.0, 30.0));
 
         // Create mock state views
-        var topology = new MockTopologyStateView(new Dictionary<PlateId, Plate>
+        var topology = new MockTopologyStateView(new Dictionary<PlateId, Topology.Contracts.Entities.Plate>
         {
-            [plateId1] = new Plate(plateId1, false, null),
-            [plateId2] = new Plate(plateId2, false, null)
+            [plateId1] = new Topology.Contracts.Entities.Plate(plateId1, false, null),
+            [plateId2] = new Topology.Contracts.Entities.Plate(plateId2, false, null)
         }, new Dictionary<BoundaryId, Boundary>
         {
             [boundaryId] = boundary
@@ -210,10 +212,10 @@ public static class BoundaryVelocityCorpusGenerator
             CreateGreatCircleArc(0.0, 0.0, 90.0, 0.0));
 
         // Create mock state views
-        var topology = new MockTopologyStateView(new Dictionary<PlateId, Plate>
+        var topology = new MockTopologyStateView(new Dictionary<PlateId, Topology.Contracts.Entities.Plate>
         {
-            [plateId1] = new Plate(plateId1, false, null),
-            [plateId2] = new Plate(plateId2, false, null)
+            [plateId1] = new Topology.Contracts.Entities.Plate(plateId1, false, null),
+            [plateId2] = new Topology.Contracts.Entities.Plate(plateId2, false, null)
         }, new Dictionary<BoundaryId, Boundary>
         {
             [boundaryId] = boundary
@@ -336,9 +338,9 @@ public static class BoundaryVelocityCorpusGenerator
     /// </summary>
     [MessagePackObject]
     public readonly record struct BoundaryVelocityInput(
-        [property: Key(0)] Boundary Boundary,
+        [property: Key(0)] Topology.Contracts.Entities.Boundary Boundary,
         [property: Key(1)] BoundarySamplingSpec Sampling,
-        [property: Key(2)] CanonicalTick Tick,
+        [property: Key(2)] TimeDete.CanonicalTick Tick,
         [property: Key(3)] MockTopologyStateView Topology,
         [property: Key(4)] MockKinematicsStateView Kinematics
     );
@@ -353,34 +355,34 @@ public static class BoundaryVelocityCorpusGenerator
         public TruthStreamIdentity Identity { get; init; } = new("test", "trunk", 1, Domain.Parse("geo.plates.test"), "0");
 
         [Key(1)]
-        public ImmutableDictionary<PlateId, Plate> Plates { get; init; }
+        public ImmutableDictionary<PlateId, Topology.Contracts.Entities.Plate> Plates { get; init; }
 
         [Key(2)]
-        public ImmutableDictionary<BoundaryId, Boundary> Boundaries { get; init; }
+        public ImmutableDictionary<BoundaryId, Topology.Contracts.Entities.Boundary> Boundaries { get; init; }
 
         [Key(3)]
-        public ImmutableDictionary<JunctionId, Junction> Junctions { get; init; } = ImmutableDictionary<JunctionId, Junction>.Empty;
+        public ImmutableDictionary<JunctionId, Topology.Contracts.Entities.Junction> Junctions { get; init; } = ImmutableDictionary<JunctionId, Topology.Contracts.Entities.Junction>.Empty;
 
         [Key(4)]
         public long LastEventSequence { get; init; } = 0;
 
         // Non-serialized interface implementations
         [IgnoreMember]
-        IReadOnlyDictionary<PlateId, Plate> IPlateTopologyStateView.Plates => Plates;
+        IReadOnlyDictionary<PlateId, Topology.Contracts.Entities.Plate> IPlateTopologyStateView.Plates => Plates;
 
         [IgnoreMember]
-        IReadOnlyDictionary<BoundaryId, Boundary> IPlateTopologyStateView.Boundaries => Boundaries;
+        IReadOnlyDictionary<BoundaryId, Topology.Contracts.Entities.Boundary> IPlateTopologyStateView.Boundaries => Boundaries;
 
         [IgnoreMember]
-        IReadOnlyDictionary<JunctionId, Junction> IPlateTopologyStateView.Junctions => Junctions;
+        IReadOnlyDictionary<JunctionId, Topology.Contracts.Entities.Junction> IPlateTopologyStateView.Junctions => Junctions;
 
         public MockTopologyStateView()
         {
-            Plates = ImmutableDictionary<PlateId, Plate>.Empty;
-            Boundaries = ImmutableDictionary<BoundaryId, Boundary>.Empty;
+            Plates = ImmutableDictionary<PlateId, Topology.Contracts.Entities.Plate>.Empty;
+            Boundaries = ImmutableDictionary<BoundaryId, Topology.Contracts.Entities.Boundary>.Empty;
         }
 
-        public MockTopologyStateView(Dictionary<PlateId, Plate> plates, Dictionary<BoundaryId, Boundary> boundaries)
+        public MockTopologyStateView(Dictionary<PlateId, Topology.Contracts.Entities.Plate> plates, Dictionary<BoundaryId, Topology.Contracts.Entities.Boundary> boundaries)
         {
             Plates = plates.ToImmutableDictionary();
             Boundaries = boundaries.ToImmutableDictionary();
@@ -413,7 +415,7 @@ public static class BoundaryVelocityCorpusGenerator
             AngularVelocities = angularVelocities.ToImmutableDictionary();
         }
 
-        public bool TryGetRotation(PlateId plateId, CanonicalTick tick, out Quaterniond rotation)
+        public bool TryGetRotation(PlateId plateId, TimeDete.CanonicalTick tick, out Quaterniond rotation)
         {
             // Compute rotation from angular velocity: θ = ω * t
             // For corpus generation, we use a simple linear rotation model

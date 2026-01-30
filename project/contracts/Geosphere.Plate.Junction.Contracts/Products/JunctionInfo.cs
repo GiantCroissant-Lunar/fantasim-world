@@ -40,10 +40,12 @@ public readonly record struct JunctionInfo(
     /// <summary>
     /// Returns true if this is a triple junction (exactly 3 incidents).
     /// </summary>
+    [IgnoreMember]
     public bool IsTriple => Incidents.Length == 3;
 
     /// <summary>
     /// Number of incident boundaries at this junction.
     /// </summary>
+    [IgnoreMember]
     public int Degree => Incidents.Length;
 }

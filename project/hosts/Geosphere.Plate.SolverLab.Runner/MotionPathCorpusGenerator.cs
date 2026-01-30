@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Plate.TimeDete.Time.Primitives;
+using TimeDete = Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -13,6 +13,9 @@ using MessagePack;
 using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Runner;
+
+using CanonicalTick = TimeDete.CanonicalTick;
+using Topology = FantaSim.Geosphere.Plate.Topology.Contracts;
 
 /// <summary>
 /// Generates Solver Lab corpus cases for RFC-V2-0035 Motion Path analysis.
@@ -57,8 +60,8 @@ public static class MotionPathCorpusGenerator
         // Integration parameters
         const int stepCount = 10;
         const int stepTicks = 1;
-        var startTick = new CanonicalTick(1000);
-        var endTick = new CanonicalTick(startTick.Value + (stepCount * stepTicks));
+        var startTick = new TimeDete.CanonicalTick(1000);
+        var endTick = new TimeDete.CanonicalTick(startTick.Value + (stepCount * stepTicks));
         var direction = IntegrationDirection.Forward;
 
         // Create angular velocity from axis and rate
@@ -69,11 +72,11 @@ public static class MotionPathCorpusGenerator
 
         // Create mock state views
         var topology = new MockTopologyStateView(
-            new Dictionary<PlateId, Plate>
+            new Dictionary<PlateId, Topology.Entities.Plate>
             {
-                [plateId] = new Plate(plateId, false, null)
+                [plateId] = new Topology.Entities.Plate(plateId, false, null)
             },
-            new Dictionary<BoundaryId, Boundary>());
+            new Dictionary<BoundaryId, Topology.Entities.Boundary>());
 
         var kinematics = new MockKinematicsStateView(
             new Dictionary<PlateId, AngularVelocity3d>
@@ -93,7 +96,7 @@ public static class MotionPathCorpusGenerator
             direction,
             topology,
             kinematics,
-            new MotionIntegrationSpec(StepTicks: stepTicks, MaxSteps: stepCount));
+            new MotionIntegrationSpec(stepTicks, stepCount, IntegrationMethod.Euler));
 
         // Compute analytical baseline for verification
         var analyticalPath = ComputeAnalyticalPath(
@@ -108,7 +111,7 @@ public static class MotionPathCorpusGenerator
         var input = new MotionPathInput(
             plateId,
             startPoint,
-            rotationAxis,
+            new Point3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z),
             angularRate,
             stepCount,
             stepTicks,
@@ -167,7 +170,7 @@ public static class MotionPathCorpusGenerator
 
         for (int i = 0; i <= stepCount; i++)
         {
-            var tick = new CanonicalTick(startTick.Value + (i * stepTicks));
+            var tick = new TimeDete.CanonicalTick(startTick.Value + (i * stepTicks));
             var t = i * stepTicks;
             var angle = angularRate * t;
 
@@ -203,12 +206,12 @@ public static class MotionPathCorpusGenerator
 
             samples.Add(new MotionPathSample(
                 tick,
-                new Point3(px, py, pz),
+                new Point3((double)px, (double)py, (double)pz),
                 new Velocity3d(vx, vy, vz),
                 i));
         }
 
-        var endTick = new CanonicalTick(startTick.Value + (stepCount * stepTicks));
+        var endTick = new TimeDete.CanonicalTick(startTick.Value + (stepCount * stepTicks));
         return new MotionPath(
             new PlateId(Guid.Parse("00000010-0000-0000-0000-000000000001")),
             startTick,

@@ -1,8 +1,8 @@
 using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
-using FantaSim.Geosphere.Plate.Raster.Core;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Masking;
+using FantaSim.Raster.Core;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifyGeometry;
 

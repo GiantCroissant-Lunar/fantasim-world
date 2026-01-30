@@ -1,12 +1,12 @@
 using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Masking;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 // Use Core types
-using CoreMaskedRasterSequence = FantaSim.Geosphere.Plate.Raster.Core.MaskedRasterSequence;
+using CoreMaskedRasterSequence = FantaSim.Raster.Core.MaskedRasterSequence;
 
 namespace FantaSim.Raster.Masking.Plate;
 
@@ -14,10 +14,10 @@ namespace FantaSim.Raster.Masking.Plate;
 /// Backward compatibility alias for <see cref="Core.MaskedRasterSequence"/>.
 /// </summary>
 /// <remarks>
-/// This type has been moved to <c>Geosphere.Plate.Raster.Core</c>.
-/// For new code, use <c>FantaSim.Geosphere.Plate.Raster.Core.MaskedRasterSequence</c>.
+/// This type has been moved to <c>Raster.Core</c>.
+/// For new code, use <c>FantaSim.Raster.Core.MaskedRasterSequence</c>.
 /// </remarks>
-[Obsolete("Use FantaSim.Geosphere.Plate.Raster.Core.MaskedRasterSequence instead.")]
+[Obsolete("Use FantaSim.Raster.Core.MaskedRasterSequence instead.")]
 public class MaskedRasterSequence : CoreMaskedRasterSequence
 {
     public MaskedRasterSequence(

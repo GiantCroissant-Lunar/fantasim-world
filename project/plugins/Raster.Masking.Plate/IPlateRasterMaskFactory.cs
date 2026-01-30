@@ -1,6 +1,6 @@
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Masking;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
 

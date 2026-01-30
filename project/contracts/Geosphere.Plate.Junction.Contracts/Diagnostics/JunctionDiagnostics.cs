@@ -32,6 +32,7 @@ public readonly record struct JunctionDiagnostics(
     /// <summary>
     /// Closure ratio: proportion of analyzed junctions that are kinematically closed.
     /// </summary>
+    [IgnoreMember]
     public double ClosureRatio => TotalJunctions > 0
         ? (double)ClosedJunctions / TotalJunctions
         : 1.0;
@@ -39,5 +40,6 @@ public readonly record struct JunctionDiagnostics(
     /// <summary>
     /// True if all analyzed junctions are kinematically closed.
     /// </summary>
+    [IgnoreMember]
     public bool AllClosed => UnclosedJunctions == 0;
 }

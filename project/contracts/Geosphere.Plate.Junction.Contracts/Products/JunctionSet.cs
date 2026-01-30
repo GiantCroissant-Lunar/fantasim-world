@@ -42,10 +42,12 @@ public readonly record struct JunctionSet(
     /// <summary>
     /// Count of triple junctions (exactly 3 incident boundaries).
     /// </summary>
+    [IgnoreMember]
     public int TripleJunctionCount => Junctions.Count(j => j.IsTriple);
 
     /// <summary>
     /// Count of non-triple junctions (≠3 incident boundaries).
     /// </summary>
+    [IgnoreMember]
     public int NonTripleJunctionCount => Junctions.Count(j => !j.IsTriple);
 }

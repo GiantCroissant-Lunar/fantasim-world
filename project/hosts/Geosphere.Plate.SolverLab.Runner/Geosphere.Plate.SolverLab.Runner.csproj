@@ -1,7 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Velocity.Solver\Geosphere.Plate.Velocity.Solver.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Motion.Solver\Geosphere.Plate.Motion.Solver.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.SolverLab.Core\Geosphere.Plate.SolverLab.Core.csproj" />
   </ItemGroup>
 

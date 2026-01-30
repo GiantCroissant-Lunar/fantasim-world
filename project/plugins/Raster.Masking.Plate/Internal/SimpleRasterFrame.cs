@@ -1,4 +1,4 @@
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+using FantaSim.Raster.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Raster.Masking.Plate;
