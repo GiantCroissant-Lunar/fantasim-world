@@ -22,6 +22,12 @@ tasks:
       - python scripts/combine_cs.py --exclude-tests
     silent: false
 
+  list-project-tree:
+    desc: "List all folder/file names under project/ into scripts/project_tree.txt"
+    cmds:
+      - python scripts/list_project_tree.py
+    silent: false
+
   # =============================================================================
   # Smoke Host Verification
   # =============================================================================

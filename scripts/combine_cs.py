@@ -104,13 +104,24 @@ def main() -> int:
     for cs_file in cs_files:
         rel_path = cs_file.relative_to(project_dir).as_posix()
 
-        # Read file content
+        # Read file content - try multiple encodings
+        content = None
+        encodings = ["utf-8", "utf-8-sig", "windows-1252", "latin-1", "iso-8859-1"]
+        
         try:
-            content = cs_file.read_text(encoding="utf-8")
-        except UnicodeDecodeError as e:
-            print(f"Warning: Skipping file due to decode error: {rel_path} ({e})")
-            skipped_count += 1
-            continue
+            for encoding in encodings:
+                try:
+                    content = cs_file.read_text(encoding=encoding)
+                    if encoding != "utf-8":
+                        print(f"Info: Read {rel_path} using {encoding} encoding")
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if content is None:
+                print(f"Warning: Skipping file - could not decode with any encoding: {rel_path}")
+                skipped_count += 1
+                continue
         except OSError as e:
             print(f"Warning: Skipping file due to read error: {rel_path} ({e})")
             skipped_count += 1
