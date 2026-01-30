@@ -193,15 +193,15 @@ public interface ITopologyEventStore
     );
 
     /// <summary>
-    /// Gets the current head state (sequence, hash, tick) of a stream per RFC-V2-0004.
+    /// Gets the current head state (sequence + hash) of a stream.
     ///
     /// Use this method to obtain the precondition for optimistic concurrency control.
     /// The returned <see cref="StreamHead"/> can be converted to a <see cref="HeadPrecondition"/>
     /// via <see cref="StreamHead.ToPrecondition"/> and passed to <see cref="AppendOptions.ExpectedHead"/>.
     ///
-    /// Design rationale (RFC-V2-0004/0005 review):
-    /// - Returns sequence, hash, AND tick for full head metadata
-    /// - Hash comparison catches corruption scenarios
+    /// Design rationale (RFC-V2-0005 review):
+    /// - Returns both sequence AND hash to enable full concurrency check
+    /// - Hash comparison catches scenarios where sequence matches but content differs (corruption)
     /// - Per-stream locking in implementation ensures read-modify-write atomicity in-process
     /// </summary>
     /// <param name="stream">
@@ -213,9 +213,6 @@ public interface ITopologyEventStore
     /// <returns>
     /// The current head state, or <see cref="StreamHead.Empty"/> if stream doesn't exist.
     /// </returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if the stream head metadata is corrupted.
-    /// </exception>
     Task<StreamHead> GetHeadAsync(
         TruthStreamIdentity stream,
         CancellationToken cancellationToken

@@ -1,4 +1,5 @@
-using Plate.TimeDete.Determinism.Abstractions;
+﻿using Plate.TimeDete.Determinism.Abstractions;
+using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Determinism;
@@ -68,6 +69,20 @@ public sealed class FnvSolverSeedProvider : ISolverSeedProvider
     {
         var derivedSeed = DeriveSeed(scenarioSeed, stream);
         return _rngFactory.Create(derivedSeed);
+    }
+
+    /// <inheritdoc />
+    public ISeededRng CreateRngForTick(ulong scenarioSeed, TruthStreamIdentity stream, CanonicalTick tick)
+    {
+        // First derive the stream-scoped seed
+        var streamSeed = DeriveSeed(scenarioSeed, stream);
+
+        // Then mix in the tick value to get a tick-specific seed
+        // This ensures each tick gets an independent RNG stream while remaining deterministic
+        var tickSeed = MixUInt64(streamSeed, (ulong)tick.Value);
+        tickSeed = Avalanche(tickSeed);
+
+        return _rngFactory.Create(tickSeed);
     }
 
     /// <inheritdoc />
