@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Raster.Masking\Geosphere.Plate.Raster.Masking.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Raster.Core\Geosphere.Plate.Raster.Core.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Raster.Contracts\Geosphere.Plate.Raster.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
