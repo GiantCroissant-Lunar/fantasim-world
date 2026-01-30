@@ -40,12 +40,8 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
     /// <summary>
     /// Per-stream locks for optimistic concurrency control.
-    /// Uses SemaphoreSlim(1,1) to allow async/await patterns.
-    ///
-    /// Design note (RFC-V2-0005 review):
-    /// This dictionary can grow unbounded with many streams. For production
-    /// use with high stream counts, consider a bounded cache with LRU eviction
-    /// or periodic cleanup of streams with no recent activity.
+    /// Ensures read-modify-write atomicity within a single process.
+    /// Key is the stream prefix string for efficient lookup.
     /// </summary>
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _streamLocks = new();
 
@@ -93,9 +89,6 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// - Allow: tick can decrease without any action (default)
     /// - Warn: tick decrease logs a warning but allows append
     /// - Reject: tick decrease throws InvalidOperationException
-    ///
-    /// Per RFC-V2-0005, uses per-stream locking for optimistic concurrency.
-    /// When ExpectedHead is set, verifies current head matches before append.
     /// </summary>
     /// <exception cref="ArgumentException">
     /// If events don't match stream identity or sequences are not monotonic.
@@ -104,7 +97,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// If stream identity is not valid, or if tick decreases and policy is Reject.
     /// </exception>
     /// <exception cref="ConcurrencyConflictException">
-    /// If ExpectedHead is set and actual head doesn't match.
+    /// If <see cref="AppendOptions.ExpectedHead"/> is set and the actual head doesn't match.
     /// </exception>
     public async Task AppendAsync(
         TruthStreamIdentity stream,
@@ -153,44 +146,38 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         // Apply tick monotonicity policy
         ApplyTickMonotonicityPolicy(eventsList, options.TickPolicy);
 
-        // Build stream prefix first - used for both locking and storage operations
+        // Build batch atomically
         var prefix = BuildStreamPrefix(stream);
+        var prefixString = Encoding.UTF8.GetString(prefix);
 
-        // Get or create per-stream lock using prefix as stable key
-        // (stream.ToString() format could change; prefix is the canonical identity)
-        var streamKey = Convert.ToBase64String(prefix);
-        var streamLock = _streamLocks.GetOrAdd(streamKey, _ => new SemaphoreSlim(1, 1));
-
+        // Acquire per-stream lock for optimistic concurrency
+        // This ensures read-check-write atomicity within a single process
+        var streamLock = _streamLocks.GetOrAdd(prefixString, _ => new SemaphoreSlim(1, 1));
         await streamLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Build batch atomically (prefix already computed above for lock key)
+            // Check optimistic concurrency precondition if specified
+            if (options.ExpectedHead.HasValue)
+            {
+                var expected = options.ExpectedHead.Value;
+                var actual = GetHeadInternal(prefix);
+
+                if (expected.Sequence != actual.Sequence ||
+                    !expected.Hash.AsSpan().SequenceEqual(actual.Hash))
+                {
+                    throw new ConcurrencyConflictException(stream, expected, actual);
+                }
+            }
+
             using var batch = _store.CreateWriteBatch();
 
             // Check if this is a genesis append (brand new stream)
             var isGenesisAppend = !StreamExists(prefix);
 
-            // Optimistic concurrency check per RFC-V2-0004 (storage/append semantics)
-            if (options.ExpectedHead.HasValue)
-            {
-                var actualHead = GetHeadInternal(prefix, stream);
-                var expected = options.ExpectedHead.Value;
-
-                if (actualHead.Sequence != expected.Sequence ||
-                    !actualHead.HashSpan.SequenceEqual(expected.HashSpan))
-                {
-                    throw new ConcurrencyConflictException(
-                        stream,
-                        expected,
-                        actualHead.ToPrecondition(),
-                        $"Concurrency conflict on stream '{stream}': expected seq={expected.Sequence}, " +
-                        $"actual seq={actualHead.Sequence}. Hash mismatch={!actualHead.HashSpan.SequenceEqual(expected.HashSpan)}");
-                }
-            }
-
             var previousHash = GetPreviousHashForAppend(prefix);
+
             byte[] lastHash = previousHash;
-            long lastTick = -1;
+            long lastTick = 0;
 
             foreach (var evt in eventsList)
             {
@@ -198,7 +185,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
                 var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
 
                 var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
-                // RFC-V2-0005: Use actual tick from event, not sequence
+                // RFC-V2-0005: tick is hash-critical and must use the event's Tick, not Sequence
                 var tick = evt.Tick.Value;
                 var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
                 var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
@@ -209,7 +196,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
                 lastTick = tick;
             }
 
-            // Update head per RFC-V2-0004: store {lastSeq, lastHash, lastTick}
+            // Update head metadata per RFC-V2-0004: {lastSeq, lastHash, lastTick}
             var headKey = BuildHeadKey(prefix);
             var lastSequence = eventsList[^1].Sequence;
             var headBytes = HeadRecordSerializer.Serialize(lastSequence, lastHash, lastTick);
@@ -387,10 +374,14 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     }
 
     /// <summary>
-    /// Gets the current head state (sequence, hash, tick) of a stream per RFC-V2-0004.
+    /// Gets the current head state (sequence + hash) of a stream.
+    ///
+    /// Use this method to obtain the precondition for optimistic concurrency control.
+    /// The returned <see cref="StreamHead"/> can be converted to a <see cref="HeadPrecondition"/>
+    /// via <see cref="StreamHead.ToPrecondition"/> and passed to <see cref="AppendOptions.ExpectedHead"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// If stream identity is not valid or if head metadata is corrupted.
+    /// If stream identity is not valid.
     /// </exception>
     public Task<StreamHead> GetHeadAsync(
         TruthStreamIdentity stream,
@@ -398,6 +389,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     {
         ArgumentNullException.ThrowIfNull(stream);
 
+        // Validate stream identity per RFC-V2-0001 review recommendation
         if (!stream.IsValid())
         {
             throw new InvalidOperationException(
@@ -406,73 +398,49 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         }
 
         var prefix = BuildStreamPrefix(stream);
-        return Task.FromResult(GetHeadInternal(prefix, stream));
+        return Task.FromResult(GetHeadInternal(prefix));
     }
 
     /// <summary>
     /// Internal helper to get stream head without validation.
     /// Used by both GetHeadAsync and AppendAsync precondition check.
-    ///
-    /// Per RFC-V2-0004, head metadata stores {lastSeq, lastHash, lastTick}.
-    /// Supports legacy 8-byte format (sequence only) for migration.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if head exists but is corrupted or references a missing event.
-    /// This is a hard invariant violation that should not be masked.
-    /// </exception>
-    private StreamHead GetHeadInternal(byte[] prefix, TruthStreamIdentity? streamForDiagnostics = null)
+    private StreamHead GetHeadInternal(byte[] prefix)
     {
         var headKey = BuildHeadKey(prefix);
 
-        byte[]? headData;
+        Span<byte> headBuffer = stackalloc byte[8];
+        int headWritten;
+
         lock (_lock)
         {
-            headData = ReadBytes(headKey);
-        }
-
-        if (headData == null)
-        {
-            return StreamHead.Empty;
-        }
-
-        // Try new RFC-V2-0004 format first: {lastSeq, lastHash, lastTick}
-        if (HeadRecordSerializer.TryDeserialize(headData, out var lastSeq, out var lastHash, out var lastTick))
-        {
-            return new StreamHead(lastSeq, lastHash, lastTick);
-        }
-
-        // Fall back to legacy 8-byte format (sequence only) for migration
-        if (HeadRecordSerializer.IsLegacyFormat(headData))
-        {
-            var legacySeq = HeadRecordSerializer.ReadLegacySequence(headData);
-            var lastEventKey = BuildEventKey(prefix, legacySeq);
-
-            byte[]? lastValue;
-            lock (_lock)
+            if (!_store.TryGet(headKey, headBuffer, out headWritten))
             {
-                lastValue = ReadBytes(lastEventKey);
+                return StreamHead.Empty;
             }
-
-            if (lastValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
-            {
-                // Legacy format doesn't store tick in head, use tick from event record
-                return new StreamHead(legacySeq, lastRecord.Hash, lastRecord.Tick);
-            }
-
-            // Head exists but event is missing - this is CORRUPTION, not "empty stream"
-            var streamInfo = streamForDiagnostics?.ToString() ?? Encoding.UTF8.GetString(prefix);
-            throw new InvalidOperationException(
-                $"Event store corruption detected: Head metadata exists for stream '{streamInfo}' " +
-                $"with lastSeq={legacySeq}, but the corresponding event record is missing or unreadable. " +
-                "This indicates data corruption or incomplete write. Manual repair may be required.");
         }
 
-        // Unknown head format - also corruption
-        var streamInfoUnknown = streamForDiagnostics?.ToString() ?? Encoding.UTF8.GetString(prefix);
-        throw new InvalidOperationException(
-            $"Event store corruption detected: Head metadata for stream '{streamInfoUnknown}' " +
-            $"has unexpected format (length={headData.Length} bytes). " +
-            "Expected RFC-V2-0004 format or legacy 8-byte sequence.");
+        if (headWritten != 8)
+        {
+            throw new InvalidOperationException($"Head value must be 8 bytes, got {headWritten}");
+        }
+
+        var lastSequence = BinaryPrimitives.ReadInt64BigEndian(headBuffer);
+        var lastEventKey = BuildEventKey(prefix, lastSequence);
+
+        byte[]? lastValue;
+        lock (_lock)
+        {
+            lastValue = ReadBytes(lastEventKey);
+        }
+
+        if (lastValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
+        {
+            return new StreamHead(lastSequence, lastRecord.Hash);
+        }
+
+        // Stream has head key but no event - shouldn't happen but return empty
+        return StreamHead.Empty;
     }
 
     public Task SaveSnapshotAsync(PlateTopologySnapshot snapshot, CancellationToken cancellationToken)

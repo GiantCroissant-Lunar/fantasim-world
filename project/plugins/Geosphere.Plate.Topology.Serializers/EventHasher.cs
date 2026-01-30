@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Security.Cryptography;
 using MessagePack;
@@ -256,7 +256,7 @@ public static class EventPayloadSerializer
     {
         var buffer = new ArrayBufferWriter<byte>();
         var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(4);
+        writer.WriteArrayHeader(6); // EventId, JunctionId, BoundaryIds, Normal(X,Y,Z), Radius
         writer.Write(@event.EventId.ToString());
         writer.Write(@event.JunctionId.Value.ToString());
         writer.WriteArrayHeader(@event.BoundaryIds.Length);
@@ -264,8 +264,11 @@ public static class EventPayloadSerializer
         {
             writer.Write(boundaryId.Value.ToString());
         }
-        writer.Write(@event.Location.X);
-        writer.Write(@event.Location.Y);
+        // SurfacePoint: Normal (UnitVector3d) + Radius
+        writer.Write(@event.Location.Normal.X);
+        writer.Write(@event.Location.Normal.Y);
+        writer.Write(@event.Location.Normal.Z);
+        writer.Write(@event.Location.Radius);
         writer.Flush();
         return buffer.WrittenMemory.ToArray();
     }
@@ -277,7 +280,7 @@ public static class EventPayloadSerializer
     {
         var buffer = new ArrayBufferWriter<byte>();
         var writer = new MessagePackWriter(buffer);
-        writer.WriteArrayHeader(4);
+        writer.WriteArrayHeader(6); // EventId, JunctionId, BoundaryIds, Normal(X,Y,Z) or NaN, Radius or NaN
         writer.Write(@event.EventId.ToString());
         writer.Write(@event.JunctionId.Value.ToString());
         writer.WriteArrayHeader(@event.NewBoundaryIds.Length);
@@ -285,13 +288,18 @@ public static class EventPayloadSerializer
         {
             writer.Write(boundaryId.Value.ToString());
         }
+        // SurfacePoint: Normal (UnitVector3d) + Radius (or NaN if null)
         if (@event.NewLocation.HasValue)
         {
-            writer.Write(@event.NewLocation.Value.X);
-            writer.Write(@event.NewLocation.Value.Y);
+            writer.Write(@event.NewLocation.Value.Normal.X);
+            writer.Write(@event.NewLocation.Value.Normal.Y);
+            writer.Write(@event.NewLocation.Value.Normal.Z);
+            writer.Write(@event.NewLocation.Value.Radius);
         }
         else
         {
+            writer.Write(double.NaN);
+            writer.Write(double.NaN);
             writer.Write(double.NaN);
             writer.Write(double.NaN);
         }

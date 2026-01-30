@@ -1,10 +1,12 @@
-using System;
+﻿using System;
 using System.Buffers;
+using System.Collections.Immutable;
 using MessagePack;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 using UnifyGeometry;
+using Numerics = FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using PlateEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate;
 
 namespace FantaSim.Geosphere.Plate.Topology.Serializers;
@@ -57,7 +59,7 @@ public static class MessagePackPlateTopologySnapshotSerializer
         var junctions = DeserializeJunctions(ref reader);
 
         return new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(stream, tick),
+            new PlateTopologyMaterializationKey(stream, tick, lastEventSequence),
             lastEventSequence,
             plates,
             boundaries,
@@ -164,7 +166,7 @@ public static class MessagePackPlateTopologySnapshotSerializer
         writer.WriteArrayHeader(junctions.Length);
         foreach (var j in junctions)
         {
-            writer.WriteArrayHeader(6);
+            writer.WriteArrayHeader(8); // JunctionId, BoundaryIds, Normal(X,Y,Z), Radius, IsRetired, RetirementReason
             writer.Write(j.JunctionId.Value.ToString());
 
             writer.WriteArrayHeader(j.BoundaryIds.Length);
@@ -173,8 +175,11 @@ public static class MessagePackPlateTopologySnapshotSerializer
                 writer.Write(b.Value.ToString());
             }
 
-            writer.Write(j.Location.X);
-            writer.Write(j.Location.Y);
+            // SurfacePoint: Normal (UnitVector3d) + Radius
+            writer.Write(j.Location.Normal.X);
+            writer.Write(j.Location.Normal.Y);
+            writer.Write(j.Location.Normal.Z);
+            writer.Write(j.Location.Radius);
             writer.Write(j.IsRetired);
 
             if (j.RetirementReason is null)
@@ -192,8 +197,8 @@ public static class MessagePackPlateTopologySnapshotSerializer
         for (var i = 0; i < count; i++)
         {
             var len = reader.ReadArrayHeader();
-            if (len != 6)
-                throw new InvalidOperationException($"Junction must have 6 elements, got {len}");
+            if (len != 8)
+                throw new InvalidOperationException($"Junction must have 8 elements, got {len}");
 
             var junctionId = new JunctionId(Guid.Parse(reader.ReadString()!));
 
@@ -204,8 +209,14 @@ public static class MessagePackPlateTopologySnapshotSerializer
                 boundaryIds[b] = new BoundaryId(Guid.Parse(reader.ReadString()!));
             }
 
-            var x = reader.ReadDouble();
-            var y = reader.ReadDouble();
+            // SurfacePoint: Normal (UnitVector3d) + Radius
+            var nx = reader.ReadDouble();
+            var ny = reader.ReadDouble();
+            var nz = reader.ReadDouble();
+            var radius = reader.ReadDouble();
+            var normal = Numerics.UnitVector3d.Create(nx, ny, nz);
+            var location = new Numerics.SurfacePoint(normal, radius);
+
             var isRetired = reader.ReadBoolean();
 
             string? reason;
@@ -214,7 +225,7 @@ public static class MessagePackPlateTopologySnapshotSerializer
             else
                 reason = reader.ReadString();
 
-            junctions[i] = new Junction(junctionId, boundaryIds, new(x, y), isRetired, reason);
+            junctions[i] = new Junction(junctionId, boundaryIds.ToImmutableArray(), location, isRetired, reason);
         }
 
         return junctions;
