@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Loading;
+using FantaSim.Raster.Contracts.Loading;
 
-namespace FantaSim.Geosphere.Plate.Raster.Registry;
+namespace FantaSim.Raster.Registry;
 
 /// <summary>
 /// Default implementation of IRasterSequenceLoaderRegistry.
