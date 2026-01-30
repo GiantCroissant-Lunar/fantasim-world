@@ -1,7 +1,7 @@
-﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
+using FantaSim.Geosphere.Plate.Raster.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Masking;
+namespace FantaSim.Raster.Masking;
 
 /// <summary>
 /// Simple raster frame wrapper for query results and temporary frame data.
@@ -45,7 +45,7 @@ internal sealed class SimpleRasterFrame : IRasterFrame
         if (col < 0 || col >= Width)
             throw new ArgumentOutOfRangeException(nameof(col));
 
-        var index = row * Width + col;
+        var index = row * Width + sizeof(double);
         var bytes = new byte[sizeof(double)];
         Array.Copy(_data, index * sizeof(double), bytes, 0, sizeof(double));
         var value = BitConverter.ToDouble(bytes, 0);

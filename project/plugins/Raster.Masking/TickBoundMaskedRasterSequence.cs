@@ -1,10 +1,10 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Raster.Contracts;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Masking;
+namespace FantaSim.Raster.Masking;
 
 /// <summary>
 /// A raster sequence that applies tick-specific masking to frames.

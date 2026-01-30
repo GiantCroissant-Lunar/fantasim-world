@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Raster.Contracts;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
@@ -8,7 +8,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 // Use Core types
 using CoreMaskedRasterSequence = FantaSim.Geosphere.Plate.Raster.Core.MaskedRasterSequence;
 
-namespace FantaSim.Geosphere.Plate.Raster.Masking;
+namespace FantaSim.Raster.Masking;
 
 /// <summary>
 /// Backward compatibility alias for <see cref="Core.MaskedRasterSequence"/>.
