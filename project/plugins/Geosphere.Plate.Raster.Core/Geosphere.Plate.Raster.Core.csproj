@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Raster.Core</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Raster.Core</PackageId>
+    <AssemblyName>Geosphere.Plate.Raster.Core</AssemblyName>
+    <Description>Core raster frame implementations and basic operations (crop, resample, mask application). Domain-agnostic per RFC-V2-0028.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Raster.Contracts\Geosphere.Plate.Raster.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+  </ItemGroup>
+
+</Project>
