@@ -1,8 +1,10 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using UnifySerialization.Abstractions;
 
 namespace FantaSim.Space.Stellar.Contracts.Snapshots;
 
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct L3SystemSnapshot(
     [property: UnifyProperty(0)] Guid SystemId,

@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using UnifySerialization.Abstractions;
 
 namespace FantaSim.Space.Stellar.Contracts.Entities;
 
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct PlanetProperties(
     [property: UnifyProperty(0)] double MassKg,

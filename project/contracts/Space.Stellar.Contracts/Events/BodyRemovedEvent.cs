@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using UnifySerialization.Abstractions;
 
 namespace FantaSim.Space.Stellar.Contracts.Events;
 
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct BodyRemovedEvent(
     [property: UnifyProperty(0)] Guid SystemId,
