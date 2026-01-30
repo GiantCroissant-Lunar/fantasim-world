@@ -1,32 +1,24 @@
 {
   "$schema": "./build.config.schema.json",
-  "versionEnv": "BUILD_VERSION",
-  "artifactsVersion": "local",
-
+  "versionEnv": "Version",
+  "artifactsVersion": null,
+  "solution": "project/FantaSim.World.sln",
   "projectGroups": {
     "contracts": {
       "sourceDir": "project/contracts",
       "action": "pack",
-      "include": [],
-      "exclude": []
-    },
-    "hosts": {
-      "sourceDir": "project/hosts",
-      "action": "publish",
-      "include": [],
-      "exclude": []
+      "include": []
     },
     "plugins": {
       "sourceDir": "project/plugins",
-      "action": "publish",
-      "include": [],
-      "exclude": []
+      "action": "pack",
+      "include": []
     }
   },
-
   "packProperties": {
     "GeneratePackageOnBuild": "false"
   },
-
-  "syncLocalNugetFeed": false
+  "syncLocalNugetFeed": true,
+  "localNugetFeedRoot": "build/_artifacts",
+  "nuGetOutputDir": "build/_artifacts/local/nuget"
 }

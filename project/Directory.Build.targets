@@ -5,5 +5,5 @@
   </PropertyGroup>
 
   <!-- Import shared foundation (MUST be in .targets, not .props) -->
-  <Import Project="$(FantaSimSharedRoot)project\build\FantaSim.Shared.targets" />
+  <Import Project="$(FantaSimSharedRoot)project\build\FantaSim.Shared.targets" Condition="Exists('$(FantaSimSharedRoot)project\build\FantaSim.Shared.targets')" />
 </Project>

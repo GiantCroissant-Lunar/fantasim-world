@@ -1,44 +1,63 @@
 using System;
-using System.Linq;
+using System.IO;
 using Nuke.Common;
-using Nuke.Common.CI;
-using Nuke.Common.Execution;
 using Nuke.Common.IO;
-using Nuke.Common.ProjectModel;
-using Nuke.Common.Tooling;
-using Nuke.Common.Utilities.Collections;
-using static Nuke.Common.EnvironmentInfo;
+using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitVersion;
+using UnifyBuild.Nuke;
+
 using static Nuke.Common.IO.FileSystemTasks;
-using static Nuke.Common.IO.PathConstruction;
 
-class Build : NukeBuild
+class Build : UnifyBuildBase
 {
-    /// Support plugins are available for:
-    ///   - JetBrains ReSharper        https://nuke.build/resharper
-    ///   - JetBrains Rider            https://nuke.build/rider
-    ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
-    ///   - Microsoft VSCode           https://nuke.build/vscode
+    [GitVersion] readonly GitVersion GitVersion;
 
-    public static int Main () => Execute<Build>(x => x.Compile);
+    void SyncLatestArtifactsImpl()
+    {
+        var artifactsRoot = RootDirectory / "build/_artifacts";
+        var sourceVersion = Context.ArtifactsVersion ?? Context.Version ?? "local";
+        var source = artifactsRoot / sourceVersion;
+        var latest = artifactsRoot / "latest";
 
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+        if (!Directory.Exists(source))
+            throw new InvalidOperationException($"Artifacts source '{source}' does not exist. Run publish/pack targets first.");
 
-    Target Clean => _ => _
-        .Before(Restore)
-        .Executes(() =>
+        EnsureCleanDirectory(latest);
+        CopyDirectoryRecursively(source, latest, DirectoryExistsPolicy.Merge, FileExistsPolicy.Overwrite);
+    }
+
+    public Target PackProjectsLatest => _ => _
+        .DependsOn(PackProjects)
+        .Executes(SyncLatestArtifactsImpl);
+
+    public Target SyncLatestArtifactsProjects => _ => _
+        .Executes(SyncLatestArtifactsImpl);
+
+    protected override DotNetPackSettings ApplyCommonPackSettings(
+        DotNetPackSettings settings,
+        string project,
+        AbsolutePath outputDir)
+    {
+        settings = base.ApplyCommonPackSettings(settings, project, outputDir);
+
+        var artifactsVersion = Context.ArtifactsVersion ?? Context.Version ?? "local";
+        var packDir = RootDirectory / "build" / "_artifacts" / artifactsVersion / "pack";
+
+        return settings.SetOutputDirectory(packDir);
+    }
+
+    protected override BuildContext Context
+    {
+        get
         {
-        });
+            if (GitVersion != null)
+            {
+                Environment.SetEnvironmentVariable("GITVERSION_MAJORMINORPATCH", GitVersion.MajorMinorPatch);
+                Environment.SetEnvironmentVariable("Version", GitVersion.FullSemVer);
+            }
+            return BuildContextLoader.FromJson(RootDirectory, "build/build.config.json");
+        }
+    }
 
-    Target Restore => _ => _
-        .Executes(() =>
-        {
-        });
-
-    Target Compile => _ => _
-        .DependsOn(Restore)
-        .Executes(() =>
-        {
-        });
-
+    public static int Main() => Execute<Build>(x => x.Compile);
 }

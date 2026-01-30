@@ -21,13 +21,13 @@ public readonly record struct RasterQueryOptions(
         null,
         null
     );
-    
+
     /// <summary>
     /// Creates options with linear interpolation enabled.
     /// </summary>
     public static RasterQueryOptions WithLinearInterpolation(RasterBounds? clipBounds = null)
         => new(InterpolationMethod.Linear, clipBounds, null);
-    
+
     /// <summary>
     /// Creates options with nearest neighbor (no interpolation).
     /// </summary>

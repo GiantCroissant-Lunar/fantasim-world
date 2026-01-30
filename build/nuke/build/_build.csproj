@@ -12,7 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nuke.Common" Version="10.1.0" />
+    <PackageReference Include="Nuke.Common" Version="8.0.0" />
+    <PackageDownload Include="GitVersion.Tool" Version="[6.0.0]" />
+    <ProjectReference Include="..\..\..\..\unify-build\src\UnifyBuild.Nuke\UnifyBuild.Nuke.csproj" />
   </ItemGroup>
 
 </Project>
