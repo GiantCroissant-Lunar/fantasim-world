@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifySerialization.Abstractions;
 
@@ -16,6 +17,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 /// <param name="LLevel">The truth L-level (see RFC-086: L×R×M Axis Model; R is not part of stream identity).</param>
 /// <param name="Domain">Stable domain identifier for routing and storage (dot-notation, e.g. "geo.plates.topology").</param>
 /// <param name="Model">The model identifier (e.g. "M0").</param>
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct TruthStreamIdentity(
     [property: UnifyProperty(0)] string VariantId,
@@ -47,7 +49,7 @@ public readonly record struct TruthStreamIdentity(
     public static bool TryParse(string urn, out TruthStreamIdentity identity)
     {
         identity = default;
-        if (string.IsNullOrWhiteSpace(urn) || !urn.StartsWith("urn:fantasim:"))
+        if (string.IsNullOrWhiteSpace(urn) || !urn.StartsWith("urn:fantasim:", StringComparison.Ordinal))
         {
             return false;
         }
@@ -58,7 +60,7 @@ public readonly record struct TruthStreamIdentity(
             return false;
         }
 
-        if (!parts[2].StartsWith("L") || !int.TryParse(parts[2].Substring(1), out var lLevel))
+        if (!parts[2].StartsWith("L", StringComparison.Ordinal) || !int.TryParse(parts[2].Substring(1), out var lLevel))
         {
             return false;
         }
@@ -79,6 +81,15 @@ public readonly record struct TruthStreamIdentity(
     /// </summary>
     public string ToStreamKey() =>
         $"{VariantId}:{BranchId}:L{LLevel}:{Domain}:{NormalizeModel(Model)}";
+
+    /// <summary>
+    /// Returns the canonical event stream identity string for fingerprinting.
+    /// Format: S:{streamKey}:Events
+    ///
+    /// This format is per RFC-V2-0006 §5.3 for use in InputFingerprint computation.
+    /// </summary>
+    public string ToEventStreamIdString() =>
+        $"S:{ToStreamKey()}:Events";
 
     private static string NormalizeModel(string model)
     {
