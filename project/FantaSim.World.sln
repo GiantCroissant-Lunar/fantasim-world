@@ -125,7 +125,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Testing.Sto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Registry", "plugins\Raster.Registry\Raster.Registry.csproj", "{CA9CAD36-5A14-4342-9789-D0EFCBF4E00E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Masking", "plugins\Raster.Masking\Raster.Masking.csproj", "{E438A1FD-16C6-45C1-87D0-73A7BC51D0F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Masking.Plate", "plugins\Raster.Masking.Plate\Raster.Masking.Plate.csproj", "{E438A1FD-16C6-45C1-87D0-73A7BC51D0F7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Core", "plugins\Raster.Core\Raster.Core.csproj", "{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}"
 EndProject

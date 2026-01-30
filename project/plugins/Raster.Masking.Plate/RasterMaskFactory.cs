@@ -4,7 +4,7 @@ using FantaSim.Geosphere.Plate.Raster.Core;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
-namespace FantaSim.Raster.Masking;
+namespace FantaSim.Raster.Masking.Plate;
 
 /// <summary>
 /// Factory for creating masked raster sequences.

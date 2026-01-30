@@ -4,9 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>FantaSim.Raster.Masking</RootNamespace>
-    <PackageId>GiantCroissant.FantaSim.Raster.Masking</PackageId>
-    <AssemblyName>Raster.Masking</AssemblyName>
+    <RootNamespace>FantaSim.Raster.Masking.Plate</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Raster.Masking.Plate</PackageId>
+    <AssemblyName>Raster.Masking.Plate</AssemblyName>
     <Description>Plate-specific raster masking and composition. RFC-V2-0028 §8.2.2 composition layer.</Description>
   </PropertyGroup>
 

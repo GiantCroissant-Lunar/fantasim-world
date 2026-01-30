@@ -5,7 +5,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Raster.Masking;
+namespace FantaSim.Raster.Masking.Plate;
 
 /// <summary>
 /// Factory that creates plate polygon-based masks for a specific tick.

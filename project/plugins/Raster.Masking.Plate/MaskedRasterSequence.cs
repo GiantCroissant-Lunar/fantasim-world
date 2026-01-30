@@ -8,7 +8,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 // Use Core types
 using CoreMaskedRasterSequence = FantaSim.Geosphere.Plate.Raster.Core.MaskedRasterSequence;
 
-namespace FantaSim.Raster.Masking;
+namespace FantaSim.Raster.Masking.Plate;
 
 /// <summary>
 /// Backward compatibility alias for <see cref="Core.MaskedRasterSequence"/>.

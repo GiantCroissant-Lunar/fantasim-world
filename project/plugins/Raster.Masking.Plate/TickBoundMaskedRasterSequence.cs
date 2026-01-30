@@ -4,7 +4,7 @@ using FantaSim.Geosphere.Plate.Raster.Contracts;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Raster.Masking;
+namespace FantaSim.Raster.Masking.Plate;
 
 /// <summary>
 /// A raster sequence that applies tick-specific masking to frames.

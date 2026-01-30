@@ -6,7 +6,7 @@ using FantaSim.Geosphere.Plate.Raster.Core;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifyGeometry;
 
-namespace FantaSim.Raster.Masking;
+namespace FantaSim.Raster.Masking.Plate;
 
 /// <summary>
 /// A mask based on plate polygons.
