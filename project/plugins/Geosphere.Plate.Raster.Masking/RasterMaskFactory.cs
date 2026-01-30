@@ -1,5 +1,6 @@
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+﻿using FantaSim.Geosphere.Plate.Raster.Contracts;
 using FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+using FantaSim.Geosphere.Plate.Raster.Core;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
@@ -38,8 +39,8 @@ public sealed class RasterMaskFactory : IPlateRasterMaskFactory
         if (source == null)
             throw new ArgumentNullException(nameof(source));
 
-        var mask = new BoundsRasterMask(bounds, includeInterior: true);
-        return new MaskedRasterSequence(source, mask, DefaultNoDataValue);
+        var mask = new Core.BoundsRasterMask(bounds, includeInterior: true);
+        return new Core.MaskedRasterSequence(source, mask, DefaultNoDataValue);
     }
 
     /// <summary>
@@ -52,8 +53,8 @@ public sealed class RasterMaskFactory : IPlateRasterMaskFactory
         if (source == null)
             throw new ArgumentNullException(nameof(source));
 
-        var mask = new BoundsRasterMask(bounds, includeInterior: false);
-        return new MaskedRasterSequence(source, mask, DefaultNoDataValue);
+        var mask = new Core.BoundsRasterMask(bounds, includeInterior: false);
+        return new Core.MaskedRasterSequence(source, mask, DefaultNoDataValue);
     }
 
     /// <inheritdoc />
@@ -67,6 +68,6 @@ public sealed class RasterMaskFactory : IPlateRasterMaskFactory
         if (mask == null)
             throw new ArgumentNullException(nameof(mask));
 
-        return new MaskedRasterSequence(source, mask, noDataValue);
+        return new Core.MaskedRasterSequence(source, mask, noDataValue);
     }
 }
