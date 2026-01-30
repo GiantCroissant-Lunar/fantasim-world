@@ -79,3 +79,4 @@ docs/_inbox/
 specs/
 
 ref-projects/
+*.DotSettings
