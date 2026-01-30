@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
+﻿namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 
 /// <summary>
 /// Policy for comparing angles in a deterministic, stable manner.

@@ -1,4 +1,4 @@
-using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+﻿using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 
