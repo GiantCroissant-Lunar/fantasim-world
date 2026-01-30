@@ -362,3 +362,34 @@ tasks:
     desc: Preview inbox organization without moving files
     cmds:
       - python scripts/organize_inbox.py --dry-run
+
+  # =============================================================================
+  # Build Tasks
+  # =============================================================================
+
+  build:
+    desc: Compile the solution
+    cmds:
+      - ./build/build.cmd Compile
+
+  build-pack:
+    desc: Create NuGet packages for contracts
+    cmds:
+      - ./build/build.cmd PackProjects
+
+  build-publish:
+    desc: Publish hosts and plugins
+    cmds:
+      - ./build/build.cmd PublishProjects
+
+  build-all:
+    desc: Compile, pack, and publish all artifacts
+    cmds:
+      - task: build
+      - task: build-pack
+      - task: build-publish
+
+  build-latest:
+    desc: Pack projects and sync to latest folder
+    cmds:
+      - ./build/build.cmd PackProjectsLatest
