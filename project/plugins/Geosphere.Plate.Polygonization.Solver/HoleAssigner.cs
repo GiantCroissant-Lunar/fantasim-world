@@ -23,12 +23,16 @@ public static class HoleAssigner
     );
 
     /// <summary>
+    /// Full result of hole assignment including orphaned holes.
+    /// </summary>
+    public readonly record struct HoleAssignmentResult(
+        ImmutableArray<PlateRingGroup> Groups,
+        ImmutableArray<Polyline3> OrphanHoles
+    );
+
+    /// <summary>
     /// Classifies and assigns rings for a single plate.
-    ///
-    /// All input rings belong to the same PlateId. This method:
-    /// 1. Separates rings into outers (CCW/positive area) and holes (CW/negative area)
-    /// 2. Assigns each hole to its containing outer ring
-    /// 3. Returns grouped outer+holes structures
+    /// Convenience overload that discards orphan holes.
     /// </summary>
     /// <param name="rings">All rings belonging to a single plate.</param>
     /// <param name="winding">Winding convention (default CCW = outer is positive area).</param>
@@ -37,15 +41,37 @@ public static class HoleAssigner
         IReadOnlyList<Polyline3> rings,
         WindingConvention winding = WindingConvention.CounterClockwise)
     {
+        var result = AssignHolesWithOrphans(rings, winding);
+        return result.Groups.AsSpan().ToArray();
+    }
+
+    /// <summary>
+    /// Classifies and assigns rings for a single plate, returning orphaned holes explicitly.
+    ///
+    /// All input rings belong to the same PlateId. This method:
+    /// 1. Separates rings into outers (CCW/positive area) and holes (CW/negative area)
+    /// 2. Assigns each hole to its innermost containing outer ring
+    /// 3. Returns grouped outer+holes structures plus any orphaned holes
+    /// </summary>
+    /// <param name="rings">All rings belonging to a single plate.</param>
+    /// <param name="winding">Winding convention (default CCW = outer is positive area).</param>
+    /// <returns>Groups and orphan holes. Orphans indicate topology errors upstream.</returns>
+    public static HoleAssignmentResult AssignHolesWithOrphans(
+        IReadOnlyList<Polyline3> rings,
+        WindingConvention winding = WindingConvention.CounterClockwise)
+    {
         if (rings.Count == 0)
         {
-            return Array.Empty<PlateRingGroup>();
+            return new HoleAssignmentResult(
+                ImmutableArray<PlateRingGroup>.Empty,
+                ImmutableArray<Polyline3>.Empty);
         }
 
         if (rings.Count == 1)
         {
             // Single ring = outer, no holes
-            return new[] { new PlateRingGroup(rings[0], ImmutableArray<Polyline3>.Empty) };
+            var groups = ImmutableArray.Create(new PlateRingGroup(rings[0], ImmutableArray<Polyline3>.Empty));
+            return new HoleAssignmentResult(groups, ImmutableArray<Polyline3>.Empty);
         }
 
         // Classify rings by signed area
@@ -70,15 +96,32 @@ public static class HoleAssigner
 
         if (outers.Count == 0)
         {
-            // All rings are holes? This shouldn't happen for valid topology.
-            // Return empty - caller should handle this as an error.
-            return Array.Empty<PlateRingGroup>();
+            // All rings are holes? Return them all as orphans.
+            return new HoleAssignmentResult(
+                ImmutableArray<PlateRingGroup>.Empty,
+                holes.ToImmutableArray());
         }
 
         if (outers.Count == 1)
         {
-            // Single outer, all holes belong to it
-            return new[] { new PlateRingGroup(outers[0].ring, holes.ToImmutableArray()) };
+            // Single outer, filter contained holes
+            var contained = new List<Polyline3>();
+            var orphans = new List<Polyline3>();
+
+            foreach (var hole in holes)
+            {
+                if (PointInPolygon(ComputeCentroid(hole), outers[0].ring))
+                {
+                    contained.Add(hole);
+                }
+                else
+                {
+                    orphans.Add(hole);
+                }
+            }
+
+            var groups = ImmutableArray.Create(new PlateRingGroup(outers[0].ring, contained.ToImmutableArray()));
+            return new HoleAssignmentResult(groups, orphans.ToImmutableArray());
         }
 
         // Multiple outers (disjoint regions of the same plate)
@@ -86,6 +129,7 @@ public static class HoleAssigner
         var outerHoles = outers.ToDictionary(
             o => o.ring,
             _ => new List<Polyline3>());
+        var orphanHoles = new List<Polyline3>();
 
         foreach (var hole in holes)
         {
@@ -110,12 +154,17 @@ public static class HoleAssigner
             {
                 outerHoles[containingOuter].Add(hole);
             }
-            // Holes not contained by any outer are orphaned (topology error, but we don't fail here)
+            else
+            {
+                orphanHoles.Add(hole);
+            }
         }
 
-        return outers
+        var resultGroups = outers
             .Select(o => new PlateRingGroup(o.ring, outerHoles[o.ring].ToImmutableArray()))
-            .ToList();
+            .ToImmutableArray();
+
+        return new HoleAssignmentResult(resultGroups, orphanHoles.ToImmutableArray());
     }
 
     /// <summary>

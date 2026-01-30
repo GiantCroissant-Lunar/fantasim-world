@@ -1,9 +1,11 @@
+using System.Runtime.InteropServices;
 using FantaSim.Space.Stellar.Contracts.Entities;
 using FantaSim.Space.Stellar.Contracts.Mechanics;
 using UnifySerialization.Abstractions;
 
 namespace FantaSim.Space.Stellar.Contracts.Snapshots;
 
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct L3BodySnapshot(
     [property: UnifyProperty(0)] Guid BodyId,

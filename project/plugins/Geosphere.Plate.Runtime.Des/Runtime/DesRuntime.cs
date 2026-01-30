@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FantaSim.Geosphere.Plate.Runtime.Des.Events;
 using FantaSim.Geosphere.Plate.Runtime.Des.Core;
 using FantaSim.Geosphere.Plate.Topology.Materializer;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Determinism;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Capabilities; // Added for TickMaterializationMode
 
@@ -17,17 +18,20 @@ public sealed class DesRuntime : IDesRuntime
     private readonly PlateTopologyTimeline _timeline;
     private readonly IDesDispatcher _dispatcher;
     private readonly IDesScheduler _scheduler;
+    private readonly ISolverSeedProvider _seedProvider;
 
     public DesRuntime(
         IDesQueue queue,
         ITruthEventAppender appender,
         PlateTopologyTimeline timeline,
-        IDesDispatcher dispatcher)
+        IDesDispatcher dispatcher,
+        ISolverSeedProvider seedProvider)
     {
         _queue = queue ?? throw new ArgumentNullException(nameof(queue));
         _appender = appender ?? throw new ArgumentNullException(nameof(appender));
         _timeline = timeline ?? throw new ArgumentNullException(nameof(timeline));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _seedProvider = seedProvider ?? throw new ArgumentNullException(nameof(seedProvider));
         _scheduler = new DesScheduler(_queue);
     }
 
@@ -84,23 +88,27 @@ public sealed class DesRuntime : IDesRuntime
             // I'll assume Auto for now or update DesRunOptions.
             // Let's assume Auto.
 
-            var slice = await _timeline.GetSliceAtTickAsync(stream, item.When, TickMaterializationMode.Auto, ct);
+            var slice = await _timeline.GetSliceAtTickAsync(stream, item.When, TickMaterializationMode.Auto, ct).ConfigureAwait(false);
+
+            // Create tick-scoped RNG for deterministic event ID generation
+            var tickRng = _seedProvider.CreateRngForTick(options.ScenarioSeed, stream, item.When);
 
             var context = new DesContext
             {
                 Stream = stream,
                 CurrentTick = item.When,
                 State = slice.State,
-                Scheduler = _scheduler
+                Scheduler = _scheduler,
+                Rng = tickRng
             };
 
             // Dispatch
-            var drafts = await _dispatcher.DispatchAsync(item, context, ct);
+            var drafts = await _dispatcher.DispatchAsync(item, context, ct).ConfigureAwait(false);
 
             // Append drafts
             if (drafts.Count > 0)
             {
-                var appendResult = await _appender.AppendAsync(drafts, new AppendOptions { EnforceMonotonicity = true }, ct);
+                var appendResult = await _appender.AppendAsync(drafts, new AppendOptions { EnforceMonotonicity = true }, ct).ConfigureAwait(false);
                 eventsAppended += drafts.Count;
             }
 

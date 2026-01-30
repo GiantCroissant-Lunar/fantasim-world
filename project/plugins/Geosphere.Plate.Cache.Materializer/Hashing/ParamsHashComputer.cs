@@ -25,7 +25,7 @@ public static class ParamsHashComputer
     public static string Compute(Dictionary<string, object?>? @params)
     {
         // Encode params as canonical MessagePack
-        var canonicalBytes = CanonicalMessagePackEncoder.EncodeMap(@params);
+        var canonicalBytes = DerivedCacheCanonicalMessagePackEncoder.EncodeMap(@params);
 
         // Compute SHA-256 hash
         var hashBytes = SHA256.HashData(canonicalBytes);

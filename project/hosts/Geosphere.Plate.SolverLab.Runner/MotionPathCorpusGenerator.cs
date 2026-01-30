@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using TimeDete = Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -111,7 +111,7 @@ public static class MotionPathCorpusGenerator
         var input = new MotionPathInput(
             plateId,
             startPoint,
-            new Point3(rotationAxis.X, rotationAxis.Y, rotationAxis.Z),
+            UnitVector3d.Create(rotationAxis.X, rotationAxis.Y, rotationAxis.Z),
             angularRate,
             stepCount,
             stepTicks,

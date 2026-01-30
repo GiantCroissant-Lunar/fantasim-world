@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
@@ -21,6 +22,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 /// <param name="StreamIdentity">The truth stream this event belongs to.</param>
 /// <param name="PreviousHash">Hash of the previous event in the chain (empty for genesis).</param>
 /// <param name="Hash">Cryptographic hash of this event (computed, not set by callers).</param>
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct BoundaryRetiredEvent(
     [property: UnifyProperty(0)] Guid EventId,

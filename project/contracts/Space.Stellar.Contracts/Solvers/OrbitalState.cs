@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using FantaSim.Space.Stellar.Contracts.Numerics;
 
 namespace FantaSim.Space.Stellar.Contracts.Solvers;
@@ -6,6 +7,7 @@ namespace FantaSim.Space.Stellar.Contracts.Solvers;
 /// Represents the complete orbital state of a body at a specific time.
 /// Includes both Cartesian state vectors and orbital anomalies.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct OrbitalState(
     Vector3d PositionM,
     Vector3d VelocityMPerS,

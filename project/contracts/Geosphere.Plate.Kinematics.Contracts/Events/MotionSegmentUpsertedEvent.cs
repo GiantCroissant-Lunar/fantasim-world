@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
@@ -10,6 +11,7 @@ namespace FantaSim.Geosphere.Plate.Kinematics.Contracts.Events;
 /// <summary>
 /// Defines or updates a motion segment for a plate over an interval [TickA, TickB].
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct MotionSegmentUpsertedEvent(
     [property: UnifyProperty(0)] Guid EventId,

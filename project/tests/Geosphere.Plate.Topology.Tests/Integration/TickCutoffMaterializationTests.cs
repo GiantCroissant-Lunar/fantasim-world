@@ -227,19 +227,19 @@ public sealed class TickCutoffMaterializationTests
         var state30 = new PlateTopologyState(_stream);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            Key: new PlateTopologyMaterializationKey(_stream, 10),
+            Key: new PlateTopologyMaterializationKey(_stream, 10, 10),
             LastEventSequence: 10,
             Plates: Array.Empty<PlateEntity>(),
             Boundaries: Array.Empty<Boundary>(),
             Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            Key: new PlateTopologyMaterializationKey(_stream, 20),
+            Key: new PlateTopologyMaterializationKey(_stream, 20, 20),
             LastEventSequence: 20,
             Plates: Array.Empty<PlateEntity>(),
             Boundaries: Array.Empty<Boundary>(),
             Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            Key: new PlateTopologyMaterializationKey(_stream, 30),
+            Key: new PlateTopologyMaterializationKey(_stream, 30, 30),
             LastEventSequence: 30,
             Plates: Array.Empty<PlateEntity>(),
             Boundaries: Array.Empty<Boundary>(),
@@ -279,13 +279,13 @@ public sealed class TickCutoffMaterializationTests
         var state2 = new PlateTopologyState(stream2);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            Key: new PlateTopologyMaterializationKey(stream1, 10),
+            Key: new PlateTopologyMaterializationKey(stream1, 10, 10),
             LastEventSequence: 10,
             Plates: Array.Empty<PlateEntity>(),
             Boundaries: Array.Empty<Boundary>(),
             Junctions: Array.Empty<Junction>()), CancellationToken.None);
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            Key: new PlateTopologyMaterializationKey(stream2, 50),
+            Key: new PlateTopologyMaterializationKey(stream2, 50, 50),
             LastEventSequence: 50,
             Plates: Array.Empty<PlateEntity>(),
             Boundaries: Array.Empty<Boundary>(),
@@ -330,7 +330,7 @@ public sealed class TickCutoffMaterializationTests
             stateAtSeq5.Plates[plates[i]] = new FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate(plates[i], false, null);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(_stream, 5),  // tick 5, seq 5
+            new PlateTopologyMaterializationKey(_stream, 5, 5),  // tick 5, seq 5
             5,  // LastEventSequence
             stateAtSeq5.Plates.Values.ToArray(),
             Array.Empty<Boundary>(),
@@ -385,7 +385,7 @@ public sealed class TickCutoffMaterializationTests
             stateAtSnapshot.Plates[evt.PlateId] = new FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate(evt.PlateId, false, null);
 
         await snapshotStore.SaveSnapshotAsync(new PlateTopologySnapshot(
-            new PlateTopologyMaterializationKey(_stream, 1000),  // tick 1000
+            new PlateTopologyMaterializationKey(_stream, 1000, 10),  // tick 1000
             10,  // LastEventSequence
             stateAtSnapshot.Plates.Values.ToArray(),
             Array.Empty<Boundary>(),
@@ -626,6 +626,14 @@ public sealed class TickCutoffMaterializationTests
             var last = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
             return Task.FromResult(last);
         }
+
+        public Task<StreamHead> GetHeadAsync(TruthStreamIdentity stream, CancellationToken cancellationToken)
+        {
+            var lastSeq = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
+            if (lastSeq == null)
+                return Task.FromResult(StreamHead.Empty);
+            return Task.FromResult(new StreamHead(lastSeq.Value, StreamHead.ZeroHash));
+        }
     }
 
     private sealed class InMemoryTopologyEventStore : ITopologyEventStore
@@ -660,6 +668,14 @@ public sealed class TickCutoffMaterializationTests
         {
             var last = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
             return Task.FromResult(last);
+        }
+
+        public Task<StreamHead> GetHeadAsync(TruthStreamIdentity stream, CancellationToken cancellationToken)
+        {
+            var lastSeq = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
+            if (lastSeq == null)
+                return Task.FromResult(StreamHead.Empty);
+            return Task.FromResult(new StreamHead(lastSeq.Value, StreamHead.ZeroHash));
         }
     }
 

@@ -20,8 +20,12 @@ namespace FantaSim.Geosphere.Plate.Junction.Solver;
 /// <b>Determinism:</b> All methods produce identical results for identical inputs.
 /// </para>
 /// <para>
-/// <b>Incident ordering (§10.1):</b> Incidents are sorted by angle (CCW from +X),
-/// ties broken by BoundaryId.
+/// <b>Incident ordering (§10.1):</b> Incidents are sorted by tangent angle (CCW from North),
+/// computed in the local tangent plane at the junction's surface point. Ties broken by BoundaryId.
+/// </para>
+/// <para>
+/// <b>Sphere-correct:</b> Angle computation uses a local tangent frame, not global coordinates.
+/// This ensures stable cyclic ordering anywhere on the sphere, including poles.
 /// </para>
 /// <para>
 /// <b>Classification (§11):</b> Boundary types mapped to R/F/T letters, sorted alphabetically,
@@ -162,16 +166,19 @@ public sealed class JunctionAnalyzer : IJunctionAnalyzer
         var incidentPlates = new HashSet<PlateId>();
         var boundaryTypes = new List<BoundaryType>();
 
+        // Create local tangent frame at the junction's surface point
+        var junctionFrame = junction.Location.CreateTangentFrame();
+
         foreach (var boundaryId in junction.BoundaryIds)
         {
             if (!topology.Boundaries.TryGetValue(boundaryId, out var boundary) || boundary.IsRetired)
                 continue;
 
             // Determine if this is the start or end of the boundary
-            var (isStartpoint, directionVector) = GetBoundaryDirection(boundary, junction.Location);
+            var (isStartpoint, direction3d) = GetBoundaryDirection3d(boundary, junction.Location);
 
-            // Compute angle from +X axis (CCW positive)
-            var angle = Math.Atan2(directionVector.Y, directionVector.X);
+            // Compute tangent angle using local frame (CCW from North)
+            var tangentAngle = junctionFrame.ComputeTangentAngle(direction3d);
 
             // Determine left/right plates based on direction
             var leftPlate = isStartpoint ? boundary.PlateIdLeft : boundary.PlateIdRight;
@@ -180,7 +187,7 @@ public sealed class JunctionAnalyzer : IJunctionAnalyzer
             incidents.Add(new JunctionIncident(
                 boundaryId,
                 isStartpoint,
-                angle,
+                tangentAngle,
                 leftPlate,
                 rightPlate));
 
@@ -189,12 +196,8 @@ public sealed class JunctionAnalyzer : IJunctionAnalyzer
             boundaryTypes.Add(boundary.BoundaryType);
         }
 
-        // Sort incidents by angle (§10.1), ties by BoundaryId
-        incidents.Sort((a, b) =>
-        {
-            var angleCmp = a.Angle.CompareTo(b.Angle);
-            return angleCmp != 0 ? angleCmp : a.BoundaryId.Value.CompareTo(b.BoundaryId.Value);
-        });
+        // Sort incidents by tangent angle (§10.1), ties by BoundaryId
+        incidents.Sort((a, b) => JunctionIncident.CompareByAngle(a, b));
 
         // Sort incident plates by PlateId (§10.3)
         var sortedPlates = incidentPlates.OrderBy(p => p.Value).ToImmutableArray();
@@ -206,84 +209,97 @@ public sealed class JunctionAnalyzer : IJunctionAnalyzer
             classification = ClassifyTripleJunction(boundaryTypes);
         }
 
-        // Convert 2D location to 3D position (Z=0 for 2D topology)
-        var position = new Point3(junction.Location.X, junction.Location.Y, 0);
+        // Convert surface point to 3D position for derived products
+        var position = junction.Location.ToPositionVector();
+        var point3 = new Point3(position.X, position.Y, position.Z);
 
         return new JunctionInfo(
             junction.JunctionId,
-            position,
+            point3,
             incidents.ToImmutableArray(),
             sortedPlates,
             classification);
     }
 
     /// <summary>
-    /// Get the direction vector from junction along boundary.
+    /// Get the 3D direction vector from junction along boundary.
     /// </summary>
-    private (bool IsStartpoint, Vector2d Direction) GetBoundaryDirection(
+    /// <remarks>
+    /// Returns a 3D direction vector in the global coordinate frame.
+    /// The vector is NOT projected to the tangent plane - that happens during angle computation.
+    /// </remarks>
+    private (bool IsStartpoint, Vector3d Direction) GetBoundaryDirection3d(
         Boundary boundary,
-        Point2 junctionLocation)
+        SurfacePoint junctionLocation)
     {
-        // Get boundary geometry points
-        var points = GetGeometryPoints(boundary.Geometry);
-        if (points.Count < 2)
-            return (true, new Vector2d(1, 0)); // Degenerate case
+        // Get boundary geometry points in 3D
+        var points3d = GetGeometryPoints3d(boundary.Geometry);
+        if (points3d.Count < 2)
+            return (true, Vector3d.UnitX); // Degenerate case
 
-        var start = points[0];
-        var end = points[^1];
+        var start = points3d[0];
+        var end = points3d[^1];
 
-        var distToStart = Distance(junctionLocation, start);
-        var distToEnd = Distance(junctionLocation, end);
+        var junctionPos = junctionLocation.ToPositionVector();
+        var distToStart = Distance3d(junctionPos, start);
+        var distToEnd = Distance3d(junctionPos, end);
 
         if (distToStart < distToEnd)
         {
             // Junction is at start - direction is from junction toward second point
-            var direction = Normalize(new Vector2d(
-                points[1].X - start.X,
-                points[1].Y - start.Y));
+            var direction = Normalize3d(new Vector3d(
+                points3d[1].X - start.X,
+                points3d[1].Y - start.Y,
+                points3d[1].Z - start.Z));
             return (true, direction);
         }
         else
         {
             // Junction is at end - direction is from junction toward second-to-last point
-            var direction = Normalize(new Vector2d(
-                points[^2].X - end.X,
-                points[^2].Y - end.Y));
+            var direction = Normalize3d(new Vector3d(
+                points3d[^2].X - end.X,
+                points3d[^2].Y - end.Y,
+                points3d[^2].Z - end.Z));
             return (false, direction);
         }
     }
 
     /// <summary>
-    /// Extract points from geometry.
+    /// Extract 3D points from geometry.
     /// </summary>
-    private IReadOnlyList<Point2> GetGeometryPoints(IGeometry geometry)
+    private IReadOnlyList<Vector3d> GetGeometryPoints3d(IGeometry geometry)
     {
-        // Handle different geometry types
+        // Handle different geometry types - convert all to 3D
         return geometry switch
         {
-            Polyline2 polyline => polyline.ToArray().Select(v => new Point2(v.X, v.Y)).ToList(),
-            Polyline3 polyline3 => polyline3.ToArray().Select(v => new Point2(v.X, v.Y)).ToList(),
-            _ => Array.Empty<Point2>()
+            Polyline3 polyline3 => polyline3.PointsList
+                .Select(p => new Vector3d(p.X, p.Y, p.Z))
+                .ToList(),
+            Polyline2 polyline => polyline.PointsList
+                .Select(v => new Vector3d(v.X, v.Y, 0))  // Promote 2D to 3D (z=0)
+                .ToList(),
+            _ => Array.Empty<Vector3d>()
         };
     }
 
     /// <summary>
-    /// Euclidean distance between two points.
+    /// Euclidean distance between two 3D points.
     /// </summary>
-    private static double Distance(Point2 a, Point2 b)
+    private static double Distance3d(Vector3d a, Vector3d b)
     {
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
+        var dz = b.Z - a.Z;
+        return Math.Sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     /// <summary>
-    /// Normalize a 2D vector.
+    /// Normalize a 3D vector.
     /// </summary>
-    private static Vector2d Normalize(Vector2d v)
+    private static Vector3d Normalize3d(Vector3d v)
     {
-        var len = Math.Sqrt(v.X * v.X + v.Y * v.Y);
-        return len > 0 ? new Vector2d(v.X / len, v.Y / len) : v;
+        var len = Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+        return len > 0 ? new Vector3d(v.X / len, v.Y / len, v.Z / len) : v;
     }
 
     /// <summary>

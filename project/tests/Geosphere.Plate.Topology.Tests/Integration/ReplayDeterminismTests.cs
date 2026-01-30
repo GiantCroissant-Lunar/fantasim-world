@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -342,7 +343,7 @@ public class ReplayDeterminismTests : IDisposable
         var exception = await Assert.ThrowsAsync<ArgumentException>(
             () => _store.AppendAsync(_stream1, events, CancellationToken.None)
         );
-        Assert.Contains("monotonically increasing", exception.Message);
+        Assert.Contains("monotonically increasing", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -359,7 +360,7 @@ public class ReplayDeterminismTests : IDisposable
         var exception = await Assert.ThrowsAsync<ArgumentException>(
             () => _store.AppendAsync(_stream1, events, CancellationToken.None)
         );
-        Assert.Contains("does not match expected", exception.Message);
+        Assert.Contains("does not match expected", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -590,8 +591,8 @@ public class ReplayDeterminismTests : IDisposable
         var j3 = state3.Junctions[junctionId];
         Assert.Equal(j1.JunctionId, j2.JunctionId);
         Assert.Equal(j1.JunctionId, j3.JunctionId);
-        Assert.Equal(j1.BoundaryIds, j2.BoundaryIds);
-        Assert.Equal(j1.BoundaryIds, j3.BoundaryIds);
+        Assert.True(j1.BoundaryIds.SequenceEqual(j2.BoundaryIds), "BoundaryIds differ between state1 and state2");
+        Assert.True(j1.BoundaryIds.SequenceEqual(j3.BoundaryIds), "BoundaryIds differ between state1 and state3");
         Assert.Equal(j1.Location, j2.Location);
         Assert.Equal(j1.Location, j3.Location);
         Assert.Equal(j1.IsRetired, j2.IsRetired);

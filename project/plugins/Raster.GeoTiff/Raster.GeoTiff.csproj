@@ -10,7 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\contracts\FantaSim.Raster.Contracts\FantaSim.Raster.Contracts.csproj" />
+    <InternalsVisibleTo Include="Raster.GeoTiff.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Raster.Contracts\Raster.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Datasets.Contracts\Geosphere.Plate.Datasets.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

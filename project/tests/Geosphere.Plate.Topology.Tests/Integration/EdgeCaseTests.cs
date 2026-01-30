@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -412,10 +413,10 @@ public class EdgeCaseTests : IDisposable
         var exception = Assert.Throws<InvalidOperationException>(() => InvariantValidator.Validate(state));
 
         // Assert
-        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
-        Assert.Contains("retired left plate", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains(plateId1.ToString(), exception.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("retired left plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains(plateId1.ToString(), exception.Message, StringComparison.Ordinal);
     }
 
     #endregion
@@ -520,9 +521,9 @@ public class EdgeCaseTests : IDisposable
         );
 
         // Should detect the non-existent boundary reference
-        Assert.Contains("NoOrphanJunctions", exception.Message);
-        Assert.Contains("non-existent boundary", exception.Message);
-        Assert.Contains(boundaryId2.ToString(), exception.Message);
+        Assert.Contains("NoOrphanJunctions", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId2.ToString(), exception.Message, StringComparison.Ordinal);
     }
 
     #endregion

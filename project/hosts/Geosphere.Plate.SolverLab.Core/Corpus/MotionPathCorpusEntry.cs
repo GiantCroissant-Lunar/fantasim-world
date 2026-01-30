@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Motion.Contracts;
 
 namespace FantaSim.Geosphere.Plate.SolverLab.Core.Corpus;
@@ -35,14 +37,18 @@ public sealed class MotionPathCorpusEntry
 /// Input parameters for motion path corpus cases.
 /// </summary>
 /// <remarks>
-/// NOTE: RotationAxis uses Point3 as a stand-in for Vector3d until UnifyGeometry adds Vector3d type.
-/// The Point3 here represents a direction vector (normalized axis of rotation).
+/// <para>
+/// <b>Type safety:</b> StartPoint is a <see cref="Point3"/> (position on sphere),
+/// while RotationAxis is a <see cref="UnitVector3d"/> (direction/axis of rotation).
+/// This distinction prevents "point vs vector" confusion bugs.
+/// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct MotionPathInput(
     [property: Key(0)] PlateId PlateId,
     [property: Key(1)] Point3 StartPoint,
-    [property: Key(2)] Point3 RotationAxis,  // TODO: Replace with Vector3d when available
+    [property: Key(2)] UnitVector3d RotationAxis,  // Direction vector (unit length)
     [property: Key(3)] double AngularRate,
     [property: Key(4)] int StepCount,
     [property: Key(5)] int StepTicks,

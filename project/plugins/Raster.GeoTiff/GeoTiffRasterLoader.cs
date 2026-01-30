@@ -1,5 +1,7 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Datasets.Contracts.Loading;
+using FantaSim.Geosphere.Plate.Datasets.Contracts.Manifest;
 using FantaSim.Raster.Contracts;
 using FantaSim.Raster.Contracts.Loading;
 using FantaSim.Raster.GeoTiff.Internal;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +7,15 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
 namespace FantaSim.Geosphere.Plate.Runtime.Des.Events;
 
+/// <summary>
+/// Appends truth events to the topology event store with optimistic concurrency control.
+///
+/// Design rationale (RFC-V2-0005 review):
+/// - Uses <see cref="ITopologyEventStore.GetHeadAsync"/> to get current head state
+/// - Passes <see cref="HeadPrecondition"/> to guard against concurrent writes
+/// - Per-stream locking in the store ensures in-process atomicity
+/// - <see cref="ConcurrencyConflictException"/> enables retry logic if needed
+/// </summary>
 public sealed class PlateTopologyEventAppender : ITruthEventAppender
 {
     private readonly ITopologyEventStore _store;
@@ -33,9 +42,9 @@ public sealed class PlateTopologyEventAppender : ITruthEventAppender
 
         var stream = drafts[0].Stream;
 
-        // 1. Get the last sequence number to determine next sequence
-        var lastSeq = await _store.GetLastSequenceAsync(stream, ct);
-        long nextSeq = (lastSeq ?? -1) + 1;
+        // 1. Get the current head state (sequence + hash) for optimistic concurrency
+        var head = await _store.GetHeadAsync(stream, ct).ConfigureAwait(false);
+        long nextSeq = head.Sequence + 1;
 
         var eventsToAppend = new List<IPlateTopologyEvent>(drafts.Count);
 
@@ -48,50 +57,26 @@ public sealed class PlateTopologyEventAppender : ITruthEventAppender
             eventsToAppend.Add(draft.ToTruthEvent(nextSeq++));
         }
 
-        // 2. Append to store
+        // 2. Append to store with optimistic concurrency precondition
         var storeOptions = new FantaSim.Geosphere.Plate.Topology.Contracts.Events.AppendOptions
         {
             TickPolicy = options.EnforceMonotonicity
                 ? TickMonotonicityPolicy.Reject
-                : TickMonotonicityPolicy.Allow
+                : TickMonotonicityPolicy.Allow,
+            ExpectedHead = head.ToPrecondition()
         };
 
-        await _store.AppendAsync(stream, eventsToAppend, storeOptions, ct);
+        await _store.AppendAsync(stream, eventsToAppend, storeOptions, ct).ConfigureAwait(false);
 
         // 3. Return result from the last appended event
-        // Note: The store computes the Hash. IPlateTopologyEvent has a Hash property.
-        // Wait, the IPlateTopologyEvent passed to AppendAsync usually has empty Hash/PreviousHash,
-        // and the store computes it?
-        // Checking PlateTopologyEventStore implementation...
-        // It computes hash: var hash = MessagePackEventRecordSerializer.ComputeHashV1(...)
-        // But it does NOT update the 'evt' object in the list (records represent persistence).
-        // The persistence layer stores the hash.
-        // If we want the computed hash back, we might need to re-read the head, or the Store should return it.
-        // The current ITopologyEventStore.AppendAsync returns Task (void).
-        // So we must read the head to get the hash.
+        // The store computes the hash but doesn't return it directly.
+        // We can either:
+        // a) Read back the event (current approach, slight overhead)
+        // b) Have the store return the computed hash (would require API change)
+        //
+        // Using GetHeadAsync is more efficient than reading the full event:
+        var newHead = await _store.GetHeadAsync(stream, ct).ConfigureAwait(false);
 
-        // Optimization: The store updates the Head key. We can read it.
-        // But GetLastSequenceAsync only returns the sequence number.
-        // To get the Hash, we need to read the event at that sequence.
-
-        // Since we know the sequence of the last event we just appended:
-        long finalSeq = nextSeq - 1;
-
-        // Read back the last event to get its computed hash.
-        // This is a slight overhead but ensures we return the authoritative hash from the store.
-        var lastEvents = _store.ReadAsync(stream, finalSeq, ct);
-        IPlateTopologyEvent? lastEvent = null;
-        await foreach (var evt in lastEvents)
-        {
-            lastEvent = evt;
-            break; // Should only be one
-        }
-
-        if (lastEvent == null)
-        {
-             throw new InvalidOperationException($"Failed to read back event at sequence {finalSeq} after append.");
-        }
-
-        return new AppendDraftsResult(lastEvent.Sequence, lastEvent.Hash);
+        return new AppendDraftsResult(newHead.Sequence, newHead.Hash);
     }
 }

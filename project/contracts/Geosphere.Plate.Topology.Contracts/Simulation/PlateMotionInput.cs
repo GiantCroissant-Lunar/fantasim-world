@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using MessagePack;
@@ -11,6 +12,7 @@ public enum PlateType
     Continental
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateSnapshot
 {
@@ -22,6 +24,7 @@ public readonly record struct PlateSnapshot
     [Key(5)] public required PlateType Type { get; init; }
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct BoundarySnapshot
 {
@@ -36,6 +39,7 @@ public readonly record struct BoundarySnapshot
 /// <summary>
 /// Immutable snapshot of plate topology mechanics for solver input.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateMechanicsSnapshot
 {
@@ -44,6 +48,7 @@ public readonly record struct PlateMechanicsSnapshot
     [Key(2)] public required double CurrentTimeS { get; init; }
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateMotionInput
 {

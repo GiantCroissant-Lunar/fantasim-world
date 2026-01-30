@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Determinism.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
@@ -8,6 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 /// EventIds use UUIDv7 format for sortability. Solvers SHOULD use NewId(ISeededRng)
 /// to ensure deterministic replay per RFC-099 guidance.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct EventId
 {
     /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -76,10 +77,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("non-existent left plate", exception.Message);
-        Assert.Contains("Sequence 1", exception.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent left plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 1", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -112,10 +113,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("non-existent right plate", exception.Message);
-        Assert.Contains("Sequence 1", exception.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent right plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 1", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -151,10 +152,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("retired left plate", exception.Message);
-        Assert.Contains("Sequence 3", exception.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("retired left plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 3", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -187,10 +188,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("identical left and right plate", exception.Message);
-        Assert.Contains("Sequence 1", exception.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("identical left and right plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 1", exception.Message, StringComparison.Ordinal);
     }
 
     #endregion
@@ -224,11 +225,11 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("NoOrphanJunctions", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("non-existent boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("Sequence 0", exception.Message);
+        Assert.Contains("NoOrphanJunctions", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 0", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -274,10 +275,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("NoOrphanJunctions", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("retired boundary", exception.Message);
-        Assert.Contains("Sequence 4", exception.Message);
+        Assert.Contains("NoOrphanJunctions", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("retired boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 4", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -319,7 +320,7 @@ public class InvariantEnforcementTests : IDisposable
             TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
-                [boundaryId2], // Non-existent boundary
+                new BoundaryId[] { boundaryId2 }, // Non-existent boundary
                 null,
                 new CanonicalTick(5),
                 5,
@@ -334,10 +335,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("NoOrphanJunctions", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("non-existent boundary", exception.Message);
-        Assert.Contains("Sequence 5", exception.Message);
+        Assert.Contains("NoOrphanJunctions", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 5", exception.Message, StringComparison.Ordinal);
     }
 
     #endregion
@@ -386,11 +387,11 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("Cannot change type of retired boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("no mutation after retirement", exception.Message);
-        Assert.Contains("Sequence 4", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cannot change type of retired boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("no mutation after retirement", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 4", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -434,11 +435,11 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("Cannot update geometry of retired boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("no mutation after retirement", exception.Message);
-        Assert.Contains("Sequence 4", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cannot update geometry of retired boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("no mutation after retirement", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 4", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -493,11 +494,11 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("Cannot update retired junction", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("no mutation after retirement", exception.Message);
-        Assert.Contains("Sequence 5", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cannot update retired junction", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("no mutation after retirement", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 5", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -520,10 +521,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("already retired", exception.Message);
-        Assert.Contains(plateId.ToString(), exception.Message);
-        Assert.Contains("Sequence 2", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("already retired", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(plateId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 2", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -560,10 +561,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("already retired", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("Sequence 4", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("already retired", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 4", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -610,10 +611,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("LifecycleOrdering", exception.Message);
-        Assert.Contains("already retired", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("Sequence 5", exception.Message);
+        Assert.Contains("LifecycleOrdering", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("already retired", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 5", exception.Message, StringComparison.Ordinal);
     }
 
     #endregion
@@ -646,10 +647,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("ReferenceValidity", exception.Message);
-        Assert.Contains("non-existent boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("Sequence 0", exception.Message);
+        Assert.Contains("ReferenceValidity", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 0", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -677,10 +678,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("ReferenceValidity", exception.Message);
-        Assert.Contains("non-existent boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("Sequence 0", exception.Message);
+        Assert.Contains("ReferenceValidity", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 0", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -709,10 +710,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("ReferenceValidity", exception.Message);
-        Assert.Contains("non-existent junction", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("Sequence 0", exception.Message);
+        Assert.Contains("ReferenceValidity", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent junction", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 0", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -740,10 +741,10 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("ReferenceValidity", exception.Message);
-        Assert.Contains("non-existent plate", exception.Message);
-        Assert.Contains(plateId.ToString(), exception.Message);
-        Assert.Contains("Sequence 0", exception.Message);
+        Assert.Contains("ReferenceValidity", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("non-existent plate", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(plateId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 0", exception.Message, StringComparison.Ordinal);
     }
 
     #endregion
@@ -801,14 +802,14 @@ public class InvariantEnforcementTests : IDisposable
             () => _materializer.MaterializeAsync(_stream, CancellationToken.None)
         );
 
-        Assert.Contains("FR-016 BoundaryDeletion", exception.Message);
-        Assert.Contains("Cannot retire boundary", exception.Message);
-        Assert.Contains(boundaryId.ToString(), exception.Message);
-        Assert.Contains("1 active junction(s) reference it", exception.Message);
-        Assert.Contains(junctionId.ToString(), exception.Message);
-        Assert.Contains("Must update or retire these junctions", exception.Message);
-        Assert.Contains("explicit JunctionUpdated/JunctionRetired events", exception.Message);
-        Assert.Contains("Sequence 4", exception.Message);
+        Assert.Contains("FR-016 BoundaryDeletion", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Cannot retire boundary", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(boundaryId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("1 active junction(s) reference it", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(junctionId.ToString(), exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Must update or retire these junctions", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("explicit JunctionUpdated/JunctionRetired events", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Sequence 4", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -935,7 +936,7 @@ public class InvariantEnforcementTests : IDisposable
             TestEventFactory.JunctionUpdated(
                 Guid.NewGuid(),
                 junctionId,
-                [boundaryId2], // Remove boundaryId1
+                new BoundaryId[] { boundaryId2 }, // Remove boundaryId1
                 null,
                 new CanonicalTick(6),
                 6,

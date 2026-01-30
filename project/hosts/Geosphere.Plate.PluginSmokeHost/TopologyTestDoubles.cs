@@ -39,6 +39,11 @@ internal sealed class NullTopologyEventStore : ITopologyEventStore
     {
         return Task.FromResult<long?>(null);
     }
+
+    public Task<StreamHead> GetHeadAsync(TruthStreamIdentity stream, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(StreamHead.Empty);
+    }
 }
 
 internal sealed class NullPlateTopologySnapshotStore : IPlateTopologySnapshotStore

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 
 namespace FantaSim.Raster.Contracts.Masking;
@@ -16,7 +17,7 @@ public static class MaskSpecVersions
 
 /// <summary>
 /// A mask that can be applied to a raster frame.
-/// RFC-V2-0028 ¡±3.3 - Cookie-cutting / masking.
+/// RFC-V2-0028 ï¿½ï¿½3.3 - Cookie-cutting / masking.
 /// </summary>
 /// <remarks>
 /// This interface is domain-agnostic. Plate-specific masking implementations
@@ -51,6 +52,7 @@ public interface IRasterMask
 /// When computing cache keys, include SchemaVersion in the params hash.
 /// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct BoundsMaskSpec(
     [property: Key(0)] int SchemaVersion,

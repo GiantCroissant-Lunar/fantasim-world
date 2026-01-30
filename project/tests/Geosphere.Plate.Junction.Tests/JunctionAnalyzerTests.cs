@@ -5,6 +5,7 @@ using FantaSim.Geosphere.Plate.Junction.Solver;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using NSubstitute;
 using Plate.TimeDete.Time.Primitives;
@@ -43,8 +44,12 @@ public class JunctionAnalyzerTests
         new(new Guid(seed, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
     private static Topology.Contracts.Entities.Junction CreateJunction(
-        JunctionId id, double x, double y, params BoundaryId[] boundaryIds) =>
-        new(id, boundaryIds, new Point2(x, y), IsRetired: false, RetirementReason: null);
+        JunctionId id, double x, double y, params BoundaryId[] boundaryIds)
+    {
+        // Convert 2D test coords to SurfacePoint on unit sphere
+        var normal = UnitVector3d.FromComponents(x, y, 0) ?? UnitVector3d.UnitZ;
+        return new(id, boundaryIds.ToImmutableArray(), SurfacePoint.UnitSphere(normal), IsRetired: false, RetirementReason: null);
+    }
 
     private static Boundary CreateBoundary(
         BoundaryId id,

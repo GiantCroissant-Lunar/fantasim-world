@@ -1,7 +1,9 @@
+using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 using FantaSim.Geosphere.Plate.Polygonization.Solver.CMap;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using NSubstitute;
 using UnifyGeometry;
 
@@ -41,8 +43,12 @@ public class BoundaryCMapBuilderTests
     private static PlateId MakePlate(int seed) =>
         new(new Guid(seed, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-    private static Junction CreateJunction(JunctionId id, double x, double y, params BoundaryId[] boundaryIds) =>
-        new(id, boundaryIds, new Point2(x, y), IsRetired: false, RetirementReason: null);
+    private static Junction CreateJunction(JunctionId id, double x, double y, params BoundaryId[] boundaryIds)
+    {
+        // Convert 2D test coords to SurfacePoint on unit sphere
+        var normal = UnitVector3d.FromComponents(x, y, 0) ?? UnitVector3d.UnitZ;
+        return new(id, boundaryIds.ToImmutableArray(), SurfacePoint.UnitSphere(normal), IsRetired: false, RetirementReason: null);
+    }
 
     private static Boundary CreateBoundary(BoundaryId id, PlateId left, PlateId right, Point3 start, Point3 end) =>
         new(id, left, right, BoundaryType.Divergent, new Polyline3([start, end]), IsRetired: false, RetirementReason: null);
@@ -607,7 +613,7 @@ public class BoundaryCMapBuilderTests
         {
             [j1] = CreateJunction(j1, 0, 0, b1),
             [j2] = CreateJunction(j2, 1, 0, b1),
-            [j3] = new Junction(j3, [b2], new Point2(2, 0), IsRetired: true, RetirementReason: "Test")
+            [j3] = new Junction(j3, [b2], SurfacePoint.UnitSphere(UnitVector3d.FromComponents(2, 0, 0) ?? UnitVector3d.UnitX), IsRetired: true, RetirementReason: "Test")
         };
 
         var boundaries = new Dictionary<BoundaryId, Boundary>

@@ -49,7 +49,7 @@ public sealed class JsonPlatesDatasetLoader : IPlatesDatasetLoader
         try
         {
             await using var stream = File.OpenRead(manifestPath);
-            manifest = await JsonSerializer.DeserializeAsync<PlatesDatasetManifest>(stream, JsonOptions, cancellationToken);
+            manifest = await JsonSerializer.DeserializeAsync<PlatesDatasetManifest>(stream, JsonOptions, cancellationToken).ConfigureAwait(false);
         }
         catch (JsonException)
         {

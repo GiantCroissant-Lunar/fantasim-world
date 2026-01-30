@@ -147,8 +147,11 @@ public sealed class BoundaryCMapBuilder : IBoundaryCMapBuilder
         var j0 = connectedJunctions[0];
         var j1 = connectedJunctions[1];
 
-        var j0Pt = new Point3(j0.Location.X, j0.Location.Y, 0); // Junction is 2D, promote to 3D
-        var j1Pt = new Point3(j1.Location.X, j1.Location.Y, 0);
+        // Convert SurfacePoint to Point3 for distance calculations
+        var j0Pos = j0.Location.ToPositionVector();
+        var j1Pos = j1.Location.ToPositionVector();
+        var j0Pt = new Point3(j0Pos.X, j0Pos.Y, j0Pos.Z);
+        var j1Pt = new Point3(j1Pos.X, j1Pos.Y, j1Pos.Z);
 
         var d0ToStart = DistanceSquared(j0Pt, startPt);
         var d1ToStart = DistanceSquared(j1Pt, startPt);

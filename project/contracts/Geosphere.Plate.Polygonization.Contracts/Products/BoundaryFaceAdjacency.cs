@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
@@ -9,6 +10,7 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 /// Face adjacency for a boundary segment.
 /// RFC-V2-0041 §6.3.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct BoundaryFaceAdjacency(
     [property: Key(0)] BoundaryId BoundaryId,
@@ -21,6 +23,7 @@ public readonly record struct BoundaryFaceAdjacency(
 /// Complete boundary-to-face mapping at a tick.
 /// RFC-V2-0041 §6.4.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct BoundaryFaceAdjacencyMap(
     [property: Key(0)] CanonicalTick Tick,

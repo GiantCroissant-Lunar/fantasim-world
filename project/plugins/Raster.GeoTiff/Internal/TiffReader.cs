@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using BitMiracle.LibTiff.Classic;
 using FantaSim.Raster.Contracts;
 
@@ -214,13 +214,15 @@ internal sealed class TiffReader : IDisposable
                 var keys = new short[keyCount];
                 Buffer.BlockCopy(keyBytes, 0, keys, 0, Math.Min(keyBytes.Length, keyCount * sizeof(short)));
 
-                // Look for GeographicTypeGeoKey (1024) or ProjectedCSTypeGeoKey (3072)
+                // Look for GeographicTypeGeoKey (2048) or ProjectedCSTypeGeoKey (3072)
+                // Key format: KeyID (2 bytes), TIFFTagLocation (2 bytes), Count (2 bytes), Value/Offset (2 bytes)
+                // Header is 4 shorts, then 4 shorts per key
                 for (int i = 4; i < keys.Length; i += 4)
                 {
                     var keyId = keys[i];
                     var value = keys[i + 3];
 
-                    if (keyId == 1024 && value != 32767) // GeographicTypeGeoKey
+                    if (keyId == 2048 && value != 32767) // GeographicTypeGeoKey
                     {
                         return $"EPSG:{value}";
                     }

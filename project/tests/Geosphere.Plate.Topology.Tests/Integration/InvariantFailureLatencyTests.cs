@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -94,7 +95,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
             async () => await _materializer.MaterializeAsync(stream, CancellationToken.None));
         sw.Stop();
 
-        Assert.Contains("FR-016", ex.Message);
+        Assert.Contains("FR-016", ex.Message, StringComparison.Ordinal);
         Assert.True(sw.Elapsed.TotalSeconds < 1.0, $"Time-to-fail was {sw.Elapsed.TotalMilliseconds:F1} ms, expected < 1000 ms");
     }
 
@@ -133,7 +134,7 @@ public sealed class InvariantFailureLatencyTests : IDisposable
             async () => await _materializer.MaterializeAsync(stream, CancellationToken.None));
         sw.Stop();
 
-        Assert.Contains("BoundarySeparatesTwoPlates", ex.Message);
+        Assert.Contains("BoundarySeparatesTwoPlates", ex.Message, StringComparison.Ordinal);
         Assert.True(sw.Elapsed.TotalSeconds < 1.0, $"Time-to-fail was {sw.Elapsed.TotalMilliseconds:F1} ms, expected < 1000 ms");
     }
 }

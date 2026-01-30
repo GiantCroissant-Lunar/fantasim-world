@@ -1,4 +1,5 @@
-using Plate.TimeDete.Determinism.Abstractions;
+﻿using Plate.TimeDete.Determinism.Abstractions;
+using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Determinism;
@@ -38,6 +39,22 @@ public interface ISolverSeedProvider
     /// <param name="stream">The truth stream identity.</param>
     /// <returns>A seeded RNG instance for deterministic generation.</returns>
     ISeededRng CreateRng(ulong scenarioSeed, TruthStreamIdentity stream);
+
+    /// <summary>
+    /// Creates a tick-scoped RNG instance for deterministic event generation within DES.
+    ///
+    /// The tick is incorporated into the seed derivation to ensure that:
+    /// - Same (scenarioSeed, stream, tick) → same RNG sequence
+    /// - Different ticks → independent RNG sequences
+    ///
+    /// This is critical for DES determinism where multiple events may be generated
+    /// at the same tick and must be reproducible across runs.
+    /// </summary>
+    /// <param name="scenarioSeed">Base seed for the scenario.</param>
+    /// <param name="stream">The truth stream identity.</param>
+    /// <param name="tick">The current canonical tick.</param>
+    /// <returns>A tick-scoped seeded RNG instance for deterministic generation.</returns>
+    ISeededRng CreateRngForTick(ulong scenarioSeed, TruthStreamIdentity stream, CanonicalTick tick);
 
     /// <summary>
     /// Gets an audit record for a seed derivation operation.

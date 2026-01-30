@@ -1,8 +1,10 @@
-﻿using System;
+using System;
+using System.Runtime.InteropServices;
 using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct Vector3d(
     [property: Key(0)] double X,
@@ -37,6 +39,7 @@ public readonly record struct Vector3d(
     public static Vector3d operator /(Vector3d a, double d) => new(a.X / d, a.Y / d, a.Z / d);
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct Quaterniond(
     [property: Key(0)] double X,

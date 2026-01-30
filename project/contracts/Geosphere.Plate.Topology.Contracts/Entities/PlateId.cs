@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Determinism.Abstractions;
 using MessagePack;
 
@@ -9,6 +10,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 /// Once created, a PlateId persists through all topology changes and is never reused
 /// even after retirement. Implements UUIDv7 for sortability while maintaining uniqueness.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateId
 {

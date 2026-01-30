@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Determinism.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -9,6 +10,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 /// Once created, a JunctionId persists through all topology changes and is never reused
 /// even after retirement.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct JunctionId
 {
     /// <summary>

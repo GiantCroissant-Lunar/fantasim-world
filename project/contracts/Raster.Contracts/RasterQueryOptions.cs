@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 
 namespace FantaSim.Raster.Contracts;
@@ -6,6 +7,7 @@ namespace FantaSim.Raster.Contracts;
 /// Options for raster sequence queries.
 /// RFC-V2-0028 §3.1.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RasterQueryOptions(
     [property: Key(0)] InterpolationMethod Interpolation,
@@ -21,13 +23,13 @@ public readonly record struct RasterQueryOptions(
         null,
         null
     );
-    
+
     /// <summary>
     /// Creates options with linear interpolation enabled.
     /// </summary>
     public static RasterQueryOptions WithLinearInterpolation(RasterBounds? clipBounds = null)
         => new(InterpolationMethod.Linear, clipBounds, null);
-    
+
     /// <summary>
     /// Creates options with nearest neighbor (no interpolation).
     /// </summary>

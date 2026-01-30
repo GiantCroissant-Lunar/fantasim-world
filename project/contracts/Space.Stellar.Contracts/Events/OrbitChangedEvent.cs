@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using FantaSim.Space.Stellar.Contracts.Mechanics;
 using UnifySerialization.Abstractions;
 
 namespace FantaSim.Space.Stellar.Contracts.Events;
 
+[StructLayout(LayoutKind.Auto)]
 [UnifyModel]
 public readonly record struct OrbitChangedEvent(
     [property: UnifyProperty(0)] Guid SystemId,

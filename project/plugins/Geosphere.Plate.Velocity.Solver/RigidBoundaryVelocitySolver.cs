@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -11,6 +12,7 @@ namespace FantaSim.Geosphere.Plate.Velocity.Solver;
 
 using Vector3d = FantaSim.Geosphere.Plate.Topology.Contracts.Numerics.Vector3d;
 
+[StructLayout(LayoutKind.Auto)]
 internal readonly record struct SampledPoint(Vector3d Position, int SegmentIndex, double SegmentT);
 
 public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
@@ -52,6 +54,39 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
         }
 
         return ComputeAggregates(boundary.BoundaryId, velocitySamples);
+    }
+
+    /// <summary>
+    /// Returns individual velocity samples for a boundary (internal, for testing).
+    /// Used to verify RFC-V2-0034 invariants: tangent follows geometry, normal points left→right.
+    /// </summary>
+    internal BoundaryVelocitySample[] GetBoundarySamples(
+        Boundary boundary, BoundarySamplingSpec sampling, CanonicalTick tick,
+        IPlateTopologyStateView topology, IPlateKinematicsStateView kinematics)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+        ArgumentNullException.ThrowIfNull(sampling);
+        ArgumentNullException.ThrowIfNull(tick);
+        ArgumentNullException.ThrowIfNull(topology);
+        ArgumentNullException.ThrowIfNull(kinematics);
+
+        var vertices = ExtractVertices(boundary.Geometry);
+        if (vertices.Length < 2)
+            return Array.Empty<BoundaryVelocitySample>();
+
+        var sampledPoints = SampleBoundary(vertices, sampling);
+        var leftOmega = _velocitySolver.GetAngularVelocity(kinematics, boundary.PlateIdLeft, tick);
+        var rightOmega = _velocitySolver.GetAngularVelocity(kinematics, boundary.PlateIdRight, tick);
+
+        var velocitySamples = new BoundaryVelocitySample[sampledPoints.Length];
+        for (var i = 0; i < sampledPoints.Length; i++)
+        {
+            velocitySamples[i] = ComputeSampleVelocity(
+                sampledPoints[i], vertices, boundary.PlateIdLeft, boundary.PlateIdRight,
+                leftOmega, rightOmega, tick, kinematics, i);
+        }
+
+        return velocitySamples;
     }
 
     public BoundaryVelocityCollection AnalyzeAllBoundaries(
@@ -237,18 +272,41 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
         return direction / length;
     }
 
+    /// <summary>
+    /// Computes the boundary normal vector pointing from left plate toward right plate.
+    ///
+    /// The normal is computed as position × tangent (perpendicular to both the radial
+    /// direction and the boundary tangent on the sphere surface). The sign is then
+    /// chosen deterministically based on PlateId ordering:
+    /// - If leftPlateId &lt; rightPlateId: normal points in cross product direction
+    /// - If leftPlateId &gt; rightPlateId: normal points in negated cross product direction
+    ///
+    /// This ensures reproducible normal orientation across runs while maintaining
+    /// the convention that positive normal rate indicates plates moving apart (divergent)
+    /// and negative normal rate indicates plates moving together (convergent).
+    /// </summary>
     private static Vector3d ComputeNormal(Vector3d position, Vector3d tangent, PlateId leftPlateId, PlateId rightPlateId)
     {
+        // Compute the normal as position × tangent (perpendicular on sphere surface)
         var crossProduct = position.Cross(tangent);
         var crossLength = crossProduct.Length();
+
         if (crossLength < double.Epsilon)
         {
+            // Degenerate case: use arbitrary perpendicular
             var arbitrary = Math.Abs(position.Dot(Vector3d.UnitX)) > 0.9 ? Vector3d.UnitY : Vector3d.UnitX;
             crossProduct = position.Cross(arbitrary).Normalize();
         }
-        else crossProduct = crossProduct / crossLength;
-        var leftToRight = leftPlateId.Value > rightPlateId.Value ? -Vector3d.UnitX : Vector3d.UnitX;
-        return crossProduct.Dot(leftToRight) < 0 ? -crossProduct : crossProduct;
+        else
+        {
+            crossProduct = crossProduct / crossLength;
+        }
+
+        // Flip normal based on deterministic PlateId ordering rule:
+        // Normal points from the plate with smaller ID toward the plate with larger ID.
+        // This ensures consistent orientation regardless of which side is labeled "left".
+        var shouldFlip = leftPlateId.Value > rightPlateId.Value;
+        return shouldFlip ? -crossProduct : crossProduct;
     }
 
     private static BoundaryVelocityProfile ComputeAggregates(BoundaryId boundaryId, BoundaryVelocitySample[] samples)

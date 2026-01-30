@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 
 /// <summary>
@@ -17,6 +19,7 @@ public enum WindingConvention
 /// Options for plate polygonization.
 /// RFC-V2-0041 §7.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct PolygonizationOptions(
     WindingConvention Winding = WindingConvention.CounterClockwise,
     double SnapTolerance = 1e-9,

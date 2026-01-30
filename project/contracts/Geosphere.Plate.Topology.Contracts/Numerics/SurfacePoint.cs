@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using MessagePack;
 
@@ -57,6 +57,15 @@ public readonly record struct SurfacePoint(
     /// Converts this surface point to a position vector (for compatibility with existing code).
     /// </summary>
     public Vector3d ToPositionVector() => new(
+        Normal.X * Radius,
+        Normal.Y * Radius,
+        Normal.Z * Radius);
+
+    /// <summary>
+    /// Converts this surface point to a Point3 (Cartesian body-frame position).
+    /// This is the canonical conversion for geometry operations.
+    /// </summary>
+    public UnifyGeometry.Point3 ToPoint3() => new(
         Normal.X * Radius,
         Normal.Y * Radius,
         Normal.Z * Radius);

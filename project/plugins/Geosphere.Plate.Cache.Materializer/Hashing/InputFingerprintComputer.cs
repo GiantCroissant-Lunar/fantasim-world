@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using FantaSim.Geosphere.Plate.Cache.Contracts.Models;
 using FantaSim.Geosphere.Plate.Cache.Materializer.Serialization;
@@ -45,7 +45,7 @@ public static class InputFingerprintComputer
         ValidateInputs(sourceStream, boundaryKind, generatorId, generatorVersion, paramsHash);
 
         // Encode as canonical MessagePack array
-        var canonicalBytes = CanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
+        var canonicalBytes = DerivedCacheCanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
             sourceStream,
             boundaryKind,
             lastSequence,

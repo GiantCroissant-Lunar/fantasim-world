@@ -1,4 +1,5 @@
-﻿using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using System.Runtime.InteropServices;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 
@@ -31,6 +32,7 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.CMap;
 /// <see cref="CompareTo"/> to ensure the same cyclic order across runs.
 /// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct BoundaryDart : IComparable<BoundaryDart>
 {
     /// <summary>

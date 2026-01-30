@@ -24,8 +24,21 @@ public readonly record struct MotionSegmentId
     [IgnoreMember]
     public bool IsEmpty => _value == Guid.Empty;
 
+    /// <summary>
+    /// Creates a new non-deterministic MotionSegmentId.
+    /// </summary>
+    /// <remarks>
+    /// WARNING: This method uses Guid.NewGuid() which breaks determinism.
+    /// Use <see cref="NewId(ISeededRng)"/> for reproducible simulation runs.
+    /// </remarks>
+    [Obsolete("Use NewId(ISeededRng) for deterministic simulation runs. This method breaks replay determinism.")]
     public static MotionSegmentId NewId() => new(Guid.NewGuid());
 
+    /// <summary>
+    /// Creates a new deterministic MotionSegmentId using a seeded RNG.
+    /// </summary>
+    /// <param name="rng">The seeded RNG to use for ID generation.</param>
+    /// <returns>A new MotionSegmentId with a deterministic value.</returns>
     public static MotionSegmentId NewId(ISeededRng rng)
     {
         ArgumentNullException.ThrowIfNull(rng);

@@ -1,10 +1,12 @@
 using System;
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Simulation;
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateMotion
 {
@@ -15,6 +17,7 @@ public readonly record struct PlateMotion
     [Key(4)] public required Vector3d Torque { get; init; }
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RiftEvent
 {
@@ -23,6 +26,7 @@ public readonly record struct RiftEvent
     [Key(2)] public required PlateId PlateB { get; init; }
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct CollisionEvent
 {
@@ -31,6 +35,7 @@ public readonly record struct CollisionEvent
     [Key(2)] public required Vector3d Location { get; init; }
 }
 
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct ComputationMetrics
 {
@@ -42,6 +47,7 @@ public readonly record struct ComputationMetrics
 /// <summary>
 /// Solver output: computed motions and topology changes.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlateMotionResult
 {

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -34,6 +35,7 @@ public sealed class FlowlineCorpusEntry
 /// <summary>
 /// Input parameters for flowline corpus cases.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct FlowlineInput(
     [property: Key(0)] BoundaryId BoundaryId,

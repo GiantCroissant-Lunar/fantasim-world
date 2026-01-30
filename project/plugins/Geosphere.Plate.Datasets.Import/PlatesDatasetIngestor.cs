@@ -52,7 +52,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 new[] { new DatasetValidationError("ingest_spec.required", "spec", "Ingest spec is required.") });
         }
 
-        var loadResult = await _loader.LoadAsync(datasetRootPath, loadOptions, cancellationToken);
+        var loadResult = await _loader.LoadAsync(datasetRootPath, loadOptions, cancellationToken).ConfigureAwait(false);
         if (!loadResult.IsSuccess)
         {
             return new PlatesDatasetIngestResult(
@@ -159,7 +159,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                         resolved.AssetId,
                         t.StreamIdentity,
                         motionModelErrors,
-                        cancellationToken);
+                        cancellationToken).ConfigureAwait(false);
 
                     if (motionModelErrors.Count != 0)
                     {
@@ -232,7 +232,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             var plans = perStreamPlans[stream];
             plans.Sort(KinematicsEventPlan.Compare);
 
-            var lastSeq = await _kinematicsEventStore.GetLastSequenceAsync(stream, cancellationToken);
+            var lastSeq = await _kinematicsEventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
             var nextSeq = lastSeq.HasValue ? lastSeq.Value + 1 : 0;
 
             var events = new List<IPlateKinematicsEvent>(plans.Count);
@@ -251,7 +251,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 events.Count == 0 ? -1 : events[^1].Sequence,
                 eventIdDigest));
 
-            await _kinematicsEventStore.AppendAsync(stream, events, cancellationToken);
+            await _kinematicsEventStore.AppendAsync(stream, events, cancellationToken).ConfigureAwait(false);
         }
 
         streamAudits.Sort(static (a, b) => string.Compare(a.StreamKey, b.StreamKey, StringComparison.Ordinal));
@@ -267,7 +267,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
         IReadOnlyList<PlatesDatasetIngestStreamAudit> streams)
     {
         var manifestPath = Path.Combine(dataset.DatasetRootPath, manifestFileName);
-        
+
         // Read manifest file once - manifest files are typically small (metadata only)
         byte[] manifestBytes;
         try
@@ -284,7 +284,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             throw new IOException(
                 $"I/O error reading manifest file: {manifestPath}", ex);
         }
-        
+
         var manifestFileSha256 = Sha256Hex.ComputeLowerHex(manifestBytes);
 
         var manifest = dataset.Manifest;
@@ -521,7 +521,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             try
             {
                 await using var streamIn = File.OpenRead(motionModelPath);
-                doc = await JsonSerializer.DeserializeAsync<MotionModelSegmentsV1>(streamIn, JsonOptions, cancellationToken);
+                doc = await JsonSerializer.DeserializeAsync<MotionModelSegmentsV1>(streamIn, JsonOptions, cancellationToken).ConfigureAwait(false);
             }
             catch (JsonException)
             {

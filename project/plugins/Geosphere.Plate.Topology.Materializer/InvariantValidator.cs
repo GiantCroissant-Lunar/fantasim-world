@@ -1,5 +1,6 @@
-using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+﻿using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using System.Linq;
 
 namespace FantaSim.Geosphere.Plate.Topology.Materializer;
@@ -168,6 +169,9 @@ public static class InvariantValidator
             if (junction.IsRetired)
                 continue; // Retired junctions don't need to satisfy this invariant
 
+            // Validate sphere-native geometry
+            ValidateJunctionGeometry(junction, violations);
+
             foreach (var boundaryId in junction.BoundaryIds)
             {
                 // Check if boundary exists
@@ -318,6 +322,46 @@ public static class InvariantValidator
         }
     }
 
+    /// <summary>
+    /// Validates that a junction's location is a valid surface point on the unit sphere.
+    /// </summary>
+    private static void ValidateJunctionGeometry(Junction junction, List<InvariantViolation> violations)
+    {
+        // Check that surface point normal is unit length
+        var normal = junction.Location.Normal;
+        var len = Math.Sqrt(normal.X * normal.X + normal.Y * normal.Y + normal.Z * normal.Z);
+        const double tolerance = 1e-6;
+
+        if (Math.Abs(len - 1.0) > tolerance)
+        {
+            violations.Add(new InvariantViolation(
+                "JunctionGeometry",
+                $"Junction {junction.JunctionId} surface normal is not unit length (length={len:G9})",
+                null
+            ));
+        }
+
+        // Check radius is positive
+        if (junction.Location.Radius <= 0)
+        {
+            violations.Add(new InvariantViolation(
+                "JunctionGeometry",
+                $"Junction {junction.JunctionId} has invalid radius ({junction.Location.Radius})",
+                null
+            ));
+        }
+
+        // Check boundary count (minimum 2 for a valid junction, typically 3+)
+        if (junction.BoundaryIds.IsDefaultOrEmpty || junction.BoundaryIds.Length < 2)
+        {
+            violations.Add(new InvariantViolation(
+                "JunctionGeometry",
+                $"Junction {junction.JunctionId} has insufficient boundaries ({junction.BoundaryIds.Length})",
+                null
+            ));
+        }
+    }
+
     private static void ValidateJunctionCreated(PlateTopologyState state, JunctionCreatedEvent evt)
     {
         // Invariant 2: no orphan junctions - all referenced boundaries must exist and be non-retired
@@ -363,7 +407,7 @@ public static class InvariantValidator
         }
 
         // Validate new boundary references if provided
-        if (evt.NewBoundaryIds is not null)
+        if (!evt.NewBoundaryIds.IsDefaultOrEmpty)
         {
             foreach (var boundaryId in evt.NewBoundaryIds)
             {

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 using UnifyGeometry;
 
@@ -6,6 +7,7 @@ namespace FantaSim.Raster.Contracts;
 /// <summary>
 /// Geographic bounds of a raster dataset.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RasterBounds(
     [property: Key(0)] double MinLongitude,

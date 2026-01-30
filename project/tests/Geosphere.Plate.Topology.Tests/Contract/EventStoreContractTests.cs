@@ -1,3 +1,4 @@
+using System;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using Xunit;
@@ -113,8 +114,8 @@ public class EventStoreContractTests
         var parameterTypes = parameters?.Select(p => p.ParameterType.Name).ToArray();
 
         // Assert - No RocksDB or other storage implementation types
-        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
-        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
+        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
+        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
     }
 
     #endregion
@@ -203,8 +204,8 @@ public class EventStoreContractTests
         var parameterTypes = parameters?.Select(p => p.ParameterType.Name).ToArray();
 
         // Assert - No RocksDB or other storage implementation types
-        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
-        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
+        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
+        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
     }
 
     #endregion
@@ -274,8 +275,8 @@ public class EventStoreContractTests
         var parameterTypes = parameters?.Select(p => p.ParameterType.Name).ToArray();
 
         // Assert - No RocksDB or other storage implementation types
-        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
-        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()));
+        Assert.DoesNotContain("RocksDB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
+        Assert.DoesNotContain("DB", string.Join(" ", parameterTypes ?? Array.Empty<string>()), StringComparison.Ordinal);
     }
 
     #endregion
@@ -358,7 +359,7 @@ public class EventStoreContractTests
         var allParameterTypesString = string.Join(" ", allParameterNames);
         foreach (var forbidden in forbiddenTypes)
         {
-            Assert.False(allParameterTypesString.Contains(forbidden),
+            Assert.False(allParameterTypesString.Contains(forbidden, StringComparison.Ordinal),
                 $"Interface should not reference storage implementation type: {forbidden}");
         }
     }

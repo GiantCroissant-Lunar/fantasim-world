@@ -1,4 +1,6 @@
-﻿namespace FantaSim.Geosphere.Plate.Motion.Contracts;
+using System.Runtime.InteropServices;
+
+namespace FantaSim.Geosphere.Plate.Motion.Contracts;
 
 /// <summary>
 /// Specification for motion path integration (RFC-V2-0035 §6).
@@ -12,6 +14,7 @@
 /// The parameterless constructor uses struct default values (0), not these documented defaults.
 /// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct MotionIntegrationSpec
 {
     /// <summary>Default integration specification with StepTicks=1, MaxSteps=1000, Method=Euler.</summary>

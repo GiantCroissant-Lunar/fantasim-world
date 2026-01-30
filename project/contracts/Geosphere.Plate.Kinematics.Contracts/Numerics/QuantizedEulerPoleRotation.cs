@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using MessagePack;
 
 namespace FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
@@ -8,6 +9,7 @@ namespace FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 ///
 /// Values are stored as micro-degrees (1e-6 degrees) to avoid floating ambiguity.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct QuantizedEulerPoleRotation(
     [property: Key(0)] int AxisAzimuthMicroDeg,

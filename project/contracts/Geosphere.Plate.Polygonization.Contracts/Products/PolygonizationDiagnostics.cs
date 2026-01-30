@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifyGeometry;
 
@@ -8,6 +9,7 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 /// Diagnostic result from polygonization validation.
 /// RFC-V2-0041 §8.2.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct PolygonizationDiagnostics(
     bool IsValid,
     ImmutableArray<OpenBoundaryDiagnostic> OpenBoundaries,
@@ -25,6 +27,7 @@ public readonly record struct PolygonizationDiagnostics(
 /// <summary>
 /// Diagnostic for an open (non-closed) boundary.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct OpenBoundaryDiagnostic(
     BoundaryId BoundaryId,
     Point3 OpenEndpoint,

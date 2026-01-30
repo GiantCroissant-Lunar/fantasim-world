@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace FantaSim.Geosphere.Plate.Velocity.Contracts;
 
 /// <summary>
@@ -8,6 +10,7 @@ namespace FantaSim.Geosphere.Plate.Velocity.Contracts;
 /// Controls how many samples are taken along a boundary and the sampling strategy.
 /// </para>
 /// </remarks>
+[StructLayout(LayoutKind.Auto)]
 public record struct BoundarySamplingSpec(
     int SampleCount,
     SamplingMode Mode,

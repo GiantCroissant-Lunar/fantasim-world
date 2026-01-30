@@ -34,7 +34,7 @@ public class InputFingerprintDeterminismTests
     [Fact]
     public void ArrayEncoding_Used()
     {
-        var canonicalBytes = CanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
+        var canonicalBytes = DerivedCacheCanonicalMessagePackEncoder.EncodeFingerprintEnvelope(
             sourceStream: "S:V1:Bmain:L0:Plates:M0:Events",
             boundaryKind: "sequence",
             lastSequence: 0,

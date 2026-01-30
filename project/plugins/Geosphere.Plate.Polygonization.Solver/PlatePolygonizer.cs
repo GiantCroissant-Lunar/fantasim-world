@@ -4,6 +4,7 @@ using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Solvers;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 
@@ -22,7 +23,12 @@ namespace FantaSim.Geosphere.Plate.Polygonization.Solver;
 ///   - Left side = B.PlateIdRight (because we're walking the edge in reverse)
 /// </para>
 /// <para>
-/// Outside face policy: The face with largest absolute signed area is treated as "exterior"
+/// <b>Spherical-correct:</b> Uses <see cref="SphericalGeometry.ComputeSignedSphericalArea"/>
+/// to determine outer vs inner rings and identify the "outside" face. This is correct
+/// anywhere on the sphere, unlike planar signed area which breaks at poles and antimeridian.
+/// </para>
+/// <para>
+/// Outside face policy: The face with largest absolute spherical area is treated as "exterior"
 /// and excluded from the polygon set (or assigned PlateId.Empty).
 /// </para>
 /// </remarks>
@@ -84,53 +90,71 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
         // Identify outside face (largest absolute area)
         var outsideFaceIndex = FindOutsideFaceIndex(attributedFaces);
 
-        // Determine winding convention from options
-        var winding = options.Value.Winding;
-
-        // Group by PlateId (excluding outside face), canonicalizing rings
-        var polygonsByPlate = new Dictionary<PlateId, List<Polyline3>>();
+        // Group by PlateId (excluding outside face), keeping signed area for outer/hole determination
+        var ringsByPlate = new Dictionary<PlateId, List<(Polyline3 ring, double signedArea)>>();
         for (int i = 0; i < attributedFaces.Count; i++)
         {
             if (i == outsideFaceIndex) continue;
 
-            var (plateId, ring, _) = attributedFaces[i];
+            var (plateId, ring, signedArea) = attributedFaces[i];
             if (plateId.IsEmpty) continue; // Skip unattributed faces
 
-            if (!polygonsByPlate.TryGetValue(plateId, out var rings))
+            if (!ringsByPlate.TryGetValue(plateId, out var rings))
             {
-                rings = new List<Polyline3>();
-                polygonsByPlate[plateId] = rings;
+                rings = new List<(Polyline3, double)>();
+                ringsByPlate[plateId] = rings;
             }
-
-            // Canonicalize ring per RFC-V2-0041 §9.3
-            // Note: Winding is set here but may be adjusted by HoleAssigner based on outer/hole classification
-            var canonicalized = RingCanonicalizer.Canonicalize(ring, winding);
-            rings.Add(canonicalized);
+            rings.Add((ring, signedArea));
         }
 
-        // Build PlatePolygons using RFC-V2-0041 §9.4 hole assignment
+        // Build PlatePolygons with proper outer/hole determination
         var polygons = new List<PlatePolygon>();
-        foreach (var (plateId, rings) in polygonsByPlate)
+        foreach (var (plateId, rings) in ringsByPlate)
         {
             if (rings.Count == 0) continue;
 
-            // Classify rings into outer/holes using signed area and point-in-polygon
-            var groups = HoleAssigner.AssignHoles(rings, winding);
+            // Separate outers (positive signed area) from holes (negative signed area)
+            // On a unit sphere with CCW winding: positive = outer, negative = hole
+            var outers = rings.Where(r => r.signedArea > 0).Select(r => CanonicalizeRing(r.ring)).ToList();
+            var holes = rings.Where(r => r.signedArea <= 0).Select(r => CanonicalizeRing(r.ring)).ToList();
 
-            foreach (var group in groups)
+            if (outers.Count == 0)
             {
-                // Re-canonicalize: outer gets target winding, holes get opposite
-                var outerWinding = winding;
-                var holeWinding = winding == WindingConvention.CounterClockwise
-                    ? WindingConvention.Clockwise
-                    : WindingConvention.CounterClockwise;
+                // Edge case: all rings are holes (impossible on a closed surface for a valid plate)
+                // Take the largest absolute area as outer
+                var largest = rings.OrderByDescending(r => Math.Abs(r.signedArea)).First();
+                outers.Add(CanonicalizeRing(largest.ring));
+                holes = rings.Where(r => r != largest).Select(r => CanonicalizeRing(r.ring)).ToList();
+            }
 
-                var canonicalOuter = RingCanonicalizer.Canonicalize(group.OuterRing, outerWinding);
-                var canonicalHoles = group.Holes
-                    .Select(h => RingCanonicalizer.Canonicalize(h, holeWinding))
-                    .ToImmutableArray();
-
-                polygons.Add(new PlatePolygon(plateId, canonicalOuter, canonicalHoles));
+            if (outers.Count == 1)
+            {
+                // Simple case: one outer, all holes belong to it
+                polygons.Add(new PlatePolygon(plateId, outers[0], holes.ToImmutableArray()));
+            }
+            else
+            {
+                // Complex case: multiple outers (archipelago) - assign holes via centroid containment
+                // For now, create separate polygons for each outer; proper hole assignment
+                // would require point-in-polygon testing using spherical containment
+                foreach (var outer in outers)
+                {
+                    // Find holes whose centroids are contained in this outer
+                    // For MVP, we skip complex assignment and create outer-only polygons
+                    // TODO: Implement spherical point-in-polygon for proper hole assignment
+                    polygons.Add(new PlatePolygon(plateId, outer, ImmutableArray<Polyline3>.Empty));
+                }
+                // Orphan holes go to the largest outer as a fallback
+                if (holes.Count > 0)
+                {
+                    var largestOuter = outers.OrderByDescending(o => Math.Abs(SphericalGeometry.ComputeSignedSphericalArea(o))).First();
+                    var largestIndex = polygons.FindIndex(p => p.PlateId == plateId && p.OuterRing == largestOuter);
+                    if (largestIndex >= 0)
+                    {
+                        var existing = polygons[largestIndex];
+                        polygons[largestIndex] = new PlatePolygon(plateId, existing.OuterRing, holes.ToImmutableArray());
+                    }
+                }
             }
         }
 
@@ -212,9 +236,10 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
                 // Single incident (degree 1) is always invalid for closed surfaces
                 if (incidentCount == 1)
                 {
+                    var pos = junction.Location.ToPositionVector();
                     nonManifoldJunctions.Add(new NonManifoldJunctionDiagnostic(
                         junction.JunctionId,
-                        new Point3(junction.Location.X, junction.Location.Y, 0),
+                        new Point3(pos.X, pos.Y, pos.Z),
                         incidentCount,
                         "Junction has only one incident boundary (dangling)"));
                 }
@@ -249,10 +274,8 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
             // If we have one connected junction, return the OTHER endpoint
             if (connectedJunctions.Count == 1)
             {
-                var junctionPt = new Point3(
-                    connectedJunctions[0].Location.X,
-                    connectedJunctions[0].Location.Y,
-                    0);
+                var jPos = connectedJunctions[0].Location.ToPositionVector();
+                var junctionPt = new Point3(jPos.X, jPos.Y, jPos.Z);
                 var startPt = polyline.Points[0];
                 var endPt = polyline.Points[^1];
 
@@ -305,8 +328,9 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
                 continue;
             }
 
-            // Add junction position (2D→3D, Z=0)
-            points.Add(new Point3(junction.Location.X, junction.Location.Y, 0));
+            // Add junction position (convert from SurfacePoint to Point3)
+            var junctionPos = junction.Location.ToPositionVector();
+            points.Add(new Point3(junctionPos.X, junctionPos.Y, junctionPos.Z));
 
             // Attribute: face is on LEFT side of each dart
             var leftPlate = GetLeftPlate(dart, topology);
@@ -329,7 +353,8 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
         }
 
         var ring = new Polyline3(points);
-        var signedArea = ComputeSignedArea(points);
+        // Use spherical area computation for correct results on the sphere
+        var signedArea = SphericalGeometry.ComputeSignedSphericalArea(ring);
 
         return (attributedPlate ?? default, ring, signedArea, attributionError);
     }
@@ -391,5 +416,65 @@ public sealed class PlatePolygonizer : IPlatePolygonizer
         }
 
         return -sum / 2.0; // Negate for standard CCW=positive convention
+    }
+
+    /// <summary>
+    /// Canonicalizes a ring by rotating its vertices so that the lexicographically
+    /// smallest vertex (by X, then Y, then Z) comes first.
+    ///
+    /// This ensures deterministic ring representation regardless of where the
+    /// face-walk started. The closing point (first=last) is preserved.
+    ///
+    /// Example: Ring [B, C, D, A, B] with min vertex A becomes [A, B, C, D, A].
+    /// </summary>
+    private static Polyline3 CanonicalizeRing(Polyline3 ring)
+    {
+        var points = ring.Points;
+        if (points.Length < 3) return ring;
+
+        // Find the lexicographically smallest vertex (excluding the closing duplicate)
+        // Ring is closed: points[0] == points[^1], so we look at points[0..^1]
+        int minIndex = 0;
+        var minPoint = points[0];
+
+        for (int i = 1; i < points.Length - 1; i++)
+        {
+            var p = points[i];
+            if (CompareLexicographic(p, minPoint) < 0)
+            {
+                minIndex = i;
+                minPoint = p;
+            }
+        }
+
+        if (minIndex == 0)
+        {
+            return ring; // Already canonical
+        }
+
+        // Rotate: take points from minIndex to end-1, then 0 to minIndex-1, then close
+        var rotated = new Point3[points.Length];
+        int n = points.Length - 1; // Exclude closing point for rotation
+        for (int i = 0; i < n; i++)
+        {
+            rotated[i] = points[(minIndex + i) % n];
+        }
+        rotated[n] = rotated[0]; // Close the ring
+
+        return new Polyline3(rotated);
+    }
+
+    /// <summary>
+    /// Lexicographic comparison of two 3D points: X, then Y, then Z.
+    /// </summary>
+    private static int CompareLexicographic(Point3 a, Point3 b)
+    {
+        var cmpX = a.X.CompareTo(b.X);
+        if (cmpX != 0) return cmpX;
+
+        var cmpY = a.Y.CompareTo(b.Y);
+        if (cmpY != 0) return cmpY;
+
+        return a.Z.CompareTo(b.Z);
     }
 }

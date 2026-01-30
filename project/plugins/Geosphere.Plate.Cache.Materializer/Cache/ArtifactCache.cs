@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using FantaSim.Geosphere.Plate.Cache.Contracts;
 using FantaSim.Geosphere.Plate.Cache.Contracts.Models;
@@ -43,7 +43,7 @@ public sealed class ArtifactCache : IDerivedArtifactCache
 
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            sourceStream: stream.ToString(),
+            sourceStream: stream.ToEventStreamIdString(),
             boundaryKind: "sequence",
             lastSequence: (ulong)lastSequence,
             generatorId: generatorId,
@@ -108,7 +108,7 @@ public sealed class ArtifactCache : IDerivedArtifactCache
         var manifest = Manifest.Create(
             productType: productType,
             inputFingerprint: inputFingerprint,
-            sourceStream: stream.ToString(),
+            sourceStream: stream.ToEventStreamIdString(),
             boundary: boundary,
             generator: generator,
             paramsHash: paramsHash,
