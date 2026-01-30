@@ -1,3 +1,4 @@
+using System;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
@@ -403,9 +404,9 @@ public class EventStoreHashChainTests : IDisposable
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _store.AppendAsync(_stream, events, options, CancellationToken.None));
 
-        Assert.Contains("Tick monotonicity violation", ex.Message);
-        Assert.Contains("100", ex.Message);  // Previous tick
-        Assert.Contains("50", ex.Message);   // Current tick
+        Assert.Contains("Tick monotonicity violation", ex.Message, StringComparison.Ordinal);
+        Assert.Contains("100", ex.Message, StringComparison.Ordinal);  // Previous tick
+        Assert.Contains("50", ex.Message, StringComparison.Ordinal);   // Current tick
     }
 
     /// <summary>

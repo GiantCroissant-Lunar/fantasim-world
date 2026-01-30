@@ -109,5 +109,14 @@ public sealed class CachedMaterializerTests
             var last = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
             return Task.FromResult(last);
         }
+
+        public Task<StreamHead> GetHeadAsync(TruthStreamIdentity stream, CancellationToken cancellationToken)
+        {
+            var lastSeq = _events.Where(e => e.StreamIdentity == stream).Select(e => (long?)e.Sequence).DefaultIfEmpty(null).Max();
+            if (lastSeq == null)
+                return Task.FromResult(StreamHead.Empty);
+            // Test double returns empty hash - not used in these tests
+            return Task.FromResult(new StreamHead(lastSeq.Value, StreamHead.ZeroHash));
+        }
     }
 }

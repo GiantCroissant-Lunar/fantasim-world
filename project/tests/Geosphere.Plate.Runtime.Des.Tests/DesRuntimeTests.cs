@@ -6,6 +6,7 @@ using FantaSim.Geosphere.Plate.Runtime.Des.Runtime;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Capabilities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Determinism;
 using FantaSim.Geosphere.Plate.Topology.Materializer;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -20,12 +21,15 @@ public class DesRuntimeTests
     private readonly ITruthEventAppender _appender;
     private readonly PlateTopologyTimeline _timeline;
     private readonly IDesDispatcher _dispatcher;
+    private readonly ISolverSeedProvider _seedProvider;
     private readonly TruthStreamIdentity _stream;
+    private const ulong TestScenarioSeed = 12345UL;
 
     public DesRuntimeTests()
     {
         _queue = new PriorityQueueDesQueue();
         _appender = Substitute.For<ITruthEventAppender>();
+        _seedProvider = Substitute.For<ISolverSeedProvider>();
 
         // Mocking PlateTopologyTimeline is hard because it's a concrete class wrapping a materializer.
         // However, we can mock the materializer dependencies if we were constructing it,
@@ -66,8 +70,8 @@ public class DesRuntimeTests
             .Returns(new List<ITruthEventDraft> { draft });
 
         // Act
-        var runtime = new DesRuntime(_queue, _appender, _timeline, _dispatcher);
-        var result = await runtime.RunAsync(_stream, new DesRunOptions(new CanonicalTick(0), new CanonicalTick(20)));
+        var runtime = new DesRuntime(_queue, _appender, _timeline, _dispatcher, _seedProvider);
+        var result = await runtime.RunAsync(_stream, new DesRunOptions(new CanonicalTick(0), new CanonicalTick(20), TestScenarioSeed));
 
         // Assert
         result.ItemsProcessed.Should().Be(1);
@@ -94,8 +98,8 @@ public class DesRuntimeTests
         _queue.Enqueue(new ScheduledWorkItem(new CanonicalTick(30), FantaSim.World.Contracts.Time.SphereIds.Geosphere, (DesWorkKind)100, 0));
 
         // Act
-        var runtime = new DesRuntime(_queue, _appender, _timeline, _dispatcher);
-        var result = await runtime.RunAsync(_stream, new DesRunOptions(new CanonicalTick(0), new CanonicalTick(20)));
+        var runtime = new DesRuntime(_queue, _appender, _timeline, _dispatcher, _seedProvider);
+        var result = await runtime.RunAsync(_stream, new DesRunOptions(new CanonicalTick(0), new CanonicalTick(20), TestScenarioSeed));
 
         // Assert
         result.ItemsProcessed.Should().Be(1); // Only T=10 processed

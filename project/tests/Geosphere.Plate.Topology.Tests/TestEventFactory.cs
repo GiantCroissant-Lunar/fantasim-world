@@ -3,11 +3,13 @@
 // </copyright>
 
 using System;
+using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
-using UnifyGeometry;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
+using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.Topology.Tests;
 
@@ -99,14 +101,41 @@ public static class TestEventFactory
     public static JunctionCreatedEvent JunctionCreated(
         Guid eventId,
         JunctionId junctionId,
-        BoundaryId[] boundaryIds,
-        Point2 location,
+        ImmutableArray<BoundaryId> boundaryIds,
+        SurfacePoint location,
         CanonicalTick tick,
         long sequence,
         TruthStreamIdentity streamIdentity)
         => new(eventId, junctionId, boundaryIds, location, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
 
+    /// <summary>Creates a JunctionCreatedEvent from 2D coords (legacy helper - converts to sphere).</summary>
+    public static JunctionCreatedEvent JunctionCreated(
+        Guid eventId,
+        JunctionId junctionId,
+        BoundaryId[] boundaryIds,
+        Point2 location,
+        CanonicalTick tick,
+        long sequence,
+        TruthStreamIdentity streamIdentity)
+    {
+        // Convert 2D planar coords to sphere surface point (z=0 plane, radius=1)
+        var normal = UnitVector3d.FromComponents(location.X, location.Y, 0) ?? UnitVector3d.UnitZ;
+        var surfacePoint = SurfacePoint.UnitSphere(normal);
+        return new(eventId, junctionId, boundaryIds.ToImmutableArray(), surfacePoint, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
+    }
+
     /// <summary>Creates a JunctionUpdatedEvent with empty hash fields.</summary>
+    public static JunctionUpdatedEvent JunctionUpdated(
+        Guid eventId,
+        JunctionId junctionId,
+        ImmutableArray<BoundaryId> newBoundaryIds,
+        SurfacePoint? newLocation,
+        CanonicalTick tick,
+        long sequence,
+        TruthStreamIdentity streamIdentity)
+        => new(eventId, junctionId, newBoundaryIds, newLocation, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
+
+    /// <summary>Creates a JunctionUpdatedEvent from 2D coords (legacy helper - converts to sphere).</summary>
     public static JunctionUpdatedEvent JunctionUpdated(
         Guid eventId,
         JunctionId junctionId,
@@ -115,7 +144,15 @@ public static class TestEventFactory
         CanonicalTick tick,
         long sequence,
         TruthStreamIdentity streamIdentity)
-        => new(eventId, junctionId, newBoundaryIds, newLocation, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
+    {
+        SurfacePoint? surfacePoint = null;
+        if (newLocation.HasValue)
+        {
+            var normal = UnitVector3d.FromComponents(newLocation.Value.X, newLocation.Value.Y, 0) ?? UnitVector3d.UnitZ;
+            surfacePoint = SurfacePoint.UnitSphere(normal);
+        }
+        return new(eventId, junctionId, newBoundaryIds.ToImmutableArray(), surfacePoint, tick, sequence, streamIdentity, EmptyHash, EmptyHash);
+    }
 
     /// <summary>Creates a JunctionRetiredEvent with empty hash fields.</summary>
     public static JunctionRetiredEvent JunctionRetired(

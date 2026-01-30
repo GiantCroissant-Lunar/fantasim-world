@@ -252,8 +252,8 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
         Assert.Equal(originalEvent.BoundaryIds.Length, deserialized.BoundaryIds.Length);
-        Assert.Equal(originalEvent.Location.X, deserialized.Location.X);
-        Assert.Equal(originalEvent.Location.Y, deserialized.Location.Y);
+        Assert.Equal(originalEvent.Location.Normal.X, deserialized.Location.Normal.X);
+        Assert.Equal(originalEvent.Location.Normal.Y, deserialized.Location.Normal.Y);
         Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);
@@ -288,8 +288,8 @@ public class EventSerializationTests
         Assert.Equal(originalEvent.EventId, deserialized.EventId);
         Assert.Equal(originalEvent.JunctionId, deserialized.JunctionId);
         Assert.Equal(originalEvent.NewBoundaryIds.Length, deserialized.NewBoundaryIds.Length);
-        Assert.Equal(originalEvent.NewLocation.Value.X, deserialized.NewLocation.Value.X);
-        Assert.Equal(originalEvent.NewLocation.Value.Y, deserialized.NewLocation.Value.Y);
+        Assert.Equal(originalEvent.NewLocation.Value.Normal.X, deserialized.NewLocation.Value.Normal.X);
+        Assert.Equal(originalEvent.NewLocation.Value.Normal.Y, deserialized.NewLocation.Value.Normal.Y);
         Assert.Equal(originalEvent.Tick, deserialized.Tick);
         Assert.Equal(originalEvent.Sequence, deserialized.Sequence);
         Assert.Equal(originalEvent.StreamIdentity, deserialized.StreamIdentity);

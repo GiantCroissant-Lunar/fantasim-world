@@ -416,7 +416,7 @@ public class SolverEmissionTests : IDisposable
             TestEventFactory.JunctionUpdated(
                 Guid.Parse("40000000-0000-0000-0000-00000000ff23"),
                 junctionId,
-                [boundaryId2],
+                new BoundaryId[] { boundaryId2 },
                 null,
                 FixedTick,
                 6,

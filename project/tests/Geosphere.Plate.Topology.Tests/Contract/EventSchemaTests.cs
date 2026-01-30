@@ -1,8 +1,10 @@
+using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
-using UnifyGeometry;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
+using UnifyGeometry;
 using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Topology.Tests.Contract;
@@ -290,9 +292,8 @@ public class EventSchemaTests
         // Assert
         Assert.NotEqual(Guid.Empty, @event.EventId);
         Assert.False(@event.JunctionId.IsEmpty);
-        Assert.NotNull(@event.BoundaryIds);
         Assert.NotEmpty(@event.BoundaryIds);
-        Assert.False(@event.Location.IsEmpty);
+        Assert.NotEqual(default, @event.Location.Normal);  // SurfacePoint is valid if Normal is set
         Assert.True(@event.StreamIdentity.IsValid());
     }
 
@@ -346,23 +347,26 @@ public class EventSchemaTests
     [Fact]
     public void JunctionCreatedEvent_Location_IsAccessible()
     {
-        // Arrange
-        var location = new Point2(42.5, -17.3);
+        // Arrange: Create a SurfacePoint on unit sphere (sphere-native format)
+        var normal = UnitVector3d.Create(0.6, 0.8, 0); // Unit vector pointing in positive X/Y direction
+        var location = SurfacePoint.UnitSphere(normal);
 
         // Act
         var @event = TestEventFactory.JunctionCreated(
             Guid.NewGuid(),
             JunctionId.NewId(),
-            new[] { BoundaryId.NewId() },
+            ImmutableArray.Create(BoundaryId.NewId()),
             location,
             new CanonicalTick(0),
             0L,
             CreateValidStreamIdentity()
         );
 
-        // Assert
-        Assert.Equal(42.5, @event.Location.X);
-        Assert.Equal(-17.3, @event.Location.Y);
+        // Assert: Location should preserve the unit vector components
+        Assert.Equal(0.6, @event.Location.Normal.X, precision: 6);
+        Assert.Equal(0.8, @event.Location.Normal.Y, precision: 6);
+        Assert.Equal(0.0, @event.Location.Normal.Z, precision: 6);
+        Assert.Equal(1.0, @event.Location.Radius, precision: 6);
     }
 
     #endregion
@@ -677,7 +681,6 @@ public class EventSchemaTests
         // Assert
         Assert.NotEqual(Guid.Empty, @event.EventId);
         Assert.False(@event.JunctionId.IsEmpty);
-        Assert.NotNull(@event.NewBoundaryIds);
         Assert.NotEmpty(@event.NewBoundaryIds);
         Assert.True(@event.StreamIdentity.IsValid());
     }
@@ -747,14 +750,15 @@ public class EventSchemaTests
     [Fact]
     public void JunctionUpdatedEvent_NewLocation_IsAccessible()
     {
-        // Arrange
-        var newLocation = new Point2(100, 200);
+        // Arrange: Create a SurfacePoint for new location (sphere-native format)
+        var normal = UnitVector3d.Create(0.8, 0.6, 0); // Unit vector
+        var newLocation = SurfacePoint.UnitSphere(normal);
 
         // Act
         var @event = TestEventFactory.JunctionUpdated(
             Guid.NewGuid(),
             JunctionId.NewId(),
-            new[] { BoundaryId.NewId() },
+            ImmutableArray.Create(BoundaryId.NewId()),
             newLocation,
             new CanonicalTick(0),
             0L,
@@ -762,9 +766,10 @@ public class EventSchemaTests
         );
 
         // Assert
-        Assert.Equal(newLocation, @event.NewLocation);
-        Assert.Equal(100, @event.NewLocation.Value.X);
-        Assert.Equal(200, @event.NewLocation.Value.Y);
+        Assert.NotNull(@event.NewLocation);
+        Assert.Equal(0.8, @event.NewLocation.Value.Normal.X, precision: 6);
+        Assert.Equal(0.6, @event.NewLocation.Value.Normal.Y, precision: 6);
+        Assert.Equal(1.0, @event.NewLocation.Value.Radius, precision: 6);
     }
 
     #endregion

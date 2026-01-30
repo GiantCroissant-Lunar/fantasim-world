@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FantaSim.Geosphere.Plate.Runtime.Des.Core;
+using FantaSim.Geosphere.Plate.Runtime.Des.Runtime;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.World.Contracts.Time;
 using Xunit;
@@ -81,4 +82,152 @@ public class ScheduledWorkItemOrderingTests
         queue.TryDequeue(out var result3).Should().BeTrue();
         result3.Should().Be(item3); // T=10, TB=1
     }
+
+    #region RFC-V2-0012 Same (When, Sphere, Kind) Determinism
+
+    /// <summary>
+    /// RFC-V2-0012: When multiple work items have identical (When, Sphere, Kind) keys,
+    /// the DES scheduler must assign unique TieBreak values to ensure deterministic ordering.
+    ///
+    /// This test verifies that:
+    /// 1. The scheduler assigns monotonically increasing TieBreak values
+    /// 2. Items scheduled first execute first (FIFO within same key)
+    /// 3. Multiple runs produce identical execution order
+    /// </summary>
+    [Fact]
+    public void Scheduler_SameKeyItems_ExecuteInScheduleOrder()
+    {
+        var queue = new PriorityQueueDesQueue();
+        var scheduler = new DesScheduler(queue);
+
+        // Schedule 5 items with IDENTICAL (When, Sphere, Kind)
+        var tick = new CanonicalTick(100);
+        var sphere = SphereIds.Geosphere;
+        var kind = (DesWorkKind)42;
+
+        // Schedule in a specific order with distinct payloads to track
+        scheduler.Schedule(tick, sphere, kind, "first");
+        scheduler.Schedule(tick, sphere, kind, "second");
+        scheduler.Schedule(tick, sphere, kind, "third");
+        scheduler.Schedule(tick, sphere, kind, "fourth");
+        scheduler.Schedule(tick, sphere, kind, "fifth");
+
+        // Dequeue and verify execution order matches schedule order
+        var executionOrder = new List<string>();
+        while (queue.TryDequeue(out var item))
+        {
+            executionOrder.Add((string)item.Payload!);
+        }
+
+        executionOrder.Should().Equal("first", "second", "third", "fourth", "fifth");
+    }
+
+    /// <summary>
+    /// Verifies that the TieBreak counter provides stable ordering even when
+    /// items are interleaved across different (When, Sphere, Kind) tuples.
+    ///
+    /// This is the "classic determinism trap" where everything else is deterministic
+    /// but runtime ordering can drift due to hash collisions or heap instability.
+    /// </summary>
+    [Fact]
+    public void Scheduler_InterleavedSameKeyItems_MaintainRelativeOrder()
+    {
+        var queue = new PriorityQueueDesQueue();
+        var scheduler = new DesScheduler(queue);
+
+        var tick = new CanonicalTick(100);
+
+        // Interleave items for two different kinds
+        scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)1, "A1");
+        scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)2, "B1");
+        scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)1, "A2");
+        scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)2, "B2");
+        scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)1, "A3");
+
+        // Dequeue all
+        var results = new List<string>();
+        while (queue.TryDequeue(out var item))
+        {
+            results.Add((string)item.Payload!);
+        }
+
+        // Kind 1 items should be first (lower Kind value), in schedule order
+        // Kind 2 items should be second, in schedule order
+        results.Should().Equal("A1", "A2", "A3", "B1", "B2");
+    }
+
+    /// <summary>
+    /// Multiple independent scheduler runs should produce byte-identical ordering.
+    /// This catches any hidden nondeterminism in the scheduler or queue implementation.
+    /// </summary>
+    [Fact]
+    public void Scheduler_MultipleRuns_ProduceIdenticalOrder()
+    {
+        const int runs = 10;
+        var allResults = new List<List<string>>();
+
+        for (var run = 0; run < runs; run++)
+        {
+            var queue = new PriorityQueueDesQueue();
+            var scheduler = new DesScheduler(queue);
+
+            var tick = new CanonicalTick(50);
+
+            // Schedule items with same key
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)99, "item-0");
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)99, "item-1");
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)99, "item-2");
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)99, "item-3");
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)99, "item-4");
+
+            var results = new List<string>();
+            while (queue.TryDequeue(out var item))
+            {
+                results.Add((string)item.Payload!);
+            }
+
+            allResults.Add(results);
+        }
+
+        // All runs should produce identical results
+        var baseline = allResults[0];
+        foreach (var r in allResults.Skip(1))
+        {
+            r.Should().Equal(baseline);
+        }
+    }
+
+    /// <summary>
+    /// Verifies that TieBreak values are actually monotonically increasing.
+    /// </summary>
+    [Fact]
+    public void Scheduler_TieBreakValues_AreMonotonicallyIncreasing()
+    {
+        var queue = new PriorityQueueDesQueue();
+        var scheduler = new DesScheduler(queue);
+
+        var tick = new CanonicalTick(100);
+
+        // Schedule 10 items
+        for (var i = 0; i < 10; i++)
+        {
+            scheduler.Schedule(tick, SphereIds.Geosphere, (DesWorkKind)1, $"item-{i}");
+        }
+
+        // Collect TieBreak values
+        var tieBreaks = new List<ulong>();
+        while (queue.TryDequeue(out var item))
+        {
+            tieBreaks.Add(item.TieBreak);
+        }
+
+        // Verify strictly increasing
+        for (var i = 1; i < tieBreaks.Count; i++)
+        {
+            tieBreaks[i].Should().BeGreaterThan(tieBreaks[i - 1],
+                $"TieBreak[{i}]={tieBreaks[i]} should be > TieBreak[{i - 1}]={tieBreaks[i - 1]}");
+        }
+    }
+
+    #endregion
 }

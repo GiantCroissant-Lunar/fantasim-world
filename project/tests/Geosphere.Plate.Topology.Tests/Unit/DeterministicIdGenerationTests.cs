@@ -476,7 +476,7 @@ public sealed class SolverSeedProviderTests
 
         // Act & Assert
         var ex = Assert.Throws<ArgumentException>(() => provider.DeriveSeed(12345UL, invalidStream));
-        Assert.Contains("not valid", ex.Message);
+        Assert.Contains("not valid", ex.Message, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System;
 using UnifyGeometry;
 using Xunit;
 
@@ -433,8 +434,8 @@ public class GeometryContractTests
         // Assert
         // The IGeometry interface does not expose coordinate system details
         // This is by design: FR-004 requires substrate-agnostic representation
-        Assert.DoesNotContain("Coordinate", geometry.GetType().Name);
-        Assert.DoesNotContain("Spatial", geometry.GetType().Name);
+        Assert.DoesNotContain("Coordinate", geometry.GetType().Name, StringComparison.Ordinal);
+        Assert.DoesNotContain("Spatial", geometry.GetType().Name, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -690,9 +691,9 @@ public class GeometryContractTests
         var emptyFormatted = emptySegment.ToString();
 
         // Assert
-        Assert.Contains("Segment2", formatted);
-        Assert.Contains("Point2(1, 2)", formatted);
-        Assert.Contains("Point2(3, 4)", formatted);
+        Assert.Contains("Segment2", formatted, StringComparison.Ordinal);
+        Assert.Contains("Point2(1, 2)", formatted, StringComparison.Ordinal);
+        Assert.Contains("Point2(3, 4)", formatted, StringComparison.Ordinal);
         Assert.Equal("Segment2(Empty)", emptyFormatted);
     }
 
@@ -889,9 +890,9 @@ public class GeometryContractTests
         var emptyFormatted = emptyPolyline.ToString();
 
         // Assert
-        Assert.StartsWith("Polyline2([", formatted);
-        Assert.Contains("Point2(1, 2)", formatted);
-        Assert.Contains("Point2(3, 4)", formatted);
+        Assert.StartsWith("Polyline2([", formatted, StringComparison.Ordinal);
+        Assert.Contains("Point2(1, 2)", formatted, StringComparison.Ordinal);
+        Assert.Contains("Point2(3, 4)", formatted, StringComparison.Ordinal);
         Assert.Equal("Polyline2(Empty)", emptyFormatted);
     }
 
