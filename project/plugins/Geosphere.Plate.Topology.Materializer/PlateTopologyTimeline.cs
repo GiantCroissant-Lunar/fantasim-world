@@ -40,7 +40,7 @@ public sealed class PlateTopologyTimeline
     /// <summary>
     /// Gets the topology state at a specific simulation tick.
     ///
-    /// Returns the state containing all entities with tick &lt;= targetTick.
+    /// Returns the state containing all entities with tick <= targetTick.
     /// This is the correct method for "what did the world look like at tick X?" queries.
     /// </summary>
     /// <param name="stream">The truth stream identity.</param>
@@ -56,7 +56,7 @@ public sealed class PlateTopologyTimeline
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        var result = await _materializer.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
+        var result = await _materializer.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken).ConfigureAwait(false);
         return new TimelineSlice(
             stream,
             targetTick,
@@ -96,7 +96,7 @@ public sealed class PlateTopologyTimeline
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        var result = await _materializer.MaterializeAtSequenceAsync(stream, targetSequence, cancellationToken);
+        var result = await _materializer.MaterializeAtSequenceAsync(stream, targetSequence, cancellationToken).ConfigureAwait(false);
 
         // For sequence-based queries, use the sequence as the tick value in the slice
         var tick = new CanonicalTick(Math.Max(0, targetSequence));
