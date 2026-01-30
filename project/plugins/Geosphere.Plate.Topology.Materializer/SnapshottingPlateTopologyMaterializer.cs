@@ -49,11 +49,14 @@ public sealed class SnapshottingPlateTopologyMaterializer
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        var key = new PlateTopologyMaterializationKey(stream, targetTick.Value);
+        // Query last sequence to include in cache key (correctness for back-in-time events)
+        var currentHead = await _eventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
+        var lastSeq = currentHead ?? 0;
+        var key = new PlateTopologyMaterializationKey(stream, targetTick.Value, lastSeq);
 
         // Try to find the latest snapshot at or before the target tick
         // This uses SeekForPrev internally for O(log n) lookup
-        var snapshot = await _snapshotStore.GetLatestSnapshotBeforeAsync(stream, targetTick.Value, cancellationToken);
+        var snapshot = await _snapshotStore.GetLatestSnapshotBeforeAsync(stream, targetTick.Value, cancellationToken).ConfigureAwait(false);
         if (snapshot.HasValue)
         {
             // Load snapshot into state
@@ -64,7 +67,7 @@ public sealed class SnapshottingPlateTopologyMaterializer
             // earlier/equal ticks (non-monotone streams) would be missed.
             if (snapshot.Value.Key.Tick == targetTick.Value)
             {
-                var headSeq = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);
+                var headSeq = await _eventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (headSeq.HasValue && headSeq.Value == snapshot.Value.LastEventSequence)
                 {
                     return new MaterializationResult(key, stateFromSnapshot, true);
@@ -77,20 +80,20 @@ public sealed class SnapshottingPlateTopologyMaterializer
                 stateFromSnapshot,
                 targetTick,
                 mode,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             return new MaterializationResult(key, incrementalState, true);
         }
 
         // No usable snapshot - do full replay with tick-based cutoff
-        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken);
+        var state = await _inner.MaterializeAtTickAsync(stream, targetTick, mode, cancellationToken).ConfigureAwait(false);
 
         // Save snapshot for "latest" queries (when targetTick is at or beyond head)
-        var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);
+        var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
         if (head.HasValue && state.LastEventSequence >= head.Value)
         {
-            var toSave = ToSnapshot(new PlateTopologyMaterializationKey(stream, state.LastEventSequence), state);
-            await _snapshotStore.SaveSnapshotAsync(toSave, cancellationToken);
+            var toSave = ToSnapshot(new PlateTopologyMaterializationKey(stream, state.LastEventSequence, state.LastEventSequence), state);
+            await _snapshotStore.SaveSnapshotAsync(toSave, cancellationToken).ConfigureAwait(false);
         }
 
         return new MaterializationResult(key, state, false);
@@ -110,23 +113,26 @@ public sealed class SnapshottingPlateTopologyMaterializer
     {
         ArgumentNullException.ThrowIfNull(stream);
 
-        var key = new PlateTopologyMaterializationKey(stream, targetSequence);
+        // Query last sequence to include in cache key
+        var currentHead = await _eventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
+        var lastSeq = currentHead ?? 0;
+        var key = new PlateTopologyMaterializationKey(stream, targetSequence, lastSeq);
 
-        var snapshot = await _snapshotStore.GetSnapshotAsync(key, cancellationToken);
+        var snapshot = await _snapshotStore.GetSnapshotAsync(key, cancellationToken).ConfigureAwait(false);
         if (snapshot.HasValue)
         {
             var stateFromSnapshot = FromSnapshot(snapshot.Value);
             return new MaterializationResult(key, stateFromSnapshot, true);
         }
 
-        var state = await _inner.MaterializeAtSequenceAsync(stream, targetSequence, cancellationToken);
+        var state = await _inner.MaterializeAtSequenceAsync(stream, targetSequence, cancellationToken).ConfigureAwait(false);
 
         // Save snapshot for "latest" queries
-        var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken);
+        var head = await _eventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
         if (head.HasValue && targetSequence >= head.Value)
         {
-            var toSave = ToSnapshot(new PlateTopologyMaterializationKey(stream, head.Value), state);
-            await _snapshotStore.SaveSnapshotAsync(toSave, cancellationToken);
+            var toSave = ToSnapshot(new PlateTopologyMaterializationKey(stream, head.Value, head.Value), state);
+            await _snapshotStore.SaveSnapshotAsync(toSave, cancellationToken).ConfigureAwait(false);
         }
 
         return new MaterializationResult(key, state, false);
