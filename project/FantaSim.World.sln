@@ -119,17 +119,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Polygonizat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Polygonization.Tests", "tests\Geosphere.Plate.Polygonization.Tests\Geosphere.Plate.Polygonization.Tests.csproj", "{57FC851D-E38A-4172-90AE-4CBFD2712BAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Contracts", "contracts\Geosphere.Plate.Raster.Contracts\Geosphere.Plate.Raster.Contracts.csproj", "{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Contracts", "contracts\Raster.Contracts\Raster.Contracts.csproj", "{E7B8A4C9-3F21-4D5E-9A8B-2C6D5F4E8A1B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Testing.Storage", "tests\Geosphere.Plate.Testing.Storage\Geosphere.Plate.Testing.Storage.csproj", "{E268EB1B-A82B-4035-B3E1-7F3A7D6AE446}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Registry", "plugins\Geosphere.Plate.Raster.Registry\Geosphere.Plate.Raster.Registry.csproj", "{CA9CAD36-5A14-4342-9789-D0EFCBF4E00E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Registry", "plugins\Raster.Registry\Raster.Registry.csproj", "{CA9CAD36-5A14-4342-9789-D0EFCBF4E00E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Masking", "plugins\Geosphere.Plate.Raster.Masking\Geosphere.Plate.Raster.Masking.csproj", "{E438A1FD-16C6-45C1-87D0-73A7BC51D0F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Masking", "plugins\Raster.Masking\Raster.Masking.csproj", "{E438A1FD-16C6-45C1-87D0-73A7BC51D0F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Core", "plugins\Geosphere.Plate.Raster.Core\Geosphere.Plate.Raster.Core.csproj", "{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Raster.Core.Tests", "tests\Geosphere.Plate.Raster.Core.Tests\Geosphere.Plate.Raster.Core.Tests.csproj", "{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raster.Core", "plugins\Raster.Core\Raster.Core.csproj", "{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -837,18 +835,6 @@ Global
 		{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}.Release|x64.Build.0 = Release|Any CPU
 		{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}.Release|x86.ActiveCfg = Release|Any CPU
 		{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE}.Release|x86.Build.0 = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|x64.Build.0 = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Debug|x86.Build.0 = Debug|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|x64.ActiveCfg = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|x64.Build.0 = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|x86.ActiveCfg = Release|Any CPU
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -885,6 +871,5 @@ Global
 		{CA9CAD36-5A14-4342-9789-D0EFCBF4E00E} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{E438A1FD-16C6-45C1-87D0-73A7BC51D0F7} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{9ADC5C97-8976-4B7D-95F2-DFB5CF609FAE} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
-		{BD946737-BDC7-47B3-B7CA-C2C46A63FE29} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
