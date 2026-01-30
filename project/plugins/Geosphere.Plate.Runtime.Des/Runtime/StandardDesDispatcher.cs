@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,8 +31,9 @@ public sealed class StandardDesDispatcher : IDesDispatcher
 
         // In a real system we might validate driver.Sphere == item.Sphere
 
-        var output = await driver.EvaluateAsync(context, ct);
+        var output = await driver.EvaluateAsync(context, ct).ConfigureAwait(false);
 
-        return trigger.EmitDrafts(output, context.CurrentTick);
+        // Pass tick-scoped RNG from context for deterministic ID generation
+        return trigger.EmitDrafts(output, context.CurrentTick, context.Rng);
     }
 }

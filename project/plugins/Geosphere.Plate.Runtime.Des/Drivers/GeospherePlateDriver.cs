@@ -37,13 +37,8 @@ public sealed class GeospherePlateDriver : IDriver
         // For this MVP, we keep the heartbeat alive.
         var nextTick = context.CurrentTick + 10;
 
-        context.Scheduler.Schedule(new ScheduledWorkItem(
-            nextTick,
-            SphereIds.Geosphere,
-            DesWorkKind.RunPlateSolver,
-            0, // TieBreak
-            null
-        ));
+        // Scheduler assigns monotonic TieBreak automatically for deterministic ordering
+        context.Scheduler.Schedule(nextTick, SphereIds.Geosphere, DesWorkKind.RunPlateSolver);
 
         return Task.FromResult(new DriverOutput(signal));
     }
