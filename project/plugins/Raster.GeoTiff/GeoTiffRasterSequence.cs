@@ -1,9 +1,9 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.GeoTiff;
+namespace FantaSim.Raster.GeoTiff;
 
 /// <summary>
 /// Implementation of IRasterSequence for GeoTiff data.

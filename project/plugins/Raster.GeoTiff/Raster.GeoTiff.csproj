@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Raster.GeoTiff</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Raster.GeoTiff</PackageId>
+    <AssemblyName>Raster.GeoTiff</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\contracts\FantaSim.Raster.Contracts\FantaSim.Raster.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BitMiracle.LibTiff.NET" />
+  </ItemGroup>
+
+</Project>

@@ -1,12 +1,10 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Loading;
-using FantaSim.Geosphere.Plate.Datasets.Contracts.Manifest;
-using FantaSim.Geosphere.Plate.Datasets.Contracts.Loading;
-using FantaSim.Geosphere.Plate.Raster.GeoTiff.Internal;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Loading;
+using FantaSim.Raster.GeoTiff.Internal;
 
-namespace FantaSim.Geosphere.Plate.Raster.GeoTiff;
+namespace FantaSim.Raster.GeoTiff;
 
 /// <summary>
 /// Loads raster sequences from GeoTiff files.

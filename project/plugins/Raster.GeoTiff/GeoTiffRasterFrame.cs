@@ -1,7 +1,7 @@
-﻿using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+using Plate.TimeDete.Time.Primitives;
+using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.GeoTiff;
+namespace FantaSim.Raster.GeoTiff;
 
 /// <summary>
 /// Implementation of IRasterFrame for GeoTiff data.

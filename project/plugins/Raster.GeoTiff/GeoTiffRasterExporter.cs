@@ -1,10 +1,10 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
-using FantaSim.Geosphere.Plate.Raster.Contracts.Export;
+using FantaSim.Raster.Contracts;
+using FantaSim.Raster.Contracts.Export;
 using BitMiracle.LibTiff.Classic;
 
-namespace FantaSim.Geosphere.Plate.Raster.GeoTiff;
+namespace FantaSim.Raster.GeoTiff;
 
 /// <summary>
 /// Exports raster sequences to GeoTiff format.

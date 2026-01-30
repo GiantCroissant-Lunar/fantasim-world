@@ -1,8 +1,8 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using BitMiracle.LibTiff.Classic;
-using FantaSim.Geosphere.Plate.Raster.Contracts;
+using FantaSim.Raster.Contracts;
 
-namespace FantaSim.Geosphere.Plate.Raster.GeoTiff.Internal;
+namespace FantaSim.Raster.GeoTiff.Internal;
 
 /// <summary>
 /// Low-level wrapper for reading GeoTiff files using LibTiff.NET.
