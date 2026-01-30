@@ -1,3 +1,4 @@
+﻿using System.Collections.Immutable;
 using System.Diagnostics;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Capabilities;
@@ -81,7 +82,7 @@ public sealed class PlateTopologyMaterializer
 
         var state = new PlateTopologyState(stream);
 
-        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken).ConfigureAwait(false))
         {
             ApplyEvent(state, evt);
         }
@@ -114,7 +115,7 @@ public sealed class PlateTopologyMaterializer
         if (targetSequence < 0)
             return state;
 
-        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken).ConfigureAwait(false))
         {
             // Events are in sequence order, so we can break early
             if (evt.Sequence > targetSequence)
@@ -155,11 +156,11 @@ public sealed class PlateTopologyMaterializer
         ArgumentNullException.ThrowIfNull(stream);
 
         // Determine effective mode
-        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken);
+        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken).ConfigureAwait(false);
 
         var state = new PlateTopologyState(stream);
 
-        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken).ConfigureAwait(false))
         {
             if (effectiveMode == TickMaterializationMode.BreakOnFirstBeyondTick)
             {
@@ -206,7 +207,7 @@ public sealed class PlateTopologyMaterializer
             return TickMaterializationMode.ScanAll;
         }
 
-        var isMonotone = await _capabilities.IsTickMonotoneFromGenesisAsync(stream, cancellationToken);
+        var isMonotone = await _capabilities.IsTickMonotoneFromGenesisAsync(stream, cancellationToken).ConfigureAwait(false);
 
         if (isMonotone)
         {
@@ -262,9 +263,9 @@ public sealed class PlateTopologyMaterializer
             $"[Materializer] Incremental replay for {stream}: startSeq={startSeq}, targetTick={targetTick.Value}");
 
         // Determine effective mode for the tail (the snapshot prefix was already correct)
-        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken);
+        var effectiveMode = await ResolveEffectiveModeAsync(stream, mode, cancellationToken).ConfigureAwait(false);
 
-        await foreach (var evt in _store.ReadAsync(stream, startSeq, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, startSeq, cancellationToken).ConfigureAwait(false))
         {
             if (effectiveMode == TickMaterializationMode.BreakOnFirstBeyondTick)
             {
@@ -327,7 +328,7 @@ public sealed class PlateTopologyMaterializer
 
         var state = new PlateTopologyState(stream);
 
-        await foreach (var evt in _store.ReadAsync(stream, fromSequence, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, fromSequence, cancellationToken).ConfigureAwait(false))
         {
             ApplyEvent(state, evt);
         }
@@ -459,7 +460,7 @@ public sealed class PlateTopologyMaterializer
         var junction = state.Junctions[evt.JunctionId];
         var updatedJunction = junction;
 
-        if (evt.NewBoundaryIds is not null)
+        if (!evt.NewBoundaryIds.IsDefaultOrEmpty)
         {
             updatedJunction = updatedJunction with { BoundaryIds = evt.NewBoundaryIds };
         }
