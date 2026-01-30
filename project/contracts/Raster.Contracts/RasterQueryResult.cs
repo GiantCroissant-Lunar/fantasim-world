@@ -1,11 +1,11 @@
-ï»¿using MessagePack;
+using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Result of a raster sequence query at a specific tick.
-/// RFC-V2-0028 Â§3.1.
+/// RFC-V2-0028 ¡±3.1.
 /// </summary>
 [MessagePackObject]
 public readonly record struct RasterQueryResult(

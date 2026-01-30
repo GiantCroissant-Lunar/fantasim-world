@@ -1,7 +1,7 @@
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Export;
+namespace FantaSim.Raster.Contracts.Export;
 
 /// <summary>
 /// Specification for exporting a raster sequence over a tick range.

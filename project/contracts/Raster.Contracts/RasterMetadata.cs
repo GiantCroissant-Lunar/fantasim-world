@@ -1,6 +1,6 @@
-﻿using MessagePack;
+using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Metadata for a raster sequence (consistent across all frames).

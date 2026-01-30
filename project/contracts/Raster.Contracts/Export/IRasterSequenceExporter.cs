@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Export;
+namespace FantaSim.Raster.Contracts.Export;
 
 /// <summary>
 /// Exports raster sequences to various formats.

@@ -1,8 +1,8 @@
-ï»¿namespace FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+namespace FantaSim.Raster.Contracts.Masking;
 
 /// <summary>
 /// A raster sequence that applies masking/cookie-cutting to frames.
-/// RFC-V2-0028 Â§3.3 - Derived transform for masking rasters.
+/// RFC-V2-0028 ¡±3.3 - Derived transform for masking rasters.
 /// </summary>
 /// <remarks>
 /// This interface is domain-agnostic. It does not reference plate polygons or topology.

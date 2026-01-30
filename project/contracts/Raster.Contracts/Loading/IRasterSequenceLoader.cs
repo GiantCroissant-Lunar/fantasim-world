@@ -1,7 +1,7 @@
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Manifest;
 using FantaSim.Geosphere.Plate.Datasets.Contracts.Loading;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Loading;
+namespace FantaSim.Raster.Contracts.Loading;
 
 /// <summary>
 /// Loads raster sequences from dataset assets.

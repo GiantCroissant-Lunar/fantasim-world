@@ -1,7 +1,7 @@
-﻿using MessagePack;
+using MessagePack;
 using UnifyGeometry;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Geographic bounds of a raster dataset.

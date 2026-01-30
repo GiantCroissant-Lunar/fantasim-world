@@ -1,6 +1,6 @@
-ï»¿using MessagePack;
+using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+namespace FantaSim.Raster.Contracts.Masking;
 
 /// <summary>
 /// Current schema version for mask specifications.
@@ -16,7 +16,7 @@ public static class MaskSpecVersions
 
 /// <summary>
 /// A mask that can be applied to a raster frame.
-/// RFC-V2-0028 Â§3.3 - Cookie-cutting / masking.
+/// RFC-V2-0028 ¡±3.3 - Cookie-cutting / masking.
 /// </summary>
 /// <remarks>
 /// This interface is domain-agnostic. Plate-specific masking implementations

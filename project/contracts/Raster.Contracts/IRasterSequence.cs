@@ -1,11 +1,11 @@
-ï»¿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Time-dependent raster sequence queryable by tick.
-/// RFC-V2-0028 Â§2.
+/// RFC-V2-0028 ¡±2.
 /// </summary>
 public interface IRasterSequence
 {
@@ -43,7 +43,7 @@ public interface IRasterSequence
 
     /// <summary>
     /// Queries the sequence for a raster at the target tick.
-    /// Per RFC-V2-0028 Â§3.1, selects the nearest frame at or before the target tick
+    /// Per RFC-V2-0028 ¡±3.1, selects the nearest frame at or before the target tick
     /// when interpolation is disabled.
     /// </summary>
     /// <param name="tick">The target tick.</param>

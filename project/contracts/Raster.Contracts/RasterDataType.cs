@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Data type of raster cell values.

@@ -1,6 +1,6 @@
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Rendering;
+namespace FantaSim.Raster.Contracts.Rendering;
 
 /// <summary>
 /// Renders raster sequences for visualization.

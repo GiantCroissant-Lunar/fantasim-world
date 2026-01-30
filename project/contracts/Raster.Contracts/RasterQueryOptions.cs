@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Options for raster sequence queries.

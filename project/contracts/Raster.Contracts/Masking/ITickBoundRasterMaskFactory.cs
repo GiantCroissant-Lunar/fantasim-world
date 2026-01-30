@@ -1,11 +1,11 @@
-ï»¿using Plate.TimeDete.Time.Primitives;
+using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Masking;
+namespace FantaSim.Raster.Contracts.Masking;
 
 /// <summary>
 /// Factory that creates tick-specific raster masks.
 /// This is the preferred pattern for time-varying masks (e.g., plate polygons that change over time).
-/// RFC-V2-0028 Â§3.3.
+/// RFC-V2-0028 ¡±3.3.
 /// </summary>
 /// <remarks>
 /// <para>

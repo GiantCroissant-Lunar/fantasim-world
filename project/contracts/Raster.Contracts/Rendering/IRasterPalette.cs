@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.Raster.Contracts.Rendering;
+namespace FantaSim.Raster.Contracts.Rendering;
 
 /// <summary>
 /// Defines a color palette for raster visualization.

@@ -1,4 +1,4 @@
-namespace FantaSim.Geosphere.Plate.Raster.Contracts;
+namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Interpolation method for deriving raster values between frames.
