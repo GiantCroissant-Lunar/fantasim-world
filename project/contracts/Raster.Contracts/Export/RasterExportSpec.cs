@@ -29,35 +29,35 @@ public readonly record struct RasterExportSpec(
             error = "SequenceId is required";
             return false;
         }
-
+        
         if (EndTick < StartTick)
         {
             error = "EndTick must be >= StartTick";
             return false;
         }
-
+        
         if (TickStep <= 0)
         {
             error = "TickStep must be > 0";
             return false;
         }
-
+        
         if (string.IsNullOrWhiteSpace(OutputDirectory))
         {
             error = "OutputDirectory is required";
             return false;
         }
-
+        
         if (string.IsNullOrWhiteSpace(FileNameTemplate))
         {
             error = "FileNameTemplate is required";
             return false;
         }
-
+        
         error = null;
         return true;
     }
-
+    
     /// <summary>
     /// Gets the ticks to export based on StartTick, EndTick, and TickStep.
     /// </summary>
@@ -68,7 +68,7 @@ public readonly record struct RasterExportSpec(
             yield return new CanonicalTick(tick);
         }
     }
-
+    
     /// <summary>
     /// Generates the output filename for a specific tick.
     /// Template supports: {tick}, {sequenceId}, {format}
@@ -79,7 +79,7 @@ public readonly record struct RasterExportSpec(
             .Replace("{tick}", tick.Value.ToString())
             .Replace("{sequenceId}", SequenceId)
             .Replace("{format}", Format.ToString().ToLowerInvariant());
-
+        
         return fileName;
     }
 }

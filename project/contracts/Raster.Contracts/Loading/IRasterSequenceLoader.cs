@@ -13,7 +13,7 @@ public interface IRasterSequenceLoader
     /// Checks if this loader can handle the given asset format.
     /// </summary>
     bool CanLoad(string format);
-
+    
     /// <summary>
     /// Loads a raster sequence from a dataset asset.
     /// </summary>
@@ -24,7 +24,7 @@ public interface IRasterSequenceLoader
         RasterSequenceAsset asset,
         IPlatesDataset dataset,
         CancellationToken cancellationToken = default);
-
+    
     /// <summary>
     /// Supported file formats (e.g., "geotiff", "netcdf", "asc").
     /// </summary>
@@ -40,7 +40,7 @@ public interface IRasterSequenceLoaderRegistry
     /// Registers a loader for specific formats.
     /// </summary>
     void Register(IRasterSequenceLoader loader);
-
+    
     /// <summary>
     /// Gets the appropriate loader for a format.
     /// </summary>

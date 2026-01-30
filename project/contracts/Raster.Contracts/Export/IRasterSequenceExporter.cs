@@ -16,7 +16,7 @@ public interface IRasterSequenceExporter
         IRasterSequence sequence,
         RasterExportSpec spec,
         CancellationToken cancellationToken = default);
-
+    
     /// <summary>
     /// Gets the supported export formats.
     /// </summary>
@@ -34,10 +34,10 @@ public readonly record struct RasterExportResult(
 )
 {
     public static RasterExportResult Empty => new(true, Array.Empty<string>(), Array.Empty<RasterExportError>(), 0);
-
+    
     public static RasterExportResult Failed(params RasterExportError[] errors)
         => new(false, Array.Empty<string>(), errors, 0);
-
+    
     public static RasterExportResult Succeeded(IReadOnlyList<string> files, int frames)
         => new(true, files, Array.Empty<RasterExportError>(), frames);
 }
@@ -53,13 +53,13 @@ public readonly record struct RasterExportError(
 {
     public static RasterExportError IOError(string message, string? path = null)
         => new("IO_ERROR", message, path);
-
+    
     public static RasterExportError FormatError(string message, string? path = null)
         => new("FORMAT_ERROR", message, path);
-
+    
     public static RasterExportError MissingFrame(string message, string? path = null)
         => new("MISSING_FRAME", message, path);
-
+    
     public static RasterExportError InvalidSpec(string message)
         => new("INVALID_SPEC", message, null);
 }

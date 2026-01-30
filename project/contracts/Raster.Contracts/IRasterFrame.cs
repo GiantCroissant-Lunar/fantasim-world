@@ -12,38 +12,38 @@ public interface IRasterFrame
     /// The tick this raster frame represents.
     /// </summary>
     CanonicalTick Tick { get; }
-
+    
     /// <summary>
     /// Width of the raster in pixels (columns).
     /// </summary>
     int Width { get; }
-
+    
     /// <summary>
     /// Height of the raster in pixels (rows).
     /// </summary>
     int Height { get; }
-
+    
     /// <summary>
     /// Geographic bounds of this raster frame.
     /// </summary>
     RasterBounds Bounds { get; }
-
+    
     /// <summary>
     /// Data type of cell values.
     /// </summary>
     RasterDataType DataType { get; }
-
+    
     /// <summary>
     /// No-data value (null if not specified).
     /// </summary>
     double? NoDataValue { get; }
-
+    
     /// <summary>
     /// Gets the raw pixel data as a read-only span of bytes.
     /// The data is row-major order (row by row, left to right).
     /// </summary>
     ReadOnlySpan<byte> GetRawData();
-
+    
     /// <summary>
     /// Gets the value at a specific cell as a double.
     /// Returns null if the cell contains the no-data value.
@@ -51,7 +51,7 @@ public interface IRasterFrame
     /// <param name="row">Row index (0-based, top to bottom).</param>
     /// <param name="col">Column index (0-based, left to right).</param>
     double? GetValue(int row, int col);
-
+    
     /// <summary>
     /// Gets the value at a specific geographic coordinate.
     /// Returns null if out of bounds or no-data.

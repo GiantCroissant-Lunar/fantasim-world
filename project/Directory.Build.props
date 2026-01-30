@@ -22,41 +22,6 @@
     <FantaSimProjectKind>Hosts</FantaSimProjectKind>
   </PropertyGroup>
 
-  <!-- Disable MA0048 (file name must match type name) globally -->
-  <PropertyGroup>
-    <NoWarn>$(NoWarn);MA0048</NoWarn>
-  </PropertyGroup>
-
-  <!-- Disable MA0051 (method too long) for benchmarks and tests -->
-  <PropertyGroup Condition="'$(MSBuildProjectName.EndsWith(`.Benchmarks`))' Or '$(MSBuildProjectName.EndsWith(`.Tests`))'">
-    <NoWarn>$(NoWarn);MA0051</NoWarn>
-  </PropertyGroup>
-
-  <!-- Treat certain CS null warnings as warnings only, not errors -->
-  <PropertyGroup>
-    <NoWarn>$(NoWarn);CS8602;CS8604</NoWarn>
-  </PropertyGroup>
-
-  <!-- Disable MA0011 for samples/benchmarks -->
-  <PropertyGroup Condition="'$(MSBuildProjectName.EndsWith(`.Benchmarks`))' Or '$(MSBuildProjectName.EndsWith(`.Sample`))'">
-    <NoWarn>$(NoWarn);MA0011</NoWarn>
-  </PropertyGroup>
-
-  <!-- Disable MA0002, MA0006, MA0016, MA0015 for flexibility -->
-  <PropertyGroup>
-    <NoWarn>$(NoWarn);MA0002;MA0006;MA0016;MA0015</NoWarn>
-  </PropertyGroup>
-
-  <!-- FantaSim.Shared Source Generators -->
-  <PropertyGroup>
-    <FantaSimSharedRoot>$(MSBuildThisFileDirectory)..\..\fantasim-shared</FantaSimSharedRoot>
-    <FantaSimSharedGenerators>$(FantaSimSharedRoot)\project\build</FantaSimSharedGenerators>
-  </PropertyGroup>
-
-  <ItemGroup Condition="Exists('$(FantaSimSharedGenerators)\FantaSim.Foundation.props')">
-    <Import Include="$(FantaSimSharedGenerators)\FantaSim.Foundation.props" />
-  </ItemGroup>
-
   <!-- netstandard2.1 compat: centralized IsExternalInit shim from fantasim-shared (if present) -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' and Exists('$(MSBuildThisFileDirectory)..\\..\\fantasim-shared\\project\\_compat\\IsExternalInit.cs')">
     <DefineConstants>$(DefineConstants);FANTASIM_SHARED_COMPAT</DefineConstants>
@@ -103,4 +68,12 @@
   <ItemGroup>
     <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);MA0048</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Benchmarks'))">
+    <NoWarn>$(NoWarn);MA0051</NoWarn>
+  </PropertyGroup>
 </Project>

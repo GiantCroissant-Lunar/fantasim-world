@@ -11,12 +11,12 @@ public enum InterpolationMethod
     /// Default behavior per RFC-V2-0028.
     /// </summary>
     NearestNeighbor,
-
+    
     /// <summary>
     /// Linear interpolation between two frames.
     /// </summary>
     Linear,
-
+    
     /// <summary>
     /// Cubic interpolation for smoother transitions.
     /// </summary>
