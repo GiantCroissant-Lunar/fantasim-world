@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Polygonization.Contracts.Products;
 using FantaSim.Raster.Contracts;
 using FantaSim.Raster.Contracts.Masking;
@@ -55,6 +56,7 @@ public interface IPlateMaskedRasterSequence : IMaskedRasterSequence
 /// Mask specification for plate polygon-based masking.
 /// RFC-V2-0028 - Plate-specific masking configuration.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct PlatePolygonMaskSpec(
     [property: Key(0)] PlateId PlateId,

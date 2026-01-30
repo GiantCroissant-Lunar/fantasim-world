@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities;
@@ -146,6 +147,7 @@ public sealed class PlateKinematicsState : IPlateKinematicsStateView
         return result;
     }
 
+    [StructLayout(LayoutKind.Auto)]
     public readonly record struct MotionSegment(
         MotionSegmentId SegmentId,
         CanonicalTick TickA,

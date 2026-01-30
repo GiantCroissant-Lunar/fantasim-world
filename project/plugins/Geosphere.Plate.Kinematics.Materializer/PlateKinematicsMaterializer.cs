@@ -21,7 +21,7 @@ public sealed class PlateKinematicsMaterializer
 
         var state = new PlateKinematicsState(stream);
 
-        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken))
+        await foreach (var evt in _store.ReadAsync(stream, 0, cancellationToken).ConfigureAwait(false))
         {
             ApplyEvent(state, evt);
         }
