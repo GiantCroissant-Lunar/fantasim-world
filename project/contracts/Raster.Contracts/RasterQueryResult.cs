@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
@@ -5,8 +6,9 @@ namespace FantaSim.Raster.Contracts;
 
 /// <summary>
 /// Result of a raster sequence query at a specific tick.
-/// RFC-V2-0028 ¡±3.1.
+/// RFC-V2-0028 Â§3.1.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RasterQueryResult(
     [property: Key(0)] CanonicalTick TargetTick,
@@ -48,6 +50,7 @@ public readonly record struct RasterQueryResult(
 /// <summary>
 /// Serializable raster frame data returned from queries.
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RasterFrameData(
     [property: Key(0)] int Width,

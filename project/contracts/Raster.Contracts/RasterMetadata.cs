@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using MessagePack;
 
 namespace FantaSim.Raster.Contracts;
@@ -5,6 +6,7 @@ namespace FantaSim.Raster.Contracts;
 /// <summary>
 /// Metadata for a raster sequence (consistent across all frames).
 /// </summary>
+[StructLayout(LayoutKind.Auto)]
 [MessagePackObject]
 public readonly record struct RasterMetadata(
     [property: Key(0)] int Width,

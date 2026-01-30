@@ -8,16 +8,16 @@ public enum RasterExportFormat
 {
     /// <summary>GeoTIFF format (.tif)</summary>
     GeoTiff,
-    
+
     /// <summary>PNG image with world file (.png + .pgw)</summary>
     PngWithWorldFile,
-    
+
     /// <summary>NetCDF format (.nc)</summary>
     NetCDF,
-    
+
     /// <summary>Raw binary with header (.bin + .hdr)</summary>
     RawBinary,
-    
+
     /// <summary>CSV with lat/lon/value columns</summary>
     Csv
 }
