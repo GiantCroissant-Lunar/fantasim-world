@@ -16,6 +16,5 @@ public readonly record struct RateStatistics(
     [property: Key(4)] double MaxTangentialRate,
     [property: Key(5)] double MeanTangentialRate,
     [property: Key(6)] double MaxRelativeSpeed,
-    [property: Key(7)] double MeanRelativeSpeed,
-    [property: Key(8)] int SampleCount
+    [property: Key(7)] double MeanRelativeSpeed
 );

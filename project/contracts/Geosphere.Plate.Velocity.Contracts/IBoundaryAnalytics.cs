@@ -1,4 +1,5 @@
 using Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 namespace FantaSim.Geosphere.Plate.Velocity.Contracts;
@@ -34,8 +35,8 @@ public interface IBoundaryAnalytics
     ValueTask<BoundaryRateProfile> SampleBoundaryVelocitiesAsync(
         BoundaryId boundaryId,
         CanonicalTick tick,
-        BoundarySamplingSpec sampling,
-        string? frame = null);
+        BoundarySampleSpec sampling,
+        ReferenceFrameId? frame = null);
 
     /// <summary>
     /// Samples multiple boundaries at the specified tick.
@@ -48,8 +49,8 @@ public interface IBoundaryAnalytics
     ValueTask<IReadOnlyList<BoundaryRateProfile>> SampleBoundariesAsync(
         IEnumerable<BoundaryId> boundaryIds,
         CanonicalTick tick,
-        BoundarySamplingSpec sampling,
-        string? frame = null);
+        BoundarySampleSpec sampling,
+        ReferenceFrameId? frame = null);
 
     /// <summary>
     /// Computes spreading metrics for a ridge boundary (RFC-V2-0048 §5.3).

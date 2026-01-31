@@ -13,7 +13,5 @@ public readonly record struct SpreadingRateMetrics(
     [property: Key(1)] double HalfRate,
     [property: Key(2)] double Asymmetry,
     [property: Key(3)] double Obliquity,
-    [property: Key(4)] double AlongStrikeVariation,
-    [property: Key(5)] double MeanDivergenceRate,
-    [property: Key(6)] int DivergentSampleCount
+    [property: Key(4)] double AlongStrikeVariation
 );

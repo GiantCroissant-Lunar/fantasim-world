@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using FantaSim.Geosphere.Plate.Velocity.Solver;
@@ -106,7 +107,6 @@ public class BoundaryAnalyticsServiceTests
         stats1.MinNormalRate.Should().Be(stats2.MinNormalRate);
         stats1.MaxNormalRate.Should().Be(stats2.MaxNormalRate);
         stats1.MeanNormalRate.Should().Be(stats2.MeanNormalRate);
-        stats1.SampleCount.Should().Be(stats2.SampleCount);
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public class BoundaryAnalyticsServiceTests
     [InlineData(-1.0, StrikeSlipSense.LeftLateral)]
     [InlineData(-0.1, StrikeSlipSense.LeftLateral)]
     [InlineData(0.0, StrikeSlipSense.None)]
-    [InlineData(1e-11, StrikeSlipSense.None)]  // Below epsilon
+    [InlineData(1e-13, StrikeSlipSense.None)]  // Below epsilon
     public void StrikeSlipSense_ClassifiedCorrectly(double tangentialRate, StrikeSlipSense expectedSense)
     {
         // Act
@@ -250,7 +250,6 @@ public class BoundaryAnalyticsServiceTests
         // Assert
         metrics.HalfRate.Should().BeApproximately(5.0, 1e-10);
         metrics.FullRate.Should().BeApproximately(10.0, 1e-10);
-        metrics.DivergentSampleCount.Should().Be(3);
     }
 
     /// <summary>
@@ -268,7 +267,6 @@ public class BoundaryAnalyticsServiceTests
         // Assert
         metrics.FullRate.Should().Be(0.0);
         metrics.HalfRate.Should().Be(0.0);
-        metrics.DivergentSampleCount.Should().Be(0);
     }
 
     #endregion
@@ -316,19 +314,22 @@ public class BoundaryAnalyticsServiceTests
     {
         return new BoundaryRateSample(
             Position: default,
+            ArcLength: arcLength,
             RelativeVelocity: default,
             Tangent: default,
             Normal: default,
             Vertical: default,
-            TangentialRate: tangentialRate,
             NormalRate: normalRate,
+            TangentialRate: tangentialRate,
             VerticalRate: null,
             RelativeSpeed: Math.Sqrt(normalRate * normalRate + tangentialRate * tangentialRate),
             RelativeAzimuth: 0,
             ObliquityAngle: 0,
             Uncertainty: default,
-            ArcLength: arcLength,
-            SampleIndex: 0
+            Provenance: new SampleProvenance(
+                SampleIndex: 0,
+                SegmentIndex: -1,
+                SegmentT: double.NaN)
         );
     }
 
@@ -338,7 +339,7 @@ public class BoundaryAnalyticsServiceTests
             BoundaryId: default,
             Type: BoundaryType.Divergent,
             Tick: default,
-            FrameId: null,
+            Frame: MantleFrame.Instance,
             Samples: samples.ToImmutableArray(),
             Statistics: BoundaryAnalyticsService.ComputeStatistics(samples),
             ConvergenceSummary: null,

@@ -9,5 +9,8 @@ public enum SamplingMode
     ArcLength,
 
     /// <summary>Sample along straight chords between vertices.</summary>
-    ChordLength
+    ChordLength,
+
+    /// <summary>Sample at geometry vertices only (no interpolation).</summary>
+    VertexOnly
 }

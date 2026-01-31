@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
@@ -13,6 +14,8 @@ namespace FantaSim.Geosphere.Plate.Velocity.Solver;
 /// </summary>
 public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
 {
+    private const double Epsilon = 1e-12;
+
     private readonly IBoundaryVelocitySolver _velocitySolver;
     private readonly IPlateVelocitySolver _plateVelocitySolver;
 
@@ -30,41 +33,32 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
     }
 
     /// <inheritdoc />
-    public async ValueTask<BoundaryRateProfile> SampleBoundaryVelocitiesAsync(
+    public ValueTask<BoundaryRateProfile> SampleBoundaryVelocitiesAsync(
         BoundaryId boundaryId,
         CanonicalTick tick,
-        BoundarySamplingSpec sampling,
-        string? frame = null)
+        BoundarySampleSpec sampling,
+        ReferenceFrameId? frame = null)
     {
-        ArgumentNullException.ThrowIfNull(boundaryId);
-        ArgumentNullException.ThrowIfNull(tick);
+        if (boundaryId.IsEmpty)
+            throw new ArgumentException("BoundaryId cannot be empty.", nameof(boundaryId));
 
-        // Note: This is a simplified implementation that relies on the caller providing
-        // topology and kinematics state. In a full implementation, these would be injected
-        // or resolved from services.
+        _ = tick;
+        _ = sampling;
+        _ = frame;
 
-        // For now, return an empty profile as placeholder
-        // Full implementation requires ITopologyReadModel and IKinematicsService integration
-        return new BoundaryRateProfile(
-            BoundaryId: boundaryId,
-            Type: BoundaryType.Divergent, // Placeholder
-            Tick: tick,
-            FrameId: frame,
-            Samples: ImmutableArray<BoundaryRateSample>.Empty,
-            Statistics: default,
-            ConvergenceSummary: null,
-            SpreadingMetrics: null,
-            StrikeSlipSummary: null
-        );
+        throw new NotSupportedException(
+            "SampleBoundaryVelocitiesAsync is not yet integrated with topology/kinematics read models. " +
+            "For now, use IBoundaryVelocitySolver with IPlateTopologyStateView + IPlateKinematicsStateView and compute rate analytics from those samples.");
     }
 
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<BoundaryRateProfile>> SampleBoundariesAsync(
         IEnumerable<BoundaryId> boundaryIds,
         CanonicalTick tick,
-        BoundarySamplingSpec sampling,
-        string? frame = null)
+        BoundarySampleSpec sampling,
+        ReferenceFrameId? frame = null)
     {
+        ArgumentNullException.ThrowIfNull(boundaryIds);
         var profiles = new List<BoundaryRateProfile>();
         foreach (var boundaryId in boundaryIds)
         {
@@ -83,9 +77,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
                 HalfRate: 0,
                 Asymmetry: 0,
                 Obliquity: 0,
-                AlongStrikeVariation: 0,
-                MeanDivergenceRate: 0,
-                DivergentSampleCount: 0
+                AlongStrikeVariation: 0
             );
         }
 
@@ -97,9 +89,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
                 HalfRate: 0,
                 Asymmetry: 0,
                 Obliquity: 0,
-                AlongStrikeVariation: 0,
-                MeanDivergenceRate: 0,
-                DivergentSampleCount: 0
+                AlongStrikeVariation: 0
             );
         }
 
@@ -121,9 +111,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
             HalfRate: meanDivergence,
             Asymmetry: asymmetry,
             Obliquity: obliquity,
-            AlongStrikeVariation: stdDevNormal,
-            MeanDivergenceRate: meanDivergence,
-            DivergentSampleCount: divergentSamples.Count
+            AlongStrikeVariation: stdDevNormal
         );
     }
 
@@ -186,7 +174,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
             );
         }
 
-        var strikeSlipSamples = profile.Samples.Where(s => Math.Abs(s.TangentialRate) > 1e-10).ToList();
+        var strikeSlipSamples = profile.Samples.Where(s => Math.Abs(s.TangentialRate) > Epsilon).ToList();
         if (!strikeSlipSamples.Any())
         {
             return new StrikeSlipSummary(
@@ -221,8 +209,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
     /// <inheritdoc />
     public StrikeSlipSense GetStrikeSlipSense(double tangentialRate)
     {
-        const double epsilon = 1e-10;
-        if (Math.Abs(tangentialRate) < epsilon)
+        if (Math.Abs(tangentialRate) < Epsilon)
             return StrikeSlipSense.None;
         return tangentialRate > 0 ? StrikeSlipSense.RightLateral : StrikeSlipSense.LeftLateral;
     }
@@ -266,8 +253,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
                 MaxTangentialRate: 0,
                 MeanTangentialRate: 0,
                 MaxRelativeSpeed: 0,
-                MeanRelativeSpeed: 0,
-                SampleCount: 0
+                MeanRelativeSpeed: 0
             );
         }
 
@@ -283,8 +269,7 @@ public sealed class BoundaryAnalyticsService : IBoundaryAnalytics
             MaxTangentialRate: tangentialRates.Max(),
             MeanTangentialRate: tangentialRates.Average(),
             MaxRelativeSpeed: speeds.Max(),
-            MeanRelativeSpeed: speeds.Average(),
-            SampleCount: samples.Count
+            MeanRelativeSpeed: speeds.Average()
         );
     }
 

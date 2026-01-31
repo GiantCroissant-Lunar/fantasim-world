@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using MessagePack;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
@@ -15,7 +16,7 @@ public readonly record struct BoundaryRateProfile(
     [property: Key(0)] BoundaryId BoundaryId,
     [property: Key(1)] BoundaryType Type,
     [property: Key(2)] CanonicalTick Tick,
-    [property: Key(3)] string? FrameId,
+    [property: Key(3)] ReferenceFrameId Frame,
     [property: Key(4)] ImmutableArray<BoundaryRateSample> Samples,
     [property: Key(5)] RateStatistics Statistics,
     [property: Key(6)] ConvergenceRateSummary? ConvergenceSummary,
@@ -48,10 +49,10 @@ public readonly record struct BoundaryRateProfile(
     public double MaxConvergenceRate => ConvergenceSummary?.MaxConvergenceRate ?? 0.0;
 
     /// <summary>
-    /// Gets the maximum divergence rate (always non-negative).
+    /// Gets the mean divergence rate (always non-negative).
     /// </summary>
     [IgnoreMember]
-    public double MaxDivergenceRate => SpreadingMetrics?.MeanDivergenceRate ?? 0.0;
+    public double MeanDivergenceRate => SpreadingMetrics?.HalfRate ?? 0.0;
 
     /// <summary>
     /// Gets the full spreading rate (2x divergence rate for ridges).

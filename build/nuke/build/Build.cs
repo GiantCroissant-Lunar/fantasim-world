@@ -12,6 +12,30 @@ class Build : UnifyBuildBase
 {
     [GitVersion] readonly GitVersion GitVersion;
 
+    public Target Test => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            if (Context.Solution is null)
+                throw new InvalidOperationException("BuildContext.Solution is not configured; cannot run tests.");
+
+            DotNetTasks.DotNetTest(s => s
+                .SetProjectFile(Context.Solution)
+                .SetConfiguration(Configuration)
+                .EnableNoBuild());
+        });
+
+    public Target TestVelocity => _ => _
+        .DependsOn(Compile)
+        .Executes(() =>
+        {
+            var project = (Context.RepoRoot / "project/tests/Geosphere.Plate.Velocity.Tests/Geosphere.Plate.Velocity.Tests.csproj").ToString();
+            DotNetTasks.DotNetTest(s => s
+                .SetProjectFile(project)
+                .SetConfiguration(Configuration)
+                .EnableNoBuild());
+        });
+
     void SyncLatestArtifactsImpl()
     {
         var artifactsRoot = Context.RepoRoot / "build/_artifacts";
