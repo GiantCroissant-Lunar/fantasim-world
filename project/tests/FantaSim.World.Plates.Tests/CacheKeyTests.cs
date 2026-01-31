@@ -1,3 +1,4 @@
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
@@ -16,7 +17,7 @@ public class CacheKeyTests
         // Arrange: Policy with empty frame
         var policy = new ReconstructionPolicy
         {
-            Frame = default, // Empty frame
+            Frame = null!, // Invalid per RFC: frame must be specified
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };
@@ -38,7 +39,7 @@ public class CacheKeyTests
         // Arrange
         var policy = new ReconstructionPolicy
         {
-            Frame = default,
+            Frame = null!,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };
@@ -54,22 +55,21 @@ public class CacheKeyTests
     }
 
     [Fact]
-    public void Frame_Inclusion_Gate_BuildVelocityKey_Throws_When_FrameId_Empty()
+    public void Frame_Inclusion_Gate_BuildVelocityKey_Throws_When_Frame_Null()
     {
         // Arrange
         var point = new Point3 { X = 1, Y = 0, Z = 0 };
         var modelId = new ModelId(Guid.NewGuid());
-        var emptyFrameId = new FrameId(Guid.Empty);
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<ArgumentNullException>(() =>
             CacheKeyBuilder.BuildVelocityKey(
                 point,
                 CanonicalTick.Genesis,
                 modelId,
-                emptyFrameId));
+                frame: null!));
 
-        Assert.Contains("FrameId", ex.Message);
+        Assert.Contains("frame", ex.ParamName);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class CacheKeyTests
         // Arrange
         var policy = new ReconstructionPolicy
         {
-            Frame = default,
+            Frame = null!,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };
@@ -132,14 +132,14 @@ public class CacheKeyTests
         // Arrange
         var point = new Point3 { X = 1, Y = 0, Z = 0 };
         var modelId = new ModelId(Guid.NewGuid());
-        var frameId = FrameId.NewId();
+        var frame = MantleFrame.Instance;
 
         // Act
         var key = CacheKeyBuilder.BuildVelocityKey(
             point,
             CanonicalTick.Genesis,
             modelId,
-            frameId);
+            frame);
 
         // Assert
         Assert.StartsWith("vel:", key);
@@ -170,14 +170,14 @@ public class CacheKeyTests
 
         var policy1 = new ReconstructionPolicy
         {
-            Frame = ReferenceFrameId.MantleFrame,
+            Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Strict
         };
 
         var policy2 = new ReconstructionPolicy
         {
-            Frame = ReferenceFrameId.PaleomagneticFrame,
+            Frame = AbsoluteFrame.Instance,
             KinematicsModel = policy1.KinematicsModel,
             PartitionTolerance = TolerancePolicy.Strict
         };
@@ -214,8 +214,8 @@ public class CacheKeyTests
         // Arrange
         var basePolicy = CreateValidPolicy();
 
-        var policy1 = basePolicy with { Frame = ReferenceFrameId.MantleFrame };
-        var policy2 = basePolicy with { Frame = ReferenceFrameId.PaleomagneticFrame };
+        var policy1 = basePolicy with { Frame = MantleFrame.Instance };
+        var policy2 = basePolicy with { Frame = AbsoluteFrame.Instance };
 
         // Act
         var hash1 = CacheKeyBuilder.ComputePolicyHash(policy1);
@@ -232,14 +232,14 @@ public class CacheKeyTests
         // This is verified by checking that changing frame produces different hash
         var policy1 = new ReconstructionPolicy
         {
-            Frame = new ReferenceFrameId(Guid.Parse("00000000-0000-0000-0000-000000000001")),
+            Frame = new PlateAnchor { PlateId = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000001")) },
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };
 
         var policy2 = new ReconstructionPolicy
         {
-            Frame = new ReferenceFrameId(Guid.Parse("00000000-0000-0000-0000-000000000002")),
+            Frame = new PlateAnchor { PlateId = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000002")) },
             KinematicsModel = policy1.KinematicsModel,
             PartitionTolerance = TolerancePolicy.Standard
         };
@@ -273,7 +273,7 @@ public class CacheKeyTests
     {
         // Arrange
         var policy1 = CreateValidPolicy();
-        var policy2 = policy1 with { Frame = ReferenceFrameId.PaleomagneticFrame };
+        var policy2 = policy1 with { Frame = AbsoluteFrame.Instance };
 
         // Act
         var hash1 = policy1.GetDeterministicHashCode();
@@ -315,7 +315,7 @@ public class CacheKeyTests
     {
         return new ReconstructionPolicy
         {
-            Frame = ReferenceFrameId.MantleFrame,
+            Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };

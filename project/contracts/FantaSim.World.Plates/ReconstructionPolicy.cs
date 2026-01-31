@@ -1,4 +1,5 @@
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using MessagePack;
 
 namespace FantaSim.World.Plates;
@@ -55,110 +56,10 @@ public sealed record ReconstructionPolicy
     [Key(5)]
     public ProvenanceStrictness Strictness { get; init; } = ProvenanceStrictness.Strict;
 
-    /// <summary>
-    /// Computes a hash code for this policy suitable for cache key generation.
-    /// </summary>
-    /// <returns>A stable hash code incorporating all policy fields.</returns>
-    /// <remarks>
-    /// Per RFC-V2-0045 Section 4.2.1: Frame MUST be included in every cache key.
-    /// This GetHashCode implementation ensures the frame is always part of the hash.
-    /// </remarks>
-    public override int GetHashCode()
-    {
-        var hash = new HashCode();
-        hash.Add(Frame);
-        hash.Add(KinematicsModel);
-        hash.Add(PartitionTolerance);
-        hash.Add(BoundarySampling);
-        hash.Add(IntegrationPolicy);
-        hash.Add(Strictness);
-        return hash.ToHashCode();
-    }
 
-    /// <summary>
-    /// Determines whether this policy equals another object.
-    /// </summary>
-    /// <param name="obj">The object to compare.</param>
-    /// <returns>True if equal; otherwise, false.</returns>
-    public override bool Equals(object? obj)
-    {
-        return obj is ReconstructionPolicy other &&
-               Frame.Equals(other.Frame) &&
-               KinematicsModel.Equals(other.KinematicsModel) &&
-               PartitionTolerance == other.PartitionTolerance &&
-               EqualityComparer<BoundarySampleSpec?>.Default.Equals(BoundarySampling, other.BoundarySampling) &&
-               IntegrationPolicy == other.IntegrationPolicy &&
-               Strictness == other.Strictness;
-    }
 }
 
-/// <summary>
-/// Uniquely identifies a reference frame for reconstruction operations.
-/// </summary>
-/// <remarks>
-/// Per RFC-V2-0045: Reference frames define the coordinate system for reconstructed positions.
-/// Common frames include mantle reference frame (MRF) and paleomagnetic reference frame.
-/// </remarks>
-[MessagePackObject]
-public readonly record struct ReferenceFrameId
-{
-    /// <summary>
-    /// The internal frame identifier.
-    /// </summary>
-    private readonly Guid _value;
 
-    /// <summary>
-    /// Initializes a new ReferenceFrameId.
-    /// </summary>
-    /// <param name="value">The frame identifier value.</param>
-    [SerializationConstructor]
-    public ReferenceFrameId(Guid value)
-    {
-        _value = value;
-    }
-
-    /// <summary>
-    /// Gets the underlying identifier value.
-    /// </summary>
-    [Key(0)]
-    public Guid Value => _value;
-
-    /// <summary>
-    /// Gets a value indicating whether this identifier is empty.
-    /// </summary>
-    [IgnoreMember]
-    public bool IsEmpty => _value == Guid.Empty;
-
-    /// <summary>
-    /// Creates a new unique reference frame identifier.
-    /// </summary>
-    /// <returns>A new ReferenceFrameId.</returns>
-    public static ReferenceFrameId NewId() => new(Guid.NewGuid());
-
-    /// <summary>
-    /// Parses a ReferenceFrameId from a string.
-    /// </summary>
-    /// <param name="value">The string representation.</param>
-    /// <returns>A ReferenceFrameId.</returns>
-    public static ReferenceFrameId Parse(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("ReferenceFrameId cannot be null or whitespace.", nameof(value));
-        return new ReferenceFrameId(Guid.Parse(value));
-    }
-
-    /// <summary>
-    /// Standard mantle reference frame identifier.
-    /// </summary>
-    public static readonly ReferenceFrameId MantleFrame = new(new Guid("00000000-0000-0000-0000-000000000001"));
-
-    /// <summary>
-    /// Paleomagnetic reference frame identifier.
-    /// </summary>
-    public static readonly ReferenceFrameId PaleomagneticFrame = new(new Guid("00000000-0000-0000-0000-000000000002"));
-
-    public override string ToString() => _value.ToString("D");
-}
 
 /// <summary>
 /// Uniquely identifies a kinematics model for rotation calculations.

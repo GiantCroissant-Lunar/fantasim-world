@@ -164,7 +164,7 @@ public class ProvenanceTests
         // Arrange
         var policy = new ReconstructionPolicy
         {
-            Frame = ReferenceFrameId.MantleFrame,
+            Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };
@@ -329,7 +329,7 @@ public class ProvenanceTests
     {
         return new ReconstructionPolicy
         {
-            Frame = ReferenceFrameId.MantleFrame,
+            Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
             PartitionTolerance = TolerancePolicy.Standard
         };

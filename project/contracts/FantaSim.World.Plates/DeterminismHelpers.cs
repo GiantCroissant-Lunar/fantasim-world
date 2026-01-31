@@ -203,7 +203,11 @@ public static class DeterminismHelpers
         if (a == 0.0 && b == 0.0)
         {
             // -0.0 < +0.0 in total order
-            return double.IsNegative(a).CompareTo(double.IsNegative(b));
+            var aNeg = double.IsNegative(a);
+            var bNeg = double.IsNegative(b);
+            if (aNeg == bNeg)
+                return 0;
+            return aNeg ? -1 : 1;
         }
 
         return a.CompareTo(b);
@@ -292,8 +296,12 @@ public static class DeterminismHelpers
 
     private sealed class ReconstructedFeatureComparerImpl : IComparer<ReconstructedFeature>
     {
-        public int Compare(ReconstructedFeature x, ReconstructedFeature y)
+        public int Compare(ReconstructedFeature? x, ReconstructedFeature? y)
         {
+            if (ReferenceEquals(x, y)) return 0;
+            if (x is null) return -1;
+            if (y is null) return 1;
+
             // Per RFC-V2-0045: Sort by SourceFeatureId.Value ascending
             return x.SourceFeatureId.Value.CompareTo(y.SourceFeatureId.Value);
         }
