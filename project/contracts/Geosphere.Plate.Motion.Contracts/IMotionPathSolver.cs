@@ -7,7 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 namespace FantaSim.Geosphere.Plate.Motion.Contracts;
 
 /// <summary>
-/// Solver for computing motion paths (RFC-V2-0035 §8.1).
+/// Solver for computing motion paths (RFC-V2-0049 §3.1).
 /// </summary>
 public interface IMotionPathSolver
 {
@@ -21,7 +21,8 @@ public interface IMotionPathSolver
     /// <param name="direction">Direction of integration (forward or backward).</param>
     /// <param name="topology">The topology state view.</param>
     /// <param name="kinematics">The kinematics state view.</param>
-    /// <param name="spec">Optional integration specification (defaults used if null).</param>
+    /// <param name="stepPolicy">Integration step policy.</param>
+    /// <param name="frameId">Reference frame for output.</param>
     /// <returns>The computed motion path.</returns>
     MotionPath ComputeMotionPath(
         PlateId plateId,
@@ -31,5 +32,6 @@ public interface IMotionPathSolver
         IntegrationDirection direction,
         IPlateTopologyStateView topology,
         IPlateKinematicsStateView kinematics,
-        MotionIntegrationSpec? spec = null);
+        StepPolicy stepPolicy,
+        ReferenceFrameId frameId);
 }

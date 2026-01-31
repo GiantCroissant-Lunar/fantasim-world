@@ -1,0 +1,30 @@
+  甇??斗閬???撠?...
+  ???獢?冽??啁????舫脰?????
+  General.AutoToString -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString\bin\Debug\netstandard2.0\Plate.SCG.General.AutoToString.dll
+  PluginArchi.Analyzers -> D:\lunar-snake\personal-work\plate-projects\plugin-archi\dotnet\PluginArchi.Analyzers\bin\Debug\netstandard2.0\PluginArchi.Analyzers.dll
+  General.DisposePattern -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern\bin\Debug\netstandard2.0\Plate.SCG.General.DisposePattern.dll
+  UseLocalProjectReferences = ''
+  DI.ConstructorInjection -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection\bin\Debug\netstandard2.0\Plate.SCG.DI.ConstructorInjection.dll
+  General.AutoProperties -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties\bin\Debug\netstandard2.0\Plate.SCG.General.AutoProperties.dll
+  PluginArchi.SourceGenerators.Proxy -> D:\lunar-snake\personal-work\plate-projects\plugin-archi\src\PluginArchi.SourceGenerators.Proxy\bin\Debug\netstandard2.0\PluginArchi.SourceGenerators.Proxy.dll
+  ServiceArchi.Contracts -> D:\lunar-snake\personal-work\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\bin\Debug\netstandard2.0\ServiceArchi.Contracts.dll
+  UnifyDiagnostics.Abstractions -> D:\lunar-snake\personal-work\plate-projects\crosscut-foundation\dotnet\src\UnifyDiagnostics.Abstractions\bin\Debug\netstandard2.0\UnifyDiagnostics.Abstractions.dll
+  ServiceArchi.SourceGen -> D:\lunar-snake\personal-work\plate-projects\service-archi\dotnet\ServiceArchi.SourceGen\bin\Debug\netstandard2.0\ServiceArchi.SourceGen.dll
+  UnifyDiagnostics.Generators -> D:\lunar-snake\personal-work\plate-projects\crosscut-foundation\dotnet\src\UnifyDiagnostics.Generators\bin\Debug\netstandard2.0\UnifyDiagnostics.Generators.dll
+  General.AutoProperties.Attributes -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties.Attributes\bin\Debug\netstandard2.0\Plate.General.AutoProperties.Attributes.dll
+  DI.ConstructorInjection.Attributes -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection.Attributes\bin\Debug\netstandard2.0\Plate.SCG.DI.ConstructorInjection.Attributes.dll
+  UnifySerialization.Abstractions -> D:\lunar-snake\personal-work\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\bin\Debug\netstandard2.0\UnifySerialization.Abstractions.dll
+  General.DisposePattern.Attributes -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern.Attributes\bin\Debug\netstandard2.0\Plate.SCG.General.DisposePattern.Attributes.dll
+  UnifySerialization.Generators -> D:\lunar-snake\personal-work\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Generators\bin\Debug\netstandard2.0\UnifySerialization.Generators.dll
+  General.NamespaceUsingScope -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.NamespaceUsingScope.Set\General.NamespaceUsingScope\bin\Debug\netstandard2.0\Plate.SCG.General.NamespaceUsingScope.dll
+  TimeDete.Time.Primitives -> D:\lunar-snake\personal-work\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\bin\Debug\netstandard2.1\TimeDete.Time.Primitives.dll
+  General.AutoToString.Attributes -> D:\lunar-snake\personal-work\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString.Attributes\bin\Debug\netstandard2.0\Plate.SCG.General.AutoToString.Attributes.dll
+  TimeDete.Determinism.Abstractions -> D:\lunar-snake\personal-work\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\bin\Debug\netstandard2.1\TimeDete.Determinism.Abstractions.dll
+  UnifyGeometry.Primitives -> D:\lunar-snake\personal-work\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\bin\Debug\netstandard2.1\UnifyGeometry.Primitives.dll
+  Space.Stellar.Contracts -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\contracts\Space.Stellar.Contracts\bin\Debug\net8.0\Space.Stellar.Contracts.dll
+  Geosphere.Plate.Topology.Contracts -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\contracts\Geosphere.Plate.Topology.Contracts\bin\Debug\net8.0\Geosphere.Plate.Topology.Contracts.dll
+  Geosphere.Plate.Kinematics.Contracts -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\contracts\Geosphere.Plate.Kinematics.Contracts\bin\Debug\net8.0\Geosphere.Plate.Kinematics.Contracts.dll
+  Geosphere.Plate.Velocity.Contracts -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\contracts\Geosphere.Plate.Velocity.Contracts\bin\Debug\net8.0\Geosphere.Plate.Velocity.Contracts.dll
+  Geosphere.Plate.Velocity.Solver -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\plugins\Geosphere.Plate.Velocity.Solver\bin\Debug\net8.0\Geosphere.Plate.Velocity.Solver.dll
+  Geosphere.Plate.Motion.Contracts -> D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\contracts\Geosphere.Plate.Motion.Contracts\bin\Debug\net8.0\Geosphere.Plate.Motion.Contracts.dll
+D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\plugins\Geosphere.Plate.Motion.Solver\EulerFlowlineSolver.cs(155,60): error CS0246: ?曆??圈????賢?蝛粹??迂 'Polyline3' (?臬?箸?鈭?using ?內閰?蝯辣??) [D:\lunar-snake\personal-work\plate-projects\fantasim-world--001-motion-paths\project\plugins\Geosphere.Plate.Motion.Solver\Geosphere.Plate.Motion.Solver.csproj]

@@ -57,11 +57,11 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path1 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
-        var path2 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path1 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, new StepPolicy.FixedInterval(1.0), ReferenceFrameId.Mantle);
+        var path2 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, new StepPolicy.FixedInterval(1.0), ReferenceFrameId.Mantle);
 
         // Assert - bit-identical outputs
-        path1.PlateId.Should().Be(path2.PlateId);
+        path1.AnchorPlate.Should().Be(path2.AnchorPlate);
         path1.StartTick.Should().Be(path2.StartTick);
         path1.EndTick.Should().Be(path2.EndTick);
         path1.Direction.Should().Be(path2.Direction);
@@ -73,7 +73,7 @@ public sealed class EulerMotionPathSolverTests
             path1.Samples[i].Position.X.Should().Be(path2.Samples[i].Position.X);
             path1.Samples[i].Position.Y.Should().Be(path2.Samples[i].Position.Y);
             path1.Samples[i].Position.Z.Should().Be(path2.Samples[i].Position.Z);
-            path1.Samples[i].StepIndex.Should().Be(path2.Samples[i].StepIndex);
+            // StepIndex removed from sample
         }
     }
 
@@ -93,8 +93,8 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path1 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
-        var path2 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path1 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
+        var path2 = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Serialize each sample's numeric components as tuples (avoiding types without MessagePack formatters)
         path1.Samples.Length.Should().Be(path2.Samples.Length);
@@ -105,8 +105,8 @@ public sealed class EulerMotionPathSolverTests
             var s2 = path2.Samples[i];
 
             // Create serializable tuples from the sample data
-            var tuple1 = (s1.Position.X, s1.Position.Y, s1.Position.Z, s1.Velocity.X, s1.Velocity.Y, s1.Velocity.Z, s1.StepIndex, s1.Tick.Value);
-            var tuple2 = (s2.Position.X, s2.Position.Y, s2.Position.Z, s2.Velocity.X, s2.Velocity.Y, s2.Velocity.Z, s2.StepIndex, s2.Tick.Value);
+            var tuple1 = (s1.Position.X, s1.Position.Y, s1.Position.Z, s1.Velocity.X, s1.Velocity.Y, s1.Velocity.Z, s1.Tick.Value);
+            var tuple2 = (s2.Position.X, s2.Position.Y, s2.Position.Z, s2.Velocity.X, s2.Velocity.Y, s2.Velocity.Z, s2.Tick.Value);
 
             var bytes1 = MessagePackSerializer.Serialize(tuple1);
             var bytes2 = MessagePackSerializer.Serialize(tuple2);
@@ -115,7 +115,7 @@ public sealed class EulerMotionPathSolverTests
         }
 
         // Also verify the overall structure matches
-        path1.PlateId.Value.Should().Be(path2.PlateId.Value);
+        path1.AnchorPlate.Value.Should().Be(path2.AnchorPlate.Value);
         path1.Direction.Should().Be(path2.Direction);
     }
 
@@ -142,7 +142,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, new StepPolicy.FixedInterval(1.0), ReferenceFrameId.Mantle);
 
         // Assert - each sample position matches expected using Rodrigues' formula
         foreach (var sample in path.Samples)
@@ -179,14 +179,14 @@ public sealed class EulerMotionPathSolverTests
 
         // Act - integrate forward 10 steps
         var forwardPath = solver.ComputeMotionPath(
-            plateId, startPoint, startTick, endTick, IntegrationDirection.Forward, topology, kinematics);
+            plateId, startPoint, startTick, endTick, IntegrationDirection.Forward, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Get the end position from forward integration
         var endPosition = forwardPath.Samples[^1].Position;
 
         // Act - integrate backward from end to start
         var backwardPath = solver.ComputeMotionPath(
-            plateId, endPosition, endTick, startTick, IntegrationDirection.Backward, topology, kinematics);
+            plateId, endPosition, endTick, startTick, IntegrationDirection.Backward, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert - final position should equal start position (within tolerance)
         var finalPosition = backwardPath.Samples[^1].Position;
@@ -220,7 +220,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act - should not throw and should continue integration
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, new StepPolicy.FixedInterval(1.0), ReferenceFrameId.Mantle);
 
         // Assert - integration continues and velocity is zero in all samples
         path.Samples.Should().NotBeEmpty("integration should continue even with missing kinematics");
@@ -252,7 +252,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert - should produce expected number of samples (5 samples: ticks 0,1,2,3,4; endTick is exclusive)
         path.Samples.Should().HaveCount(5);
@@ -287,7 +287,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert - samples after the first should have unit length (normalized to unit sphere)
         // Note: first sample uses the original start point; normalization happens AFTER each Euler step
@@ -320,7 +320,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert - all samples maintain unit length throughout integration
         foreach (var sample in path.Samples)
@@ -333,72 +333,6 @@ public sealed class EulerMotionPathSolverTests
             lengthSquared.Should().BeApproximately(1.0, EulerEpsilon,
                 $"Position at tick {sample.Tick.Value} should maintain unit length");
         }
-    }
-
-    #endregion
-
-    #region 6️⃣ Max Steps Stops At Limit
-
-    [Fact]
-    public void MaxSteps_StopsAtLimit()
-    {
-        // Arrange
-        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
-        var startPoint = new Point3(1, 0, 0);
-        var startTick = new CanonicalTick(0);
-        var endTick = new CanonicalTick(100); // Request 100 ticks
-        var direction = IntegrationDirection.Forward;
-
-        // Set MaxSteps to 5
-        var spec = new MotionIntegrationSpec(stepTicks: 1, maxSteps: 5, method: IntegrationMethod.Euler);
-
-        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
-        var topology = new SinglePlateTopologyState(plateId);
-        var velocitySolver = new FiniteRotationPlateVelocitySolver();
-        var solver = new EulerMotionPathSolver(velocitySolver);
-
-        // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, spec);
-
-        // Assert - exactly 5 samples returned (MaxSteps limit)
-        path.Samples.Should().HaveCount(5, "integration should stop at MaxSteps even if endTick not reached");
-
-        // Verify the samples are at ticks 0, 1, 2, 3, 4
-        for (int i = 0; i < 5; i++)
-        {
-            path.Samples[i].Tick.Value.Should().Be(i);
-            path.Samples[i].StepIndex.Should().Be(i);
-        }
-    }
-
-    [Fact]
-    public void MaxSteps_HonorsLimitWithDifferentStepTicks()
-    {
-        // Arrange
-        var plateId = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
-        var startPoint = new Point3(1, 0, 0);
-        var startTick = new CanonicalTick(0);
-        var endTick = new CanonicalTick(1000);
-        var direction = IntegrationDirection.Forward;
-
-        // Set MaxSteps to 3 with StepTicks = 10
-        var spec = new MotionIntegrationSpec(stepTicks: 10, maxSteps: 3, method: IntegrationMethod.Euler);
-
-        var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.01);
-        var topology = new SinglePlateTopologyState(plateId);
-        var velocitySolver = new FiniteRotationPlateVelocitySolver();
-        var solver = new EulerMotionPathSolver(velocitySolver);
-
-        // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, spec);
-
-        // Assert - exactly 3 samples (MaxSteps limit)
-        path.Samples.Should().HaveCount(3);
-
-        // Verify the samples are at ticks 0, 10, 20
-        path.Samples[0].Tick.Value.Should().Be(0);
-        path.Samples[1].Tick.Value.Should().Be(10);
-        path.Samples[2].Tick.Value.Should().Be(20);
     }
 
     #endregion
@@ -421,7 +355,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert - first sample tick == startTick
         path.Samples.Should().NotBeEmpty();
@@ -437,7 +371,7 @@ public sealed class EulerMotionPathSolverTests
         var startTick = new CanonicalTick(0);
         var endTick = new CanonicalTick(10);
         var direction = IntegrationDirection.Forward;
-        var spec = new MotionIntegrationSpec(stepTicks: 1, maxSteps: 1000);
+        var stepPolicy = new StepPolicy.FixedInterval(1.0);
 
         var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
         var topology = new SinglePlateTopologyState(plateId);
@@ -445,13 +379,13 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, spec);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, stepPolicy, ReferenceFrameId.Mantle);
 
         // Assert - last sample tick < endTick (endTick is exclusive)
         path.Samples.Should().NotBeEmpty();
         var lastSample = path.Samples[^1];
         lastSample.Tick.Value.Should().BeLessThan(endTick.Value, "endTick is exclusive; last sample should be before it");
-        lastSample.Tick.Value.Should().Be(endTick.Value - spec.StepTicks, "last sample should be at endTick - StepTicks");
+        lastSample.Tick.Value.Should().Be(endTick.Value - (long)stepPolicy.StepTicks, "last sample should be at endTick - StepTicks");
     }
 
     [Fact]
@@ -463,7 +397,7 @@ public sealed class EulerMotionPathSolverTests
         var startTick = new CanonicalTick(0);
         var endTick = new CanonicalTick(10);
         var direction = IntegrationDirection.Forward;
-        var spec = new MotionIntegrationSpec(stepTicks: 2, maxSteps: 1000);
+        var stepPolicy = new StepPolicy.FixedInterval(2.0);
 
         var kinematics = new ConstantRotationKinematicsState(plateId, new Vector3d(0, 0, 1), 0.1);
         var topology = new SinglePlateTopologyState(plateId);
@@ -471,7 +405,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, spec);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, stepPolicy, ReferenceFrameId.Mantle);
 
         // Assert - samples at ticks 0, 2, 4, 6, 8 (5 samples in [0, 10))
         path.Samples.Should().HaveCount(5, "interval [0, 10) with step 2 should yield 5 samples");
@@ -484,45 +418,7 @@ public sealed class EulerMotionPathSolverTests
 
     #endregion
 
-    #region 8️⃣ Validation Guards
 
-    [Fact]
-    public void MotionIntegrationSpec_ThrowsOnZeroStepTicks()
-    {
-        // Act & Assert
-        var act = () => new MotionIntegrationSpec(stepTicks: 0, maxSteps: 100);
-        act.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("stepTicks");
-    }
-
-    [Fact]
-    public void MotionIntegrationSpec_ThrowsOnNegativeStepTicks()
-    {
-        // Act & Assert
-        var act = () => new MotionIntegrationSpec(stepTicks: -1, maxSteps: 100);
-        act.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("stepTicks");
-    }
-
-    [Fact]
-    public void MotionIntegrationSpec_ThrowsOnZeroMaxSteps()
-    {
-        // Act & Assert
-        var act = () => new MotionIntegrationSpec(stepTicks: 1, maxSteps: 0);
-        act.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("maxSteps");
-    }
-
-    [Fact]
-    public void MotionIntegrationSpec_ThrowsOnNegativeMaxSteps()
-    {
-        // Act & Assert
-        var act = () => new MotionIntegrationSpec(stepTicks: 1, maxSteps: -1);
-        act.Should().Throw<ArgumentOutOfRangeException>()
-            .WithParameterName("maxSteps");
-    }
-
-    #endregion
 
     #region 9️⃣ Algorithm Conformance (Euler Recurrence Rule)
 
@@ -551,7 +447,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert: Manually compute expected positions using Euler recurrence
         var expectedPositions = ComputeExpectedEulerPositions(startPoint, constantVelocity, stepTicks, 4);
@@ -571,7 +467,7 @@ public sealed class EulerMotionPathSolverTests
 
             // Verify tick advances by dt
             sample.Tick.Value.Should().Be(i);
-            sample.StepIndex.Should().Be(i);
+            // StepIndex check removed
         }
     }
 
@@ -596,7 +492,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert: First sample must be at startTick with original position
         var firstSample = path.Samples[0];
@@ -604,7 +500,7 @@ public sealed class EulerMotionPathSolverTests
         firstSample.Position.X.Should().BeApproximately(startPoint.X, 1e-10);
         firstSample.Position.Y.Should().BeApproximately(startPoint.Y, 1e-10);
         firstSample.Position.Z.Should().BeApproximately(startPoint.Z, 1e-10);
-        firstSample.StepIndex.Should().Be(0, "First sample stepIndex must be 0");
+        // StepIndex check removed
     }
 
     /// <summary>
@@ -629,7 +525,7 @@ public sealed class EulerMotionPathSolverTests
         var solver = new EulerMotionPathSolver(velocitySolver);
 
         // Act
-        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics);
+        var path = solver.ComputeMotionPath(plateId, startPoint, startTick, endTick, direction, topology, kinematics, StepPolicy.Default, ReferenceFrameId.Mantle);
 
         // Assert: All positions must be on unit sphere
         foreach (var sample in path.Samples)
@@ -639,7 +535,7 @@ public sealed class EulerMotionPathSolverTests
                 sample.Position.Y * sample.Position.Y +
                 sample.Position.Z * sample.Position.Z);
             magnitude.Should().BeApproximately(1.0, 1e-10,
-                $"Position at step {sample.StepIndex} must be normalized to unit sphere");
+                $"Position at step {sample.Tick.Value} must be normalized to unit sphere");
         }
     }
 
