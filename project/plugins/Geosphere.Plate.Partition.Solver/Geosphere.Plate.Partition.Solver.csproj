@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Partition.Solver</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Partition.Solver</PackageId>
+    <AssemblyName>Geosphere.Plate.Partition.Solver</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Partition.Contracts\Geosphere.Plate.Partition.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Polygonization.Solver\Geosphere.Plate.Polygonization.Solver.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>
