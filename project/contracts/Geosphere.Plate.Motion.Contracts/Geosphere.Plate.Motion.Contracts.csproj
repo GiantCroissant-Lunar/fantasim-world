@@ -13,6 +13,7 @@
     <ProjectReference Include="..\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
   <ItemGroup>
