@@ -95,6 +95,18 @@ public sealed record ProvenanceChain
     public required string SolverImplementation { get; init; }
 
     /// <summary>
+    /// Gets the reference frame used for this reconstruction.
+    /// </summary>
+    [Key(12)]
+    public ReferenceFrameId? ReferenceFrame { get; init; }
+
+    /// <summary>
+    /// Gets the provenance of the frame transform applied.
+    /// </summary>
+    [Key(13)]
+    public FrameTransformProvenance? FrameTransform { get; init; }
+
+    /// <summary>
     /// Validates that this provenance chain meets strictness requirements.
     /// </summary>
     /// <param name="strictness">The strictness level to validate against.</param>

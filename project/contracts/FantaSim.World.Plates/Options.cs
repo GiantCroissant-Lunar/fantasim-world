@@ -2,6 +2,7 @@ using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
 namespace FantaSim.World.Plates;
 
@@ -91,7 +92,7 @@ public sealed record FeatureFilter
     /// Gets the plate IDs to include (reconstruct only features on these plates).
     /// </summary>
     [Key(1)]
-    public IReadOnlyList<PlateId>? PlateIds { get; init; }
+    public IReadOnlyList<FantaSim.Geosphere.Plate.Topology.Contracts.Entities.PlateId>? PlateIds { get; init; }
 
     /// <summary>
     /// Gets the bounding box for spatial filtering.

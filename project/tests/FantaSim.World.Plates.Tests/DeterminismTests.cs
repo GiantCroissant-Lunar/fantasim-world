@@ -259,7 +259,7 @@ public class DeterminismTests
         {
             SourceFeatureId = new FeatureId(featureId),
             PlateId = new PlateId(Guid.NewGuid()),
-            Geometry = new PointGeometry(new LonLat(0, 0))
+            Geometry = new Point2(0, 0)
         };
     }
 

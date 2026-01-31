@@ -93,24 +93,24 @@ public static class CacheKeyBuilder
     /// <param name="point">The query point.</param>
     /// <param name="tick">The query tick.</param>
     /// <param name="modelId">The kinematics model identifier.</param>
-    /// <param name="frameId">The reference frame identifier.</param>
+    /// <param name="frame">The reference frame identifier.</param>
     /// <param name="options">Optional velocity options.</param>
     /// <returns>A stable cache key string.</returns>
     public static string BuildVelocityKey(
         Point3 point,
         CanonicalTick tick,
         ModelId modelId,
-        FrameId frameId,
+        ReferenceFrameId frame,
         VelocityOptions? options = null)
     {
-        if (frameId.IsEmpty)
-            throw new ArgumentException("FrameId cannot be empty per RFC-V2-0045 Section 4.2.1", nameof(frameId));
+        ArgumentNullException.ThrowIfNull(frame);
 
         var pointHash = ComputePointHash(point);
+        var frameHash = ComputeReferenceFrameHash(frame);
         var optionsHash = ComputeVelocityOptionsHash(options);
 
-        // Format: vel:{pointHash}:{tick}:{modelId}:{frameId}:{optionsHash}:{formatVersion}
-        return $"{VelocityPrefix}{Separator}{pointHash}{Separator}{tick.Value}{Separator}{modelId.Value:D}{Separator}{frameId.Value:D}{Separator}{optionsHash}{Separator}{CacheKeyFormatVersion}";
+        // Format: vel:{pointHash}:{tick}:{modelId}:{frameHash}:{optionsHash}:{formatVersion}
+        return $"{VelocityPrefix}{Separator}{pointHash}{Separator}{tick.Value}{Separator}{modelId.Value:D}{Separator}{frameHash}{Separator}{optionsHash}{Separator}{CacheKeyFormatVersion}";
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public static class CacheKeyBuilder
         ArgumentNullException.ThrowIfNull(policy);
 
         // Per RFC-V2-0045 Section 4.2.1: Frame MUST be included in every cache key
-        if (policy.Frame.IsEmpty)
+        if (policy.Frame is null)
         {
             throw new ArgumentException(
                 "ReconstructionPolicy.Frame cannot be empty per RFC-V2-0045 Section 4.2.1 (normative requirement)",
@@ -157,7 +157,7 @@ public static class CacheKeyBuilder
         var buffer = new List<byte>();
 
         // Frame MUST be first per RFC 4.2.1
-        buffer.AddRange(policy.Frame.Value.ToByteArray());
+        AppendReferenceFrameIdBytes(buffer, policy.Frame);
         buffer.AddRange(policy.KinematicsModel.Value.ToByteArray());
         buffer.Add((byte)policy.PartitionTolerance);
         buffer.Add((byte)policy.Strictness);
@@ -230,11 +230,13 @@ public static class CacheKeyBuilder
         using var sha256 = SHA256.Create();
         var buffer = new List<byte>();
 
-        if (!options.Frame.IsEmpty)
-            buffer.AddRange(options.Frame.Value.Value.ToByteArray());
+        if (options.Frame is not null)
+        {
+            AppendReferenceFrameIdBytes(buffer, options.Frame);
+        }
 
-        if (!options.ModelId.IsEmpty)
-            buffer.AddRange(options.ModelId.Value.ToByteArray());
+        if (options.ModelId is { IsEmpty: false } modelId)
+            buffer.AddRange(modelId.Value.ToByteArray());
 
         buffer.Add((byte)(options.IncludeDecomposition ? 1 : 0));
         buffer.Add((byte)(options.IncludeBoundaryInfo ? 1 : 0));
@@ -246,6 +248,89 @@ public static class CacheKeyBuilder
 
         var hash = sha256.ComputeHash(buffer.ToArray());
         return Convert.ToHexString(hash)[..16];
+    }
+
+    private static string ComputeReferenceFrameHash(ReferenceFrameId frame)
+    {
+        using var sha256 = SHA256.Create();
+        var buffer = new List<byte>();
+        AppendReferenceFrameIdBytes(buffer, frame);
+        var hash = sha256.ComputeHash(buffer.ToArray());
+        return Convert.ToHexString(hash)[..16];
+    }
+
+    private static void AppendReferenceFrameIdBytes(List<byte> buffer, ReferenceFrameId frame)
+    {
+        var visiting = new HashSet<ReferenceFrameId>(ReferenceEqualityComparer.Instance);
+        AppendReferenceFrameIdBytes(buffer, frame, visiting);
+    }
+
+    private static void AppendReferenceFrameIdBytes(List<byte> buffer, ReferenceFrameId frame, HashSet<ReferenceFrameId> visiting)
+    {
+        if (!visiting.Add(frame))
+            throw new CyclicFrameReferenceException("ReferenceFrameId contains a cyclic CustomFrame definition.");
+
+        switch (frame)
+        {
+            case MantleFrame:
+                buffer.Add(0);
+                break;
+
+            case AbsoluteFrame:
+                buffer.Add(1);
+                break;
+
+            case PlateAnchor anchor:
+                buffer.Add(2);
+                buffer.AddRange(anchor.PlateId.Value.ToByteArray());
+                break;
+
+            case CustomFrame custom:
+                buffer.Add(3);
+                AppendString(buffer, custom.Definition.Name);
+                buffer.AddRange(BitConverter.GetBytes(custom.Definition.Chain.Count));
+
+                foreach (var link in custom.Definition.Chain)
+                {
+                    AppendReferenceFrameIdBytes(buffer, link.BaseFrame, visiting);
+                    AppendFiniteRotation(buffer, link.Transform);
+
+                    if (link.ValidityRange.HasValue)
+                    {
+                        buffer.Add(1);
+                        buffer.AddRange(BitConverter.GetBytes(link.ValidityRange.Value.StartTick.Value));
+                        buffer.AddRange(BitConverter.GetBytes(link.ValidityRange.Value.EndTick.Value));
+                    }
+                    else
+                    {
+                        buffer.Add(0);
+                    }
+
+                    buffer.AddRange(BitConverter.GetBytes(link.SequenceHint ?? int.MinValue));
+                }
+
+                break;
+
+            default:
+                throw new NotSupportedException($"Unknown ReferenceFrameId type: {frame.GetType().Name}");
+        }
+
+        visiting.Remove(frame);
+    }
+
+    private static void AppendFiniteRotation(List<byte> buffer, FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics.FiniteRotation rotation)
+    {
+        buffer.AddRange(BitConverter.GetBytes(rotation.Orientation.X));
+        buffer.AddRange(BitConverter.GetBytes(rotation.Orientation.Y));
+        buffer.AddRange(BitConverter.GetBytes(rotation.Orientation.Z));
+        buffer.AddRange(BitConverter.GetBytes(rotation.Orientation.W));
+    }
+
+    private static void AppendString(List<byte> buffer, string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        buffer.AddRange(BitConverter.GetBytes(bytes.Length));
+        buffer.AddRange(bytes);
     }
 
     /// <summary>
