@@ -552,6 +552,102 @@ public sealed class EulerFlowlineSolverTests
 
     #endregion
 
+    #region 7️⃣ Geometry Sampling & Bundle Computation
+
+    [Fact]
+    public void ComputeFlowlineBundle_SamplesLinearlyAlongSimpleBoundary()
+    {
+        // Arrange: Simple 3-unit long straight line
+        var plateIdLeft = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var plateIdRight = new PlateId(Guid.Parse("00000002-0000-0000-0000-000000000002"));
+        var boundaryId = new BoundaryId(Guid.Parse("00000003-0000-0000-0000-000000000003"));
+
+        var line = new Polyline3(new[] { new Point3(0, 0, 0), new Point3(3, 0, 0) });
+        var topology = new CustomBoundaryTopologyState(boundaryId, plateIdLeft, plateIdRight, line);
+        var kinematics = new ConstantRotationKinematicsState(plateIdLeft, new Vector3d(0, 0, 1), 0.1);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerFlowlineSolver(velocitySolver);
+
+        // Act - Sample with spacing 1.0
+        var bundle = solver.ComputeFlowlineBundle(
+            boundaryId,
+            PlateSide.Left,
+            sampleSpacing: 1.0,
+            new SpreadingModel(SpreadingModelType.Uniform),
+            new CanonicalTick(0),
+            new CanonicalTick(1),
+            new StepPolicy.FixedInterval(1.0),
+            topology,
+            kinematics);
+
+        // Assert
+        // Length is 3.0.
+        // Samples at 0, 1, 2, 3. Total 4.
+        bundle.Should().HaveCount(4);
+
+        bundle[0].SeedPoint.X.Should().BeApproximately(0, Epsilon);
+        bundle[1].SeedPoint.X.Should().BeApproximately(1, Epsilon);
+        bundle[2].SeedPoint.X.Should().BeApproximately(2, Epsilon);
+        bundle[3].SeedPoint.X.Should().BeApproximately(3, Epsilon);
+    }
+
+    [Fact]
+    public void ComputeFlowlineBundle_SamplesCorrectlyAcrossCorner_VShapedBoundary()
+    {
+        // Arrange: V-shape (0,0)->(1,0)->(1,1)
+        // Length of first segment = 1
+        // Length of second segment = 1
+        // Total length = 2.0
+        var plateIdLeft = new PlateId(Guid.Parse("00000001-0000-0000-0000-000000000001"));
+        var plateIdRight = new PlateId(Guid.Parse("00000002-0000-0000-0000-000000000002"));
+        var boundaryId = new BoundaryId(Guid.Parse("00000003-0000-0000-0000-000000000003"));
+
+        var line = new Polyline3(new[] { new Point3(0, 0, 0), new Point3(1, 0, 0), new Point3(1, 1, 0) });
+        var topology = new CustomBoundaryTopologyState(boundaryId, plateIdLeft, plateIdRight, line);
+        var kinematics = new ConstantRotationKinematicsState(plateIdLeft, new Vector3d(0, 0, 1), 0.1);
+        var velocitySolver = new FiniteRotationPlateVelocitySolver();
+        var solver = new EulerFlowlineSolver(velocitySolver);
+
+        // Act - Sample with spacing 0.6
+        // Expected samples:
+        // 1. Dist 0.0: (0, 0, 0)
+        // 2. Dist 0.6: (0.6, 0, 0) [on first seg]
+        // 3. Dist 1.2: (1, 0.2, 0) [0.2 along second seg which starts at (1,0)]
+        // 4. Dist 1.8: (1, 0.8, 0) [0.8 along second seg]
+        // Total length 2.0. Next would be 2.4 > 2.0.
+
+        var bundle = solver.ComputeFlowlineBundle(
+            boundaryId,
+            PlateSide.Left,
+            sampleSpacing: 0.6,
+            new SpreadingModel(SpreadingModelType.Uniform),
+            new CanonicalTick(0),
+            new CanonicalTick(1),
+            new StepPolicy.FixedInterval(1.0),
+            topology,
+            kinematics);
+
+        // Assert
+        bundle.Should().HaveCount(4);
+
+        // P0 (start)
+        bundle[0].SeedPoint.X.Should().BeApproximately(0, Epsilon);
+        bundle[0].SeedPoint.Y.Should().BeApproximately(0, Epsilon);
+
+        // P1 (0.6 along first segment)
+        bundle[1].SeedPoint.X.Should().BeApproximately(0.6, Epsilon);
+        bundle[1].SeedPoint.Y.Should().BeApproximately(0, Epsilon);
+
+        // P2 (0.2 along second segment)
+        bundle[2].SeedPoint.X.Should().BeApproximately(1.0, Epsilon);
+        bundle[2].SeedPoint.Y.Should().BeApproximately(0.2, Epsilon);
+
+        // P3 (0.8 along second segment)
+        bundle[3].SeedPoint.X.Should().BeApproximately(1.0, Epsilon);
+        bundle[3].SeedPoint.Y.Should().BeApproximately(0.8, Epsilon);
+    }
+    #endregion
+
     #region Helper Methods
 
     private static BoundaryVelocitySample CreateBoundarySample(Vector3d position, int sampleIndex)
@@ -646,6 +742,35 @@ public sealed class EulerFlowlineSolverTests
             rotation = Quaterniond.Identity;
             return false;
         }
+    }
+
+    /// <summary>
+    /// Topology state with a custom boundary geometry.
+    /// </summary>
+    private sealed class CustomBoundaryTopologyState : IPlateTopologyStateView
+    {
+        private readonly Dictionary<PlateId, PlateEntity> _plates;
+        private readonly Dictionary<BoundaryId, Boundary> _boundaries;
+
+        public CustomBoundaryTopologyState(BoundaryId boundaryId, PlateId plateIdLeft, PlateId plateIdRight, Polyline3 geometry)
+        {
+            _plates = new Dictionary<PlateId, PlateEntity>
+            {
+                [plateIdLeft] = new PlateEntity(plateIdLeft, false, null),
+                [plateIdRight] = new PlateEntity(plateIdRight, false, null)
+            };
+
+            _boundaries = new Dictionary<BoundaryId, Boundary>
+            {
+                [boundaryId] = new Boundary(boundaryId, plateIdLeft, plateIdRight, BoundaryType.Divergent, geometry, false, null)
+            };
+        }
+
+        public TruthStreamIdentity Identity { get; } = new("science", "trunk", 2, Domain.Parse("geo.plates"), "0");
+        public IReadOnlyDictionary<PlateId, PlateEntity> Plates => _plates;
+        public IReadOnlyDictionary<BoundaryId, Boundary> Boundaries => _boundaries;
+        public IReadOnlyDictionary<JunctionId, Junction> Junctions { get; } = new Dictionary<JunctionId, Junction>();
+        public long LastEventSequence { get; } = 0;
     }
 
     /// <summary>
