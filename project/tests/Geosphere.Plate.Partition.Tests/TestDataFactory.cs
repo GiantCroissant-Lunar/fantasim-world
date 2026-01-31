@@ -34,15 +34,24 @@ public static class TestDataFactory
     #region Simple Topologies
 
     /// <summary>
-    /// Creates a simple 2-plate topology with a shared boundary.
-    /// Two plates separated by a single boundary line.
+    /// Creates a simple 2-plate topology: a square loop where plateA is outside
+    /// and plateB is inside. This follows the CMap left/right rule.
+    ///
+    ///   J2----B2----J3
+    ///   |           |
+    ///   B1    [B]   B3    [A = outside]
+    ///   |           |
+    ///   J1----B4----J4
+    ///
+    /// All boundaries have Left=plateA (outside), Right=plateB (inside).
+    /// Junction positions must match boundary geometry endpoints for correct CMap building.
     /// </summary>
     public static InMemoryTopologyStateView CreateTwoPlateTopology()
     {
         var topology = new InMemoryTopologyStateView("two-plate");
 
-        var plateA = PlateId(1);
-        var plateB = PlateId(2);
+        var plateA = PlateId(1);  // Outside plate
+        var plateB = PlateId(2);  // Inside plate
 
         var j1 = JunctionId(1);
         var j2 = JunctionId(2);
@@ -54,133 +63,168 @@ public static class TestDataFactory
         var b3 = BoundaryId(3);
         var b4 = BoundaryId(4);
 
-        // Plate A on left (x < 0), Plate B on right (x > 0)
-        // Shared boundary is at x = 0
         topology.Plates[plateA] = new PlateEntity(plateA, false, null);
         topology.Plates[plateB] = new PlateEntity(plateB, false, null);
 
-        // Junctions form a rectangle
+        // Junctions at each corner of a unit square
+        // CRITICAL: Junction positions must match boundary geometry endpoints!
+        // Using normalized (x, y, 0) vectors projected onto unit sphere
         topology.Junctions[j1] = new JunctionEntity(j1,
             ImmutableArray.Create(b1, b4),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            SurfacePoint.UnitSphere(UnitVector3d.UnitZ),  // Origin fallback
             false, null);
         topology.Junctions[j2] = new JunctionEntity(j2,
             ImmutableArray.Create(b1, b2),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            SurfacePoint.UnitSphere(UnitVector3d.UnitY),  // (0, 1, 0)
             false, null);
         topology.Junctions[j3] = new JunctionEntity(j3,
             ImmutableArray.Create(b2, b3),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(1, 1, 0) ?? UnitVector3d.UnitZ),  // normalized (1,1,0)
             false, null);
         topology.Junctions[j4] = new JunctionEntity(j4,
             ImmutableArray.Create(b3, b4),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            SurfacePoint.UnitSphere(UnitVector3d.UnitX),  // (1, 0, 0)
             false, null);
 
-        // Boundaries
+        // Boundaries form a CCW loop: J1→J2→J3→J4→J1
+        // All have Left=plateA (outside), Right=plateB (inside)
+        // Geometry endpoints must match junction positions (mapped to 2D plane z=0)
         topology.Boundaries[b1] = new BoundaryEntity(b1, plateA, plateB,
             BoundaryType.Divergent,
-            new Polyline3([new Point3(-1, -1, 0), new Point3(1, -1, 0)]),
+            new Polyline3([new Point3(0, 0, 0), new Point3(0, 1, 0)]),
             false, null);
         topology.Boundaries[b2] = new BoundaryEntity(b2, plateA, plateB,
             BoundaryType.Convergent,
-            new Polyline3([new Point3(1, -1, 0), new Point3(1, 1, 0)]),
+            new Polyline3([new Point3(0, 1, 0), new Point3(1, 1, 0)]),
             false, null);
         topology.Boundaries[b3] = new BoundaryEntity(b3, plateA, plateB,
             BoundaryType.Divergent,
-            new Polyline3([new Point3(1, 1, 0), new Point3(-1, 1, 0)]),
+            new Polyline3([new Point3(1, 1, 0), new Point3(1, 0, 0)]),
             false, null);
         topology.Boundaries[b4] = new BoundaryEntity(b4, plateA, plateB,
             BoundaryType.Convergent,
-            new Polyline3([new Point3(-1, 1, 0), new Point3(-1, -1, 0)]),
+            new Polyline3([new Point3(1, 0, 0), new Point3(0, 0, 0)]),
             false, null);
 
         return topology;
     }
 
     /// <summary>
-    /// Creates a 3-plate topology meeting at a triple junction.
+    /// Creates a 3-plate topology: a "Mercedes star" pattern where three plates
+    /// (A, B, C) meet at a triple junction in the center, surrounded by an
+    /// outer "world" plate.
+    ///
+    ///         J3
+    ///        / \
+    ///       B3  B6
+    ///      /     \
+    ///    J0--B1--J1
+    ///      \     /
+    ///       B2  B5
+    ///        \ /
+    ///         J2
+    ///
+    /// Interior: A occupies "top" slice, B occupies "bottom-left", C occupies "bottom-right"
+    /// Exterior: worldPlate wraps around
+    ///
+    /// Boundary rules:
+    /// - B1 (center→J1): Left=A, Right=C
+    /// - B2 (center→J2): Left=C, Right=B
+    /// - B3 (center→J3): Left=B, Right=A
+    /// - B4 (J1→J2): Left=world, Right=C
+    /// - B5 (J2→J3): Left=world, Right=B
+    /// - B6 (J3→J1): Left=world, Right=A
     /// </summary>
     public static InMemoryTopologyStateView CreateThreePlateTopology()
     {
         var topology = new InMemoryTopologyStateView("three-plate");
 
-        var plateA = PlateId(1);
-        var plateB = PlateId(2);
-        var plateC = PlateId(3);
+        var plateA = PlateId(1);  // Top
+        var plateB = PlateId(2);  // Bottom-left
+        var plateC = PlateId(3);  // Bottom-right
+        var world = PlateId(99);  // Outer world
 
-        var center = JunctionId(1);
-        var j1 = JunctionId(2);
-        var j2 = JunctionId(3);
-        var j3 = JunctionId(4);
+        var center = JunctionId(1);  // Triple junction at origin
+        var j1 = JunctionId(2);      // Right
+        var j2 = JunctionId(3);      // Bottom
+        var j3 = JunctionId(4);      // Top-left
 
-        var b1 = BoundaryId(1); // A-B
-        var b2 = BoundaryId(2); // B-C
-        var b3 = BoundaryId(3); // C-A
-        var b4 = BoundaryId(4); // A-outer
-        var b5 = BoundaryId(5); // B-outer
-        var b6 = BoundaryId(6); // C-outer
+        var b1 = BoundaryId(1);  // center→j1, A|C
+        var b2 = BoundaryId(2);  // center→j2, C|B
+        var b3 = BoundaryId(3);  // center→j3, B|A
+        var b4 = BoundaryId(4);  // j1→j2, world|C
+        var b5 = BoundaryId(5);  // j2→j3, world|B
+        var b6 = BoundaryId(6);  // j3→j1, world|A
 
         topology.Plates[plateA] = new PlateEntity(plateA, false, null);
         topology.Plates[plateB] = new PlateEntity(plateB, false, null);
         topology.Plates[plateC] = new PlateEntity(plateC, false, null);
+        topology.Plates[world] = new PlateEntity(world, false, null);
 
-        // Triple junction at center
+        // Junctions
         topology.Junctions[center] = new JunctionEntity(center,
             ImmutableArray.Create(b1, b2, b3),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(0, 0, 1) ?? UnitVector3d.UnitZ),
             false, null);
-
-        // Outer junctions
         topology.Junctions[j1] = new JunctionEntity(j1,
-            ImmutableArray.Create(b1, b4, b5),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            ImmutableArray.Create(b1, b4, b6),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(1, 0, 1) ?? UnitVector3d.UnitZ),
             false, null);
         topology.Junctions[j2] = new JunctionEntity(j2,
-            ImmutableArray.Create(b2, b5, b6),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            ImmutableArray.Create(b2, b4, b5),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(0, -1, 1) ?? UnitVector3d.UnitZ),
             false, null);
         topology.Junctions[j3] = new JunctionEntity(j3,
-            ImmutableArray.Create(b3, b6, b4),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitY),
+            ImmutableArray.Create(b3, b5, b6),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(-1, 1, 1) ?? UnitVector3d.UnitZ),
             false, null);
 
-        // Internal boundaries meeting at triple junction
-        topology.Boundaries[b1] = new BoundaryEntity(b1, plateA, plateB,
+        // Internal boundaries from center
+        topology.Boundaries[b1] = new BoundaryEntity(b1, plateA, plateC,
             BoundaryType.Divergent,
-            new Polyline3([new Point3(0, 0, 0), new Point3(1, -0.5, 0)]),
+            new Polyline3([new Point3(0, 0, 0), new Point3(1, 0, 0)]),
             false, null);
-        topology.Boundaries[b2] = new BoundaryEntity(b2, plateB, plateC,
+        topology.Boundaries[b2] = new BoundaryEntity(b2, plateC, plateB,
             BoundaryType.Divergent,
-            new Polyline3([new Point3(0, 0, 0), new Point3(0.5, 1, 0)]),
+            new Polyline3([new Point3(0, 0, 0), new Point3(0, -1, 0)]),
             false, null);
-        topology.Boundaries[b3] = new BoundaryEntity(b3, plateC, plateA,
+        topology.Boundaries[b3] = new BoundaryEntity(b3, plateB, plateA,
             BoundaryType.Divergent,
-            new Polyline3([new Point3(0, 0, 0), new Point3(-1, 0.5, 0)]),
+            new Polyline3([new Point3(0, 0, 0), new Point3(-1, 1, 0)]),
             false, null);
 
-        // Outer boundaries (connecting to external "world" plate)
-        var worldPlate = PlateId(99);
-        topology.Plates[worldPlate] = new PlateEntity(worldPlate, false, null);
-
-        topology.Boundaries[b4] = new BoundaryEntity(b4, plateA, worldPlate,
+        // External boundaries forming outer triangle
+        topology.Boundaries[b4] = new BoundaryEntity(b4, world, plateC,
             BoundaryType.Convergent,
-            new Polyline3([new Point3(-1, 0.5, 0), new Point3(1, -0.5, 0)]),
+            new Polyline3([new Point3(1, 0, 0), new Point3(0, -1, 0)]),
             false, null);
-        topology.Boundaries[b5] = new BoundaryEntity(b5, plateB, worldPlate,
+        topology.Boundaries[b5] = new BoundaryEntity(b5, world, plateB,
             BoundaryType.Convergent,
-            new Polyline3([new Point3(1, -0.5, 0), new Point3(0.5, 1, 0)]),
+            new Polyline3([new Point3(0, -1, 0), new Point3(-1, 1, 0)]),
             false, null);
-        topology.Boundaries[b6] = new BoundaryEntity(b6, plateC, worldPlate,
+        topology.Boundaries[b6] = new BoundaryEntity(b6, world, plateA,
             BoundaryType.Convergent,
-            new Polyline3([new Point3(0.5, 1, 0), new Point3(-1, 0.5, 0)]),
+            new Polyline3([new Point3(-1, 1, 0), new Point3(1, 0, 0)]),
             false, null);
 
         return topology;
     }
 
     /// <summary>
-    /// Creates a topology with 4 plates forming a cross pattern.
+    /// Creates a 4-plate topology: quadrants around a center junction,
+    /// with an outer world plate.
+    ///
+    ///       J5---B8---J1
+    ///       |    N    |
+    ///       B7   B1   B5
+    ///       |         |
+    ///  J4---B4--center--B2---J2
+    ///       |         |
+    ///       B6   B3   B9
+    ///       |    S    |
+    ///       J3---B10--J6
+    ///
+    /// Actually simpler: 4-way junction at center, 4 corners.
     /// </summary>
     public static InMemoryTopologyStateView CreateFourPlateTopology()
     {
@@ -190,44 +234,86 @@ public static class TestDataFactory
         var east = PlateId(2);
         var south = PlateId(3);
         var west = PlateId(4);
+        var world = PlateId(99);
 
         var center = JunctionId(1);
+        var j1 = JunctionId(2);  // Top-right
+        var j2 = JunctionId(3);  // Bottom-right
+        var j3 = JunctionId(4);  // Bottom-left
+        var j4 = JunctionId(5);  // Top-left
+
+        var b1 = BoundaryId(1);  // center→j1 (N|E)
+        var b2 = BoundaryId(2);  // center→j2 (E|S)
+        var b3 = BoundaryId(3);  // center→j3 (S|W)
+        var b4 = BoundaryId(4);  // center→j4 (W|N)
+        var b5 = BoundaryId(5);  // j1→j2 (world|E)
+        var b6 = BoundaryId(6);  // j2→j3 (world|S)
+        var b7 = BoundaryId(7);  // j3→j4 (world|W)
+        var b8 = BoundaryId(8);  // j4→j1 (world|N)
 
         topology.Plates[north] = new PlateEntity(north, false, null);
         topology.Plates[east] = new PlateEntity(east, false, null);
         topology.Plates[south] = new PlateEntity(south, false, null);
         topology.Plates[west] = new PlateEntity(west, false, null);
+        topology.Plates[world] = new PlateEntity(world, false, null);
 
-        // Create 4 quadrants meeting at center
+        // Junctions
         topology.Junctions[center] = new JunctionEntity(center,
-            ImmutableArray.Create(BoundaryId(1), BoundaryId(2), BoundaryId(3), BoundaryId(4)),
-            SurfacePoint.UnitSphere(UnitVector3d.UnitZ),
+            ImmutableArray.Create(b1, b2, b3, b4),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(0, 0, 1) ?? UnitVector3d.UnitZ),
+            false, null);
+        topology.Junctions[j1] = new JunctionEntity(j1,
+            ImmutableArray.Create(b1, b5, b8),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(1, 1, 1) ?? UnitVector3d.UnitZ),
+            false, null);
+        topology.Junctions[j2] = new JunctionEntity(j2,
+            ImmutableArray.Create(b2, b5, b6),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(1, -1, 1) ?? UnitVector3d.UnitZ),
+            false, null);
+        topology.Junctions[j3] = new JunctionEntity(j3,
+            ImmutableArray.Create(b3, b6, b7),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(-1, -1, 1) ?? UnitVector3d.UnitZ),
+            false, null);
+        topology.Junctions[j4] = new JunctionEntity(j4,
+            ImmutableArray.Create(b4, b7, b8),
+            SurfacePoint.UnitSphere(UnitVector3d.FromComponents(-1, 1, 1) ?? UnitVector3d.UnitZ),
             false, null);
 
-        // Create outer boundary junctions
-        var j1 = JunctionId(2);
-        var j2 = JunctionId(3);
-        var j3 = JunctionId(4);
-        var j4 = JunctionId(5);
+        // Internal boundaries from center to corners
+        topology.Boundaries[b1] = new BoundaryEntity(b1, north, east,
+            BoundaryType.Divergent,
+            new Polyline3([new Point3(0, 0, 0), new Point3(1, 1, 0)]),
+            false, null);
+        topology.Boundaries[b2] = new BoundaryEntity(b2, east, south,
+            BoundaryType.Divergent,
+            new Polyline3([new Point3(0, 0, 0), new Point3(1, -1, 0)]),
+            false, null);
+        topology.Boundaries[b3] = new BoundaryEntity(b3, south, west,
+            BoundaryType.Divergent,
+            new Polyline3([new Point3(0, 0, 0), new Point3(-1, -1, 0)]),
+            false, null);
+        topology.Boundaries[b4] = new BoundaryEntity(b4, west, north,
+            BoundaryType.Divergent,
+            new Polyline3([new Point3(0, 0, 0), new Point3(-1, 1, 0)]),
+            false, null);
 
-        topology.Junctions[j1] = new JunctionEntity(j1, ImmutableArray.Create(BoundaryId(1), BoundaryId(2)), SurfacePoint.UnitSphere(UnitVector3d.UnitX), false, null);
-        topology.Junctions[j2] = new JunctionEntity(j2, ImmutableArray.Create(BoundaryId(2), BoundaryId(3)), SurfacePoint.UnitSphere(UnitVector3d.UnitX), false, null);
-        topology.Junctions[j3] = new JunctionEntity(j3, ImmutableArray.Create(BoundaryId(3), BoundaryId(4)), SurfacePoint.UnitSphere(UnitVector3d.UnitX), false, null);
-        topology.Junctions[j4] = new JunctionEntity(j4, ImmutableArray.Create(BoundaryId(4), BoundaryId(1)), SurfacePoint.UnitSphere(UnitVector3d.UnitX), false, null);
-
-        // Boundaries between plates
-        topology.Boundaries[BoundaryId(1)] = new BoundaryEntity(BoundaryId(1), north, east, BoundaryType.Divergent,
-            new Polyline3([new Point3(0, 1, 0), new Point3(1, 0, 0)]), false, null);
-        topology.Boundaries[BoundaryId(2)] = new BoundaryEntity(BoundaryId(2), east, south, BoundaryType.Divergent,
-            new Polyline3([new Point3(1, 0, 0), new Point3(0, -1, 0)]), false, null);
-        topology.Boundaries[BoundaryId(3)] = new BoundaryEntity(BoundaryId(3), south, west, BoundaryType.Divergent,
-            new Polyline3([new Point3(0, -1, 0), new Point3(-1, 0, 0)]), false, null);
-        topology.Boundaries[BoundaryId(4)] = new BoundaryEntity(BoundaryId(4), west, north, BoundaryType.Divergent,
-            new Polyline3([new Point3(-1, 0, 0), new Point3(0, 1, 0)]), false, null);
-
-        // Outer boundaries to world
-        var world = PlateId(99);
-        topology.Plates[world] = new PlateEntity(world, false, null);
+        // External boundaries forming outer square
+        topology.Boundaries[b5] = new BoundaryEntity(b5, world, east,
+            BoundaryType.Convergent,
+            new Polyline3([new Point3(1, 1, 0), new Point3(1, -1, 0)]),
+            false, null);
+        topology.Boundaries[b6] = new BoundaryEntity(b6, world, south,
+            BoundaryType.Convergent,
+            new Polyline3([new Point3(1, -1, 0), new Point3(-1, -1, 0)]),
+            false, null);
+        topology.Boundaries[b7] = new BoundaryEntity(b7, world, west,
+            BoundaryType.Convergent,
+            new Polyline3([new Point3(-1, -1, 0), new Point3(-1, 1, 0)]),
+            false, null);
+        topology.Boundaries[b8] = new BoundaryEntity(b8, world, north,
+            BoundaryType.Convergent,
+            new Polyline3([new Point3(-1, 1, 0), new Point3(1, 1, 0)]),
+            false, null);
 
         return topology;
     }

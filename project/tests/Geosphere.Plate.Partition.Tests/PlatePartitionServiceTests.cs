@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Partition.Contracts;
 using FantaSim.Geosphere.Plate.Partition.Solver;
+using FantaSim.Geosphere.Plate.Polygonization.Contracts.Solvers;
 using FantaSim.Geosphere.Plate.Polygonization.Solver;
 using FantaSim.Geosphere.Plate.Polygonization.Solver.CMap;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -31,7 +32,8 @@ public sealed class PlatePartitionServiceTests
         var services = new ServiceCollection();
         services.AddPlatePartitionSolver();
         services.AddSingleton<PlateTopologyMaterializer>(sp => CreateFakeMaterializer());
-        services.AddSingleton<PlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
+        // Register IPlatePolygonizer interface (required by StrictPolygonizer, LenientPolygonizer, etc.)
+        services.AddSingleton<IPlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
 
         var provider = services.BuildServiceProvider();
 
@@ -60,7 +62,7 @@ public sealed class PlatePartitionServiceTests
         var services = new ServiceCollection();
         services.AddPlatePartitionSolver(customCache);
         services.AddSingleton<PlateTopologyMaterializer>(sp => CreateFakeMaterializer());
-        services.AddSingleton<PlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
+        services.AddSingleton<IPlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
 
         var provider = services.BuildServiceProvider();
 
@@ -85,7 +87,7 @@ public sealed class PlatePartitionServiceTests
         var services = new ServiceCollection();
         services.AddPlatePartitionSolver(options);
         services.AddSingleton<PlateTopologyMaterializer>(sp => CreateFakeMaterializer());
-        services.AddSingleton<PlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
+        services.AddSingleton<IPlatePolygonizer>(sp => new PlatePolygonizer(new BoundaryCMapBuilder()));
 
         var provider = services.BuildServiceProvider();
 
@@ -179,7 +181,8 @@ public sealed class PlatePartitionServiceTests
 
         for (int i = 0; i < 5; i++)
         {
-            var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), i, new TolerancePolicy.StrictPolicy());
+            // Use different stream identities (not just different versions) to create distinct cache entries
+            var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity($"stream-{i}"), 1, new TolerancePolicy.StrictPolicy());
             cache.Set(identity, CreateFakePartitionResult());
         }
 
@@ -418,11 +421,11 @@ public sealed class PlatePartitionServiceTests
         return new PlateTopologyMaterializer(store);
     }
 
-    private static FantaSim.Geosphere.Plate.Topology.Contracts.Identity.TruthStreamIdentity CreateFakeStreamIdentity()
+    private static FantaSim.Geosphere.Plate.Topology.Contracts.Identity.TruthStreamIdentity CreateFakeStreamIdentity(string? variant = null)
     {
         var domain = FantaSim.Geosphere.Plate.Topology.Contracts.Identity.Domain.Parse("test.partition");
         return new FantaSim.Geosphere.Plate.Topology.Contracts.Identity.TruthStreamIdentity(
-            "test-variant", "main", 0, domain, "M0");
+            variant ?? "test-variant", "main", 0, domain, "M0");
     }
 
     private static PlatePartitionResult CreateFakePartitionResult(

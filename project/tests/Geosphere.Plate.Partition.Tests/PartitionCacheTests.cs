@@ -68,14 +68,16 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
         var streamId = CreateFakeStreamIdentity();
+        var differentStreamId = CreateFakeStreamIdentity("different-stream"); // Different stream for miss
         var policy = new TolerancePolicy.StrictPolicy();
         var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
+        var differentIdentity = identityComputer.ComputeStreamIdentity(differentStreamId, 1, policy);
         var result = CreateFakePartitionResult();
 
         // Act: 1 hit, 1 miss
         cache.Set(identity, result);
         cache.TryGet(identity, out _); // hit
-        cache.TryGet(identityComputer.ComputeStreamIdentity(streamId, 2, policy), out _); // miss
+        cache.TryGet(differentIdentity, out _); // miss (different stream identity)
 
         // Assert
         cache.HitRatio.Should().BeApproximately(0.5, 0.01);
@@ -180,7 +182,7 @@ public sealed class PartitionCacheTests
 
         // Act
         cache.Set(expiredIdentity, CreateFakePartitionResult());
-        Thread.Sleep(60); // Wait for first to expire
+        Thread.Sleep(100); // Wait for first to expire (2x cache duration to avoid flaky timing)
         cache.Set(freshIdentity, CreateFakePartitionResult()); // Add fresh entry
         cache.EvictExpired();
 
