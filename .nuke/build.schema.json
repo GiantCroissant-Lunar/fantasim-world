@@ -79,7 +79,9 @@
               "PublishPlugins",
               "PublishProjects",
               "SyncLatestArtifacts",
-              "SyncLatestArtifactsProjects"
+              "SyncLatestArtifactsProjects",
+              "Test",
+              "TestVelocity"
             ]
           }
         },
@@ -100,7 +102,9 @@
               "PublishPlugins",
               "PublishProjects",
               "SyncLatestArtifacts",
-              "SyncLatestArtifactsProjects"
+              "SyncLatestArtifactsProjects",
+              "Test",
+              "TestVelocity"
             ]
           }
         },
