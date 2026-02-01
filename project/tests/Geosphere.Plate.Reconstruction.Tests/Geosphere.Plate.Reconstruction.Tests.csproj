@@ -23,10 +23,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Reconstruction.Contracts\Geosphere.Plate.Reconstruction.Contracts.csproj" />
-    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Reconstruction.Solver\Geosphere.Plate.Reconstruction.Solver.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\FantaSim.World.Plates\FantaSim.World.Plates.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Reconstruction.Solver\Geosphere.Plate.Reconstruction.Solver.csproj" />
   </ItemGroup>
 
 </Project>

@@ -110,17 +110,19 @@ public static class FlowlineCorpusGenerator
         var velocitySolver = new FiniteRotationPlateVelocitySolver();
         var flowlineSolver = new EulerFlowlineSolver(velocitySolver);
 
+        var spreadingModel = new SpreadingModel(SpreadingModelType.Uniform);
+
         // Compute flowline for left plate side
         var leftFlowline = flowlineSolver.ComputeFlowline(
+            new Point3(ridgeCenter.X, ridgeCenter.Y, ridgeCenter.Z),
             boundaryId,
-            seedSample,
             PlateSide.Left,
+            spreadingModel,
             startTick,
             endTick,
-            direction,
+            new StepPolicy.FixedInterval(stepTicks),
             topology,
-            kinematics,
-            new MotionIntegrationSpec(stepTicks, stepCount));
+            kinematics);
 
         // Create input structure
         var input = new FlowlineInput(

@@ -1,3 +1,5 @@
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
+
 namespace FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 
 public sealed class ReconstructionOptions

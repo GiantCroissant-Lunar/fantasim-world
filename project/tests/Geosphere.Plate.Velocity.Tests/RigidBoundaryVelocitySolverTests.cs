@@ -29,7 +29,12 @@ public sealed class RigidBoundaryVelocitySolverTests
     private const double Epsilon = 1e-9;
 
     private static readonly CanonicalTick DefaultTick = new(1000);
-    private static readonly BoundarySamplingSpec DefaultSampling = new(32, SamplingMode.ArcLength, IncludeEndpoints: true);
+    private static readonly BoundarySampleSpec DefaultSampling = new()
+    {
+        SampleCount = 32,
+        Mode = SamplingMode.ArcLength,
+        Interpolation = InterpolationMethod.GreatCircle
+    };
 
     #region 1️⃣ Sampling Determinism
 
@@ -59,7 +64,12 @@ public sealed class RigidBoundaryVelocitySolverTests
     {
         // Arrange
         var (solver, topology, kinematics, boundary) = CreateDivergentBoundaryScenario();
-        var sampling = new BoundarySamplingSpec(16, SamplingMode.ArcLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 16,
+            Mode = SamplingMode.ArcLength,
+            Interpolation = InterpolationMethod.GreatCircle
+        };
 
         // Act
         var profile = solver.AnalyzeBoundary(boundary, sampling, DefaultTick, topology, kinematics);
@@ -156,7 +166,12 @@ public sealed class RigidBoundaryVelocitySolverTests
         var solver = new RigidBoundaryVelocitySolver(velocitySolver);
 
         // Use minimal sampling at endpoints
-        var sampling = new BoundarySamplingSpec(2, SamplingMode.ChordLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 2,
+            Mode = SamplingMode.ChordLength,
+            Interpolation = InterpolationMethod.Linear
+        };
 
         // Act - get individual samples to inspect tangent direction
         var samples = solver.GetBoundarySamples(boundary, sampling, DefaultTick, topology, kinematics);
@@ -196,7 +211,12 @@ public sealed class RigidBoundaryVelocitySolverTests
         var velocitySolver = new FiniteRotationPlateVelocitySolver();
         var solver = new RigidBoundaryVelocitySolver(velocitySolver);
 
-        var sampling = new BoundarySamplingSpec(2, SamplingMode.ChordLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 2,
+            Mode = SamplingMode.ChordLength,
+            Interpolation = InterpolationMethod.Linear
+        };
 
         // Act
         var samples = solver.GetBoundarySamples(boundary, sampling, DefaultTick, topology, kinematics);
@@ -244,7 +264,12 @@ public sealed class RigidBoundaryVelocitySolverTests
 
         var velocitySolver = new FiniteRotationPlateVelocitySolver();
         var solver = new RigidBoundaryVelocitySolver(velocitySolver);
-        var sampling = new BoundarySamplingSpec(2, SamplingMode.ChordLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 2,
+            Mode = SamplingMode.ChordLength,
+            Interpolation = InterpolationMethod.Linear
+        };
 
         // Act
         var samples1 = solver.GetBoundarySamples(boundary1, sampling, DefaultTick, topology1, kinematics);
@@ -289,7 +314,12 @@ public sealed class RigidBoundaryVelocitySolverTests
 
         var velocitySolver = new FiniteRotationPlateVelocitySolver();
         var solver = new RigidBoundaryVelocitySolver(velocitySolver);
-        var sampling = new BoundarySamplingSpec(2, SamplingMode.ChordLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 2,
+            Mode = SamplingMode.ChordLength,
+            Interpolation = InterpolationMethod.Linear
+        };
 
         // Act
         var samples1 = solver.GetBoundarySamples(boundary1, sampling, DefaultTick, topology1, kinematics);
@@ -342,7 +372,12 @@ public sealed class RigidBoundaryVelocitySolverTests
 
         var velocitySolver = new FiniteRotationPlateVelocitySolver();
         var solver = new RigidBoundaryVelocitySolver(velocitySolver);
-        var sampling = new BoundarySamplingSpec(4, SamplingMode.ArcLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 4,
+            Mode = SamplingMode.ArcLength,
+            Interpolation = InterpolationMethod.GreatCircle
+        };
 
         // Act
         var profile1 = solver.AnalyzeBoundary(boundary1, sampling, DefaultTick, topology1, kinematics);
@@ -372,7 +407,12 @@ public sealed class RigidBoundaryVelocitySolverTests
     {
         // Arrange: Use a scenario where we know the velocity pattern
         var (solver, topology, kinematics, boundary) = CreateDivergentBoundaryScenario();
-        var sampling = new BoundarySamplingSpec(10, SamplingMode.ArcLength, IncludeEndpoints: true);
+        var sampling = new BoundarySampleSpec
+        {
+            SampleCount = 10,
+            Mode = SamplingMode.ArcLength,
+            Interpolation = InterpolationMethod.GreatCircle
+        };
 
         // Act
         var profile = solver.AnalyzeBoundary(boundary, sampling, DefaultTick, topology, kinematics);

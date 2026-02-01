@@ -1,4 +1,7 @@
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
+using FantaSim.Geosphere.Plate.Partition.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
@@ -100,7 +103,7 @@ public class ProvenanceTests
         var provenance = ProvenanceChain.Empty;
 
         // Act
-        var isValid = provenance.Validate(ProvenanceStrictness.Disabled);
+        var isValid = provenance.Validate(ProvenanceStrictness.Permissive);
 
         // Assert
         Assert.True(isValid);
@@ -151,7 +154,7 @@ public class ProvenanceTests
     [Theory]
     [InlineData(ProvenanceStrictness.Strict)]
     [InlineData(ProvenanceStrictness.Lenient)]
-    [InlineData(ProvenanceStrictness.Disabled)]
+    [InlineData(ProvenanceStrictness.Permissive)]
     public void Provenance_Strictness_Levels_Gate_All_Levels_Defined(ProvenanceStrictness strictness)
     {
         // Assert: All enum values are defined
@@ -166,7 +169,7 @@ public class ProvenanceTests
         {
             Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         // Assert
@@ -331,7 +334,7 @@ public class ProvenanceTests
         {
             Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
     }
 

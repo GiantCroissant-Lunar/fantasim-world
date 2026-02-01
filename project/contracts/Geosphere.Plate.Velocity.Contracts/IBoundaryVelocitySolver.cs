@@ -41,7 +41,7 @@ public interface IBoundaryVelocitySolver
     /// <returns>Velocity profile with samples and aggregates for the boundary.</returns>
     BoundaryVelocityProfile AnalyzeBoundary(
         Boundary boundary,
-        BoundarySamplingSpec sampling,
+        BoundarySampleSpec sampling,
         CanonicalTick tick,
         IPlateTopologyStateView topology,
         IPlateKinematicsStateView kinematics);
@@ -57,7 +57,7 @@ public interface IBoundaryVelocitySolver
     /// <returns>Collection of velocity profiles sorted by BoundaryId.</returns>
     BoundaryVelocityCollection AnalyzeAllBoundaries(
         IEnumerable<Boundary> boundaries,
-        BoundarySamplingSpec sampling,
+        BoundarySampleSpec sampling,
         CanonicalTick tick,
         IPlateTopologyStateView topology,
         IPlateKinematicsStateView kinematics);

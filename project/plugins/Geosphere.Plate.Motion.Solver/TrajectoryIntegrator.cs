@@ -8,6 +8,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using FantaSim.Geosphere.Plate.Motion.Contracts;
+using MotionSampleProvenance = FantaSim.Geosphere.Plate.Motion.Contracts.SampleProvenance;
 
 namespace FantaSim.Geosphere.Plate.Motion.Solver;
 
@@ -47,7 +48,7 @@ public sealed class TrajectoryIntegrator : ITrajectoryIntegrator
         var v0 = GetVelocity(context.Kinematics, currentPlateId, p, t);
 
         // Initial sample provenance
-        var initialProv = new SampleProvenance
+        var initialProv = new MotionSampleProvenance
         {
             ReconstructionInfo = new ReconstructionProvenance(default(MotionSegmentId), null, 0.0)
         };
@@ -115,7 +116,7 @@ public sealed class TrajectoryIntegrator : ITrajectoryIntegrator
             // Velocity at new state
             var nextV = GetVelocity(context.Kinematics, currentPlateId, p, t);
 
-            var sampleProv = new SampleProvenance
+            var sampleProv = new MotionSampleProvenance
             {
                 ReconstructionInfo = new ReconstructionProvenance(default(MotionSegmentId), null, 0.5)
             };

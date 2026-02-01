@@ -1,4 +1,6 @@
-using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
+using FantaSim.Geosphere.Plate.Partition.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
@@ -19,7 +21,7 @@ public class CacheKeyTests
         {
             Frame = null!, // Invalid per RFC: frame must be specified
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         // Act & Assert: Should throw because Frame is required per RFC 4.2.1
@@ -41,7 +43,7 @@ public class CacheKeyTests
         {
             Frame = null!,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         // Act & Assert
@@ -80,7 +82,7 @@ public class CacheKeyTests
         {
             Frame = null!,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         // Act & Assert
@@ -172,14 +174,14 @@ public class CacheKeyTests
         {
             Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Strict
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         var policy2 = new ReconstructionPolicy
         {
             Frame = AbsoluteFrame.Instance,
             KinematicsModel = policy1.KinematicsModel,
-            PartitionTolerance = TolerancePolicy.Strict
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         // Act
@@ -234,14 +236,14 @@ public class CacheKeyTests
         {
             Frame = new PlateAnchor { PlateId = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000001")) },
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         var policy2 = new ReconstructionPolicy
         {
             Frame = new PlateAnchor { PlateId = new PlateId(Guid.Parse("00000000-0000-0000-0000-000000000002")) },
             KinematicsModel = policy1.KinematicsModel,
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
 
         var hash1 = CacheKeyBuilder.ComputePolicyHash(policy1);
@@ -317,7 +319,7 @@ public class CacheKeyTests
         {
             Frame = MantleFrame.Instance,
             KinematicsModel = new ModelId(Guid.NewGuid()),
-            PartitionTolerance = TolerancePolicy.Standard
+            PartitionTolerance = new TolerancePolicy.StrictPolicy()
         };
     }
 

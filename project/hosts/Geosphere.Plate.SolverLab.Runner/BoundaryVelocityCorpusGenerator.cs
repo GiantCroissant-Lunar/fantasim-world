@@ -21,7 +21,12 @@ using CanonicalTick = TimeDete.CanonicalTick;
 public static class BoundaryVelocityCorpusGenerator
 {
     private static readonly TimeDete.CanonicalTick DefaultTick = new TimeDete.CanonicalTick(1000);
-    private static readonly BoundarySamplingSpec DefaultSampling = new(32, SamplingMode.ArcLength, true);
+    private static readonly BoundarySampleSpec DefaultSampling = new()
+    {
+        SampleCount = 32,
+        Mode = SamplingMode.ArcLength,
+        Interpolation = InterpolationMethod.GreatCircle
+    };
 
     /// <summary>
     /// Generates the complete boundary velocity corpus with 3 test cases.
@@ -339,7 +344,7 @@ public static class BoundaryVelocityCorpusGenerator
     [MessagePackObject]
     public readonly record struct BoundaryVelocityInput(
         [property: Key(0)] Topology.Contracts.Entities.Boundary Boundary,
-        [property: Key(1)] BoundarySamplingSpec Sampling,
+        [property: Key(1)] BoundarySampleSpec Sampling,
         [property: Key(2)] TimeDete.CanonicalTick Tick,
         [property: Key(3)] MockTopologyStateView Topology,
         [property: Key(4)] MockKinematicsStateView Kinematics

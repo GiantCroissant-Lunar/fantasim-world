@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using FantaSim.Geosphere.Plate.Velocity.Solver;
