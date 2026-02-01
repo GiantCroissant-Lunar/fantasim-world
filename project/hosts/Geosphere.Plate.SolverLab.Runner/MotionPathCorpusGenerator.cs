@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using TimeDete = Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -96,7 +97,8 @@ public static class MotionPathCorpusGenerator
             direction,
             topology,
             kinematics,
-            new MotionIntegrationSpec(stepTicks, stepCount, IntegrationMethod.Euler));
+            new StepPolicy.FixedInterval(stepTicks),
+            MantleFrame.Instance);
 
         // Compute analytical baseline for verification
         var analyticalPath = ComputeAnalyticalPath(
@@ -154,6 +156,7 @@ public static class MotionPathCorpusGenerator
         CanonicalTick startTick)
     {
         var samples = new List<MotionPathSample>(stepCount + 1);
+        var anchorPlate = new PlateId(Guid.Parse("00000010-0000-0000-0000-000000000001"));
 
         // Normalize rotation axis
         var axisLength = rotationAxis.Length();
@@ -204,19 +207,23 @@ public static class MotionPathCorpusGenerator
             var vy = omegaVec.Z * px - omegaVec.X * pz;
             var vz = omegaVec.X * py - omegaVec.Y * px;
 
+            var provenance = new ReconstructionProvenance(default(FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities.MotionSegmentId), null, 0.0);
             samples.Add(new MotionPathSample(
                 tick,
-                new Point3((double)px, (double)py, (double)pz),
-                new Velocity3d(vx, vy, vz),
-                i));
+                new Point3(px, py, pz),
+                anchorPlate,
+                new Vector3d(vx, vy, vz),
+                provenance,
+                0.0));
         }
 
         var endTick = new TimeDete.CanonicalTick(startTick.Value + (stepCount * stepTicks));
         return new MotionPath(
-            new PlateId(Guid.Parse("00000010-0000-0000-0000-000000000001")),
+            anchorPlate,
             startTick,
             endTick,
             IntegrationDirection.Forward,
+            MantleFrame.Instance,
             samples.ToImmutableArray());
     }
 }

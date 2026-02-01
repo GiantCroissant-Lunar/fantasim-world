@@ -8,6 +8,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using UnifyGeometry;
 using PlateEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Plate;
 using JunctionEntity = FantaSim.Geosphere.Plate.Topology.Contracts.Entities.Junction;
+using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Reconstruction.Tests;
 

@@ -1,6 +1,8 @@
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
@@ -23,10 +25,10 @@ public interface IFrameService
     /// <param name="topology">The topology state view (for plate enumeration/weights).</param>
     /// <returns>The computed frame transform result.</returns>
     FrameTransformResult GetFrameTransform(
-        ReferenceFrameId fromFrame,
-        ReferenceFrameId toFrame,
+        FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId fromFrame,
+        FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId toFrame,
         CanonicalTick tick,
-        ModelId modelId,
+        FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics,
         IPlateTopologyStateView topology);
 
@@ -85,10 +87,10 @@ public sealed record FrameTransformResult
 public sealed record FrameTransformProvenance
 {
     [Key(0)]
-    public required ReferenceFrameId FromFrame { get; init; }
+    public required FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId FromFrame { get; init; }
 
     [Key(1)]
-    public required ReferenceFrameId ToFrame { get; init; }
+    public required FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId ToFrame { get; init; }
 
     [Key(2)]
     public required IReadOnlyList<FrameChainLink> EvaluationChain { get; init; }

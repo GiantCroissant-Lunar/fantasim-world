@@ -12,6 +12,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Partition.Contracts\Geosphere.Plate.Partition.Contracts.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Motion.Contracts\Geosphere.Plate.Motion.Contracts.csproj" />
+    <ProjectReference Include="..\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
+
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
     <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>

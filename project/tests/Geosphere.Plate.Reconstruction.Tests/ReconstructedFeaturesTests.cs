@@ -7,6 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using UnifyGeometry;
+using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Reconstruction.Tests;
 

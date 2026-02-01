@@ -1,6 +1,8 @@
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.World.Plates;
@@ -14,7 +16,7 @@ public sealed class FrameService : IFrameService
         ReferenceFrameId fromFrame,
         ReferenceFrameId toFrame,
         CanonicalTick tick,
-        ModelId modelId,
+        FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics,
         IPlateTopologyStateView topology)
     {
@@ -43,7 +45,7 @@ public sealed class FrameService : IFrameService
     private static FrameTransformResult GetFrameToMantleTransform(
         ReferenceFrameId frame,
         CanonicalTick tick,
-        ModelId modelId,
+        FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics)
     {
         switch (frame)
@@ -117,7 +119,7 @@ public sealed class FrameService : IFrameService
     private static FrameTransformResult EvaluateCustomFrame(
         CustomFrame custom,
         CanonicalTick tick,
-        ModelId modelId,
+        FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics)
     {
         var activeLink = custom.Definition.Chain

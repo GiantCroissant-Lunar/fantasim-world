@@ -1,4 +1,8 @@
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
+using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
@@ -197,13 +201,13 @@ public sealed record VelocityOptions
     /// Gets the reference frame for velocity calculation.
     /// </summary>
     [Key(0)]
-    public ReferenceFrameId? Frame { get; init; }
+    public FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId? Frame { get; init; }
 
     /// <summary>
     /// Gets the model identifier for kinematics.
     /// </summary>
     [Key(1)]
-    public ModelId? ModelId { get; init; }
+    public FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId? ModelId { get; init; }
 
     /// <summary>
     /// Gets a value indicating whether to include velocity decomposition.
@@ -233,7 +237,7 @@ public sealed record VelocityOptions
     /// Gets the interpolation method for boundary-adjacent velocities.
     /// </summary>
     [Key(6)]
-    public BoundaryInterpolationMode InterpolationMode { get; init; } = BoundaryInterpolationMode.Linear;
+    public InterpolationMethod InterpolationMode { get; init; } = InterpolationMethod.Linear;
 
     /// <summary>
     /// Gets the default options instance.

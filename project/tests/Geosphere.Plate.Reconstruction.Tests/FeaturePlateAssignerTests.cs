@@ -3,6 +3,7 @@ using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Solver;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifyGeometry;
+using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Reconstruction.Tests;
 

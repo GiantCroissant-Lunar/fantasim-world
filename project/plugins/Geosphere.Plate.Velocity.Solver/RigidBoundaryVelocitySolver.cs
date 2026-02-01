@@ -17,8 +17,14 @@ internal readonly record struct SampledPoint(Vector3d Position, int SegmentIndex
 
 public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
 {
-    public static readonly BoundarySamplingSpec DefaultSampling = new(
-        SampleCount: 64, Mode: SamplingMode.ArcLength, IncludeEndpoints: true);
+    private const int DefaultSampleCount = 64;
+
+    public static readonly BoundarySampleSpec DefaultSampling = new()
+    {
+        SampleCount = DefaultSampleCount,
+        Mode = SamplingMode.ArcLength,
+        Interpolation = InterpolationMethod.GreatCircle
+    };
 
     private readonly IPlateVelocitySolver _velocitySolver;
 
@@ -28,12 +34,10 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
     }
 
     public BoundaryVelocityProfile AnalyzeBoundary(
-        Boundary boundary, BoundarySamplingSpec sampling, CanonicalTick tick,
+        Boundary boundary, BoundarySampleSpec sampling, CanonicalTick tick,
         IPlateTopologyStateView topology, IPlateKinematicsStateView kinematics)
     {
         ArgumentNullException.ThrowIfNull(boundary);
-        ArgumentNullException.ThrowIfNull(sampling);
-        ArgumentNullException.ThrowIfNull(tick);
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(kinematics);
 
@@ -61,12 +65,10 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
     /// Used to verify RFC-V2-0034 invariants: tangent follows geometry, normal points left→right.
     /// </summary>
     internal BoundaryVelocitySample[] GetBoundarySamples(
-        Boundary boundary, BoundarySamplingSpec sampling, CanonicalTick tick,
+        Boundary boundary, BoundarySampleSpec sampling, CanonicalTick tick,
         IPlateTopologyStateView topology, IPlateKinematicsStateView kinematics)
     {
         ArgumentNullException.ThrowIfNull(boundary);
-        ArgumentNullException.ThrowIfNull(sampling);
-        ArgumentNullException.ThrowIfNull(tick);
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(kinematics);
 
@@ -90,12 +92,10 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
     }
 
     public BoundaryVelocityCollection AnalyzeAllBoundaries(
-        IEnumerable<Boundary> boundaries, BoundarySamplingSpec sampling, CanonicalTick tick,
+        IEnumerable<Boundary> boundaries, BoundarySampleSpec sampling, CanonicalTick tick,
         IPlateTopologyStateView topology, IPlateKinematicsStateView kinematics)
     {
         ArgumentNullException.ThrowIfNull(boundaries);
-        ArgumentNullException.ThrowIfNull(sampling);
-        ArgumentNullException.ThrowIfNull(tick);
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(kinematics);
 
@@ -119,21 +119,75 @@ public sealed class RigidBoundaryVelocitySolver : IBoundaryVelocitySolver
         return vertices;
     }
 
-    private SampledPoint[] SampleBoundary(Vector3d[] vertices, BoundarySamplingSpec sampling)
+    private SampledPoint[] SampleBoundary(Vector3d[] vertices, BoundarySampleSpec sampling)
     {
-        var sampleCount = sampling.SampleCount < 2 ? 2 : sampling.SampleCount;
+        var includeEndpoints = sampling.JunctionBufferDistance is null or <= 0;
+
+        if (sampling.Mode == SamplingMode.VertexOnly)
+        {
+            if (vertices.Length == 0)
+                return Array.Empty<SampledPoint>();
+
+            if (includeEndpoints || vertices.Length <= 2)
+            {
+                var all = new SampledPoint[vertices.Length];
+                for (var i = 0; i < vertices.Length; i++)
+                {
+                    var segmentIndex = Math.Clamp(i, 0, Math.Max(0, vertices.Length - 2));
+                    var segmentT = i == vertices.Length - 1 ? 1 : 0;
+                    all[i] = new SampledPoint(vertices[i], segmentIndex, segmentT);
+                }
+                return all;
+            }
+
+            var interiorCount = Math.Max(0, vertices.Length - 2);
+            var interior = new SampledPoint[interiorCount];
+            for (var i = 0; i < interiorCount; i++)
+                interior[i] = new SampledPoint(vertices[i + 1], i, 0);
+            return interior;
+        }
+
         if (vertices.Length == 2)
         {
-            return sampling.IncludeEndpoints
+            return includeEndpoints
                 ? new[] { new SampledPoint(vertices[0], 0, 0), new SampledPoint(vertices[1], 0, 1) }
                 : new[] { new SampledPoint(ComputeMidpoint(vertices[0], vertices[1]), 0, 0.5) };
         }
+
+        var sampleCount = sampling.SampleCount ?? ComputeSampleCountFromSpacing(vertices, sampling, includeEndpoints) ?? DefaultSampleCount;
+        if (sampleCount < 2) sampleCount = 2;
+
         return sampling.Mode switch
         {
-            SamplingMode.ArcLength => SampleByArcLength(vertices, sampleCount, sampling.IncludeEndpoints),
-            SamplingMode.ChordLength => SampleByChordLength(vertices, sampleCount, sampling.IncludeEndpoints),
-            _ => SampleByArcLength(vertices, sampleCount, sampling.IncludeEndpoints)
+            SamplingMode.ArcLength => SampleByArcLength(vertices, sampleCount, includeEndpoints),
+            SamplingMode.ChordLength => SampleByChordLength(vertices, sampleCount, includeEndpoints),
+            _ => SampleByArcLength(vertices, sampleCount, includeEndpoints)
         };
+    }
+
+    private static int? ComputeSampleCountFromSpacing(Vector3d[] vertices, BoundarySampleSpec sampling, bool includeEndpoints)
+    {
+        if (sampling.Spacing is null or <= 0)
+            return null;
+
+        double totalLength = 0.0;
+        for (var i = 0; i < vertices.Length - 1; i++)
+        {
+            totalLength += sampling.Mode == SamplingMode.ChordLength
+                ? (vertices[i + 1] - vertices[i]).Length()
+                : GreatCircleDistance(vertices[i], vertices[i + 1]);
+        }
+
+        if (totalLength < double.Epsilon)
+            return 2;
+
+        var intervals = (int)Math.Max(1, Math.Round(totalLength / sampling.Spacing.Value));
+        var count = intervals + 1;
+
+        if (!includeEndpoints)
+            count = Math.Max(1, count - 2);
+
+        return count;
     }
 
     private static SampledPoint[] SampleByArcLength(Vector3d[] vertices, int sampleCount, bool includeEndpoints)

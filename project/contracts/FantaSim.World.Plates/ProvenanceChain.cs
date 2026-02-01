@@ -1,4 +1,6 @@
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
@@ -50,7 +52,7 @@ public sealed record ProvenanceChain
     /// Gets the kinematics model identifier used for rotations.
     /// </summary>
     [Key(4)]
-    public required ModelId KinematicsModelId { get; init; }
+    public required FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId KinematicsModelId { get; init; }
 
     /// <summary>
     /// Gets the kinematics model version (for cache invalidation).
@@ -98,7 +100,7 @@ public sealed record ProvenanceChain
     /// Gets the reference frame used for this reconstruction.
     /// </summary>
     [Key(12)]
-    public ReferenceFrameId? ReferenceFrame { get; init; }
+    public FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId? ReferenceFrame { get; init; }
 
     /// <summary>
     /// Gets the provenance of the frame transform applied.
@@ -113,7 +115,7 @@ public sealed record ProvenanceChain
     /// <returns>True if valid; otherwise, false.</returns>
     public bool Validate(ProvenanceStrictness strictness)
     {
-        if (strictness == ProvenanceStrictness.Disabled)
+        if (strictness == ProvenanceStrictness.Permissive)
             return true;
 
         // All required fields must be present

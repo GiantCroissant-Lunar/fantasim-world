@@ -1,8 +1,10 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.World.Plates;
@@ -99,8 +101,8 @@ public static class CacheKeyBuilder
     public static string BuildVelocityKey(
         Point3 point,
         CanonicalTick tick,
-        ModelId modelId,
-        ReferenceFrameId frame,
+        FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
+        FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId frame,
         VelocityOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(frame);
@@ -153,29 +155,8 @@ public static class CacheKeyBuilder
     /// </remarks>
     public static string ComputePolicyHash(ReconstructionPolicy policy)
     {
-        using var sha256 = SHA256.Create();
-        var buffer = new List<byte>();
-
-        // Frame MUST be first per RFC 4.2.1
-        AppendReferenceFrameIdBytes(buffer, policy.Frame);
-        buffer.AddRange(policy.KinematicsModel.Value.ToByteArray());
-        buffer.Add((byte)policy.PartitionTolerance);
-        buffer.Add((byte)policy.Strictness);
-
-        if (policy.BoundarySampling is not null)
-        {
-            buffer.AddRange(BitConverter.GetBytes(policy.BoundarySampling.SampleCount));
-            buffer.AddRange(BitConverter.GetBytes(policy.BoundarySampling.MaxDistanceDegrees));
-            buffer.Add((byte)policy.BoundarySampling.Interpolation);
-        }
-
-        if (policy.IntegrationPolicy.HasValue)
-        {
-            buffer.Add((byte)policy.IntegrationPolicy.Value);
-        }
-
-        var hash = sha256.ComputeHash(buffer.ToArray());
-        return Convert.ToHexString(hash)[..16]; // Use first 16 chars for compactness
+        // Delegate to the contract's standard hash computation (MessagePack based)
+        return FantaSim.Geosphere.Plate.Reconstruction.Contracts.Cache.PolicyCacheKey.ComputeHash(policy);
     }
 
     /// <summary>
@@ -250,7 +231,7 @@ public static class CacheKeyBuilder
         return Convert.ToHexString(hash)[..16];
     }
 
-    private static string ComputeReferenceFrameHash(ReferenceFrameId frame)
+    private static string ComputeReferenceFrameHash(FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId frame)
     {
         using var sha256 = SHA256.Create();
         var buffer = new List<byte>();
@@ -259,16 +240,16 @@ public static class CacheKeyBuilder
         return Convert.ToHexString(hash)[..16];
     }
 
-    private static void AppendReferenceFrameIdBytes(List<byte> buffer, ReferenceFrameId frame)
+    private static void AppendReferenceFrameIdBytes(List<byte> buffer, FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId frame)
     {
-        var visiting = new HashSet<ReferenceFrameId>(ReferenceEqualityComparer.Instance);
+        var visiting = new HashSet<FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId>(ReferenceEqualityComparer.Instance);
         AppendReferenceFrameIdBytes(buffer, frame, visiting);
     }
 
-    private static void AppendReferenceFrameIdBytes(List<byte> buffer, ReferenceFrameId frame, HashSet<ReferenceFrameId> visiting)
+    private static void AppendReferenceFrameIdBytes(List<byte> buffer, FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId frame, HashSet<FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId> visiting)
     {
         if (!visiting.Add(frame))
-            throw new CyclicFrameReferenceException("ReferenceFrameId contains a cyclic CustomFrame definition.");
+            throw new CyclicFrameReferenceException("FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId contains a cyclic CustomFrame definition.");
 
         switch (frame)
         {
@@ -312,7 +293,7 @@ public static class CacheKeyBuilder
                 break;
 
             default:
-                throw new NotSupportedException($"Unknown ReferenceFrameId type: {frame.GetType().Name}");
+                throw new NotSupportedException($"Unknown FantaSim.Geosphere.Plate.Kinematics.Contracts.ReferenceFrameId type: {frame.GetType().Name}");
         }
 
         visiting.Remove(frame);
