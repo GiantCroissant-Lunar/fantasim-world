@@ -5,6 +5,7 @@ using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Topology.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
@@ -51,54 +52,9 @@ internal static class ReadOnlySequenceExtensions
 /// </summary>
 public static class MessagePackEventSerializer
 {
-    public static readonly MessagePackSerializerOptions Options = MessagePackSerializerOptions.Standard
-        .WithResolver(CompositeResolver.Create(
-            new IMessagePackFormatter[]
-            {
-                new GeometryFormatter(),
-                new Point2Formatter(),
-                new Segment2Formatter(),
-                new Polyline2Formatter(),
-                new DomainFormatter(),
-                new CanonicalTickFormatter(),
-                new PlateIdFormatter(),
-                new BoundaryIdFormatter(),
-                new JunctionIdFormatter(),
-                new EventIdFormatter(),
+    public static readonly MessagePackSerializerOptions Options = TopologySerializationOptions.Options;
 
-                // Generated Formatters
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Identity.TruthStreamIdentityMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.PlateCreatedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.PlateRetiredEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.BoundaryCreatedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.BoundaryTypeChangedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.BoundaryGeometryUpdatedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.BoundaryRetiredEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.JunctionCreatedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.JunctionUpdatedEventMessagePackFormatter(),
-                new FantaSim.Geosphere.Plate.Topology.Contracts.Events.JunctionRetiredEventMessagePackFormatter()
-            },
-            new IFormatterResolver[]
-            {
-                NativeGuidResolver.Instance,
-                BuiltinResolver.Instance,
-                StandardResolver.Instance
-            }
-        ));
-
-    // Event type name to formatter mapping for polymorphic deserialization
-    private static readonly Dictionary<string, Type> EventTypeMap = new()
-    {
-        { nameof(PlateCreatedEvent), typeof(PlateCreatedEvent) },
-        { nameof(PlateRetiredEvent), typeof(PlateRetiredEvent) },
-        { nameof(BoundaryCreatedEvent), typeof(BoundaryCreatedEvent) },
-        { nameof(BoundaryTypeChangedEvent), typeof(BoundaryTypeChangedEvent) },
-        { nameof(BoundaryGeometryUpdatedEvent), typeof(BoundaryGeometryUpdatedEvent) },
-        { nameof(BoundaryRetiredEvent), typeof(BoundaryRetiredEvent) },
-        { nameof(JunctionCreatedEvent), typeof(JunctionCreatedEvent) },
-        { nameof(JunctionUpdatedEvent), typeof(JunctionUpdatedEvent) },
-        { nameof(JunctionRetiredEvent), typeof(JunctionRetiredEvent) }
-    };
+    // Polymorphic deserialization uses EventTypeRegistry for type resolution
 
     /// <summary>
     /// Serializes an event to a MessagePack byte array with envelope.
@@ -113,7 +69,7 @@ public static class MessagePackEventSerializer
 
         // Serialize envelope directly using MessagePack
         // Envelope is: [eventType:string, payload:binary]
-        var eventType = ((IPlateTopologyEvent)value).EventType;
+        var eventType = EventTypeRegistry.GetId(typeof(T));
 
         // Create envelope bytes manually
         var buffer = new System.Buffers.ArrayBufferWriter<byte>();
@@ -131,7 +87,7 @@ public static class MessagePackEventSerializer
         ArgumentNullException.ThrowIfNull(value);
 
         var payloadBytes = MessagePackSerializer.Serialize(value.GetType(), value, Options);
-        var eventType = value.EventType;
+        var eventType = EventTypeRegistry.GetId(value.GetType());
 
         var buffer = new System.Buffers.ArrayBufferWriter<byte>();
         var writer = new MessagePackWriter(buffer);
@@ -167,9 +123,8 @@ public static class MessagePackEventSerializer
 
         var payloadArray = payloadBytes.Value.ToByteArray();
 
-        // Use ReadOnlySequence directly for deserialization
-        if (!EventTypeMap.TryGetValue(eventType, out var eventTypeType))
-            throw new InvalidOperationException($"Unknown event type: {eventType}");
+        // Resolve type using EventTypeRegistry
+        var eventTypeType = EventTypeRegistry.Resolve(eventType);
 
         var eventObj = MessagePackSerializer.Deserialize(eventTypeType, payloadArray, Options);
         return (IPlateTopologyEvent)eventObj!;
@@ -186,22 +141,12 @@ public static class MessagePackEventSerializer
             throw new InvalidOperationException($"Invalid event envelope. Expected 2 elements, got {length}");
 
         var eventType = reader.ReadString();
-        // We verify event type matches T (assuming T.EventType matches class name)
-        // Actually T is the type, we should check if eventType maps to T.
-
-        // This check is a bit loose but sufficient for now.
-        // Ideally we check ((IPlateTopologyEvent)default(T)).EventType but T might not have default.
-        // For strictness we could rely on EventTypeMap.
-        if (!EventTypeMap.TryGetValue(eventType!, out var type) || !typeof(T).IsAssignableFrom(type))
+        
+        // Validate event type matches T
+        var expectedTypeId = EventTypeRegistry.GetId(typeof(T));
+        if (eventType != expectedTypeId)
         {
-             // It's okay if T is IPlateTopologyEvent (handled above)
-             // But if T is PlateCreatedEvent and eventType is "PlateRetiredEvent", this should fail.
-             // Warning: strict check might fail if T is interface.
-             // If T is concrete:
-             if (typeof(T).Name != eventType)
-             {
-                 throw new InvalidOperationException($"Event type mismatch. Expected {typeof(T).Name}, got {eventType}");
-             }
+            throw new InvalidOperationException($"Event type mismatch. Expected {expectedTypeId}, got {eventType}");
         }
 
         var payloadBytes = reader.ReadBytes();
