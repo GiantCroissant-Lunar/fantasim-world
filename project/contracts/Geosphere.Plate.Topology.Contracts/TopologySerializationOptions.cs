@@ -7,11 +7,11 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts;
 
 /// <summary>
 /// Frozen MessagePack serialization options for plate topology events.
-/// 
+///
 /// This options instance is shared by both legacy and new serialization paths
 /// to ensure byte-for-byte identical output. The options are frozen at startup
 /// to prevent runtime modifications that could cause serialization divergence.
-/// 
+///
 /// Includes:
 /// - Custom formatters for geometry types (Point2, Segment2, Polyline2)
 /// - Generated MessagePack formatters for event types (from [UnifyModel] attribute)
@@ -20,7 +20,7 @@ public static class TopologySerializationOptions
 {
     /// <summary>
     /// Gets the frozen MessagePack serialization options.
-    /// 
+    ///
     /// This instance is initialized once at startup and never modified,
     /// ensuring deterministic serialization across the application lifetime.
     /// </summary>

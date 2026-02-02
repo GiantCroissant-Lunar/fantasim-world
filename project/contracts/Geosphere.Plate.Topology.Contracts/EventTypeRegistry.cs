@@ -6,7 +6,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts;
 
 /// <summary>
 /// Registry for stable bidirectional mapping between event type IDs and CLR types.
-/// 
+///
 /// Provides O(1) lookup for both directions with startup validation to ensure
 /// one-to-one mapping. Used by MessagePackEventSerializer for polymorphic dispatch.
 /// </summary>
@@ -30,14 +30,14 @@ public static class EventTypeRegistry
             ("JunctionUpdatedEvent", typeof(JunctionUpdatedEvent)),
             ("JunctionRetiredEvent", typeof(JunctionRetiredEvent))
         };
-        
+
         foreach (var (id, type) in mappings)
         {
             if (IdToType.ContainsKey(id))
                 throw new InvalidOperationException($"Duplicate event type ID: {id}");
             if (TypeToId.ContainsKey(type))
                 throw new InvalidOperationException($"Duplicate event type: {type}");
-            
+
             IdToType[id] = type;
             TypeToId[type] = id;
         }
@@ -53,7 +53,7 @@ public static class EventTypeRegistry
     {
         if (IdToType.TryGetValue(id, out var type))
             return type;
-        
+
         throw new UnknownEventTypeException(id);
     }
 
@@ -67,7 +67,7 @@ public static class EventTypeRegistry
     {
         if (TypeToId.TryGetValue(type, out var id))
             return id;
-        
+
         throw new UnregisteredEventTypeException(type);
     }
 
