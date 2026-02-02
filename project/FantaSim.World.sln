@@ -19,31 +19,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Runtime.Des
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unify-maths", "unify-maths", "{DE2F5B0B-0D0F-4C57-A03E-8F3A1E4F2B1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Primitives", "..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Primitives", "..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj", "{0DB3653F-18C2-4540-A777-B1A1F1362E58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operations", "..\..\unify-maths\dotnet\src\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGeometry.Operations", "..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj", "{BA298AD0-11FD-4B4D-AE86-60473AA21A3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDete.Determinism.Abstractions", "..\..\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj", "{DDBB8D8A-9F9E-4261-9DA8-D328AFBC8BC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDete.Determinism.Abstractions", "..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj", "{DDBB8D8A-9F9E-4261-9DA8-D328AFBC8BC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.NamespaceUsingScope", "..\..\plate-shared\dotnet\source-generators\General.NamespaceUsingScope.Set\General.NamespaceUsingScope\General.NamespaceUsingScope.csproj", "{34060CA7-1CF2-4205-B0AA-4C61BE65F71F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.NamespaceUsingScope", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.NamespaceUsingScope.Set\General.NamespaceUsingScope\General.NamespaceUsingScope.csproj", "{34060CA7-1CF2-4205-B0AA-4C61BE65F71F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDete.Time.Primitives", "..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj", "{ED18EF5D-9DDB-4FA4-AA47-5A68E327E878}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDete.Time.Primitives", "..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj", "{ED18EF5D-9DDB-4FA4-AA47-5A68E327E878}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantaSim.Shared", "..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj", "{75DF1F4D-1D75-47D4-8168-5A32C85E030A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoToString", "..\..\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString\General.AutoToString.csproj", "{A210AF81-ECC6-40C6-AD93-62C7CBE0D648}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoToString", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString\General.AutoToString.csproj", "{A210AF81-ECC6-40C6-AD93-62C7CBE0D648}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoToString.Attributes", "..\..\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString.Attributes\General.AutoToString.Attributes.csproj", "{6A90A77C-605C-4AF7-A518-E9F752A6C09E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoToString.Attributes", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString.Attributes\General.AutoToString.Attributes.csproj", "{6A90A77C-605C-4AF7-A518-E9F752A6C09E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.DisposePattern", "..\..\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern\General.DisposePattern.csproj", "{2D6B5FF4-A863-404E-9BC7-1F30318B84A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.DisposePattern", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern\General.DisposePattern.csproj", "{2D6B5FF4-A863-404E-9BC7-1F30318B84A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.DisposePattern.Attributes", "..\..\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern.Attributes\General.DisposePattern.Attributes.csproj", "{0F5DD6E9-987B-444B-8FDF-5660DB443B01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.DisposePattern.Attributes", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern.Attributes\General.DisposePattern.Attributes.csproj", "{0F5DD6E9-987B-444B-8FDF-5660DB443B01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DI.ConstructorInjection", "..\..\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection\DI.ConstructorInjection.csproj", "{C3D828E0-453D-4FBF-AFF4-80C163A1C0CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DI.ConstructorInjection", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection\DI.ConstructorInjection.csproj", "{C3D828E0-453D-4FBF-AFF4-80C163A1C0CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DI.ConstructorInjection.Attributes", "..\..\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection.Attributes\DI.ConstructorInjection.Attributes.csproj", "{B592F4D4-7058-4593-8CDC-D5E39D1DB890}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyGrid.Abstractions", "..\..\unify-grid\dotnet\src\UnifyGrid.Abstractions\UnifyGrid.Abstractions.csproj", "{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DI.ConstructorInjection.Attributes", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection.Attributes\DI.ConstructorInjection.Attributes.csproj", "{B592F4D4-7058-4593-8CDC-D5E39D1DB890}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hosts", "hosts", "{88AB7371-40A3-7B65-CF7E-ACD3CC9F1E10}"
 EndProject
@@ -57,25 +55,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contracts", "contracts", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Kinematics.Contracts", "contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj", "{F9C529E6-F6B4-4C21-A2C1-03642B239D14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.SourceGenerators.Proxy", "..\..\plugin-archi\src\PluginArchi.SourceGenerators.Proxy\PluginArchi.SourceGenerators.Proxy.csproj", "{C032CCB6-A38B-484C-9916-1590D9494682}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.SourceGenerators.Proxy", "..\..\..\plate-projects\plugin-archi\src\PluginArchi.SourceGenerators.Proxy\PluginArchi.SourceGenerators.Proxy.csproj", "{C032CCB6-A38B-484C-9916-1590D9494682}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.Analyzers", "..\..\plugin-archi\dotnet\PluginArchi.Analyzers\PluginArchi.Analyzers.csproj", "{DFECBF21-73E0-4AAF-BD7C-96D8275A5AB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.Analyzers", "..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Analyzers\PluginArchi.Analyzers.csproj", "{DFECBF21-73E0-4AAF-BD7C-96D8275A5AB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceArchi.SourceGen", "..\..\service-archi\dotnet\ServiceArchi.SourceGen\ServiceArchi.SourceGen.csproj", "{03E5CA0A-135F-4E57-9DEE-F24B615A62F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceArchi.SourceGen", "..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.SourceGen\ServiceArchi.SourceGen.csproj", "{03E5CA0A-135F-4E57-9DEE-F24B615A62F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceArchi.Contracts", "..\..\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj", "{7398E05E-A02F-4051-980E-9A76ABF1D973}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceArchi.Contracts", "..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj", "{7398E05E-A02F-4051-980E-9A76ABF1D973}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyDiagnostics.Generators", "..\..\crosscut-foundation\dotnet\src\UnifyDiagnostics.Generators\UnifyDiagnostics.Generators.csproj", "{611B5D6A-010F-452A-9689-4C7905F38C0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyDiagnostics.Generators", "..\..\..\plate-projects\crosscut-foundation\dotnet\src\UnifyDiagnostics.Generators\UnifyDiagnostics.Generators.csproj", "{611B5D6A-010F-452A-9689-4C7905F38C0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyDiagnostics.Abstractions", "..\..\crosscut-foundation\dotnet\src\UnifyDiagnostics.Abstractions\UnifyDiagnostics.Abstractions.csproj", "{4486E872-3920-47E1-873B-9DC5041AEED9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyDiagnostics.Abstractions", "..\..\..\plate-projects\crosscut-foundation\dotnet\src\UnifyDiagnostics.Abstractions\UnifyDiagnostics.Abstractions.csproj", "{4486E872-3920-47E1-873B-9DC5041AEED9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoProperties", "..\..\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties\General.AutoProperties.csproj", "{D186DD26-9BEA-4F78-8965-95B483E7D03C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoProperties", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties\General.AutoProperties.csproj", "{D186DD26-9BEA-4F78-8965-95B483E7D03C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoProperties.Attributes", "..\..\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties.Attributes\General.AutoProperties.Attributes.csproj", "{045628C8-C1F6-4918-810C-47164C52E39D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoProperties.Attributes", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties.Attributes\General.AutoProperties.Attributes.csproj", "{045628C8-C1F6-4918-810C-47164C52E39D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifySerialization.Abstractions", "..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj", "{AFA0ED5D-38B6-488D-A119-ED5EEE4A9165}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifySerialization.Abstractions", "..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj", "{AFA0ED5D-38B6-488D-A119-ED5EEE4A9165}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifySerialization.Generators", "..\..\unify-serialization\dotnet\src\UnifySerialization.Generators\UnifySerialization.Generators.csproj", "{8FEA93A8-05E2-4046-A7AD-2FC89AC7DF0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifySerialization.Generators", "..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Generators\UnifySerialization.Generators.csproj", "{8FEA93A8-05E2-4046-A7AD-2FC89AC7DF0B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plugins", "plugins", "{07D57EEB-2F50-60C4-C011-FE4FA775C9A8}"
 EndProject
@@ -83,7 +81,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Kinematics.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Kinematics.Materializer", "plugins\Geosphere.Plate.Kinematics.Materializer\Geosphere.Plate.Kinematics.Materializer.csproj", "{02767518-81A1-4599-A1B5-59E83DAF83B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyStorage.Abstractions", "..\..\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj", "{6623F3F9-DA3D-42DA-9DB4-65FCEEB01D33}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnifyStorage.Abstractions", "..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj", "{6623F3F9-DA3D-42DA-9DB4-65FCEEB01D33}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Kinematics.Tests", "tests\Geosphere.Plate.Kinematics.Tests\Geosphere.Plate.Kinematics.Tests.csproj", "{1D4FDFBB-75AA-429A-9F25-CD6FF6ED455A}"
 EndProject
@@ -150,6 +148,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Policy.Tests", "..\tools\architecture\Fantasim.Architecture.Policy.Tests\Fantasim.Architecture.Policy.Tests.csproj", "{3A9CA0B6-8B4D-4DFF-AFF4-70FBD76CE2E3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Router.Tests", "..\tools\architecture\Fantasim.Architecture.Router.Tests\Fantasim.Architecture.Router.Tests.csproj", "{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Space.Region.Contracts", "contracts\Space.Region.Contracts\Space.Region.Contracts.csproj", "{01EE6DBD-C9CC-416C-9830-655253324056}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Space.Region.Contracts.Tests", "tests\Space.Region.Contracts.Tests\Space.Region.Contracts.Tests.csproj", "{90BE5C34-B62F-48EA-96BF-C470F96A801A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -377,18 +379,6 @@ Global
 		{B592F4D4-7058-4593-8CDC-D5E39D1DB890}.Release|x64.Build.0 = Release|Any CPU
 		{B592F4D4-7058-4593-8CDC-D5E39D1DB890}.Release|x86.ActiveCfg = Release|Any CPU
 		{B592F4D4-7058-4593-8CDC-D5E39D1DB890}.Release|x86.Build.0 = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|x64.Build.0 = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Debug|x86.Build.0 = Debug|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|x64.ActiveCfg = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|x64.Build.0 = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|x86.ActiveCfg = Release|Any CPU
-		{FB71F6C3-55CF-4F60-9457-C46FD556FFA6}.Release|x86.Build.0 = Release|Any CPU
 		{D594F733-3ED4-48B0-BA01-62FE99EC7DE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D594F733-3ED4-48B0-BA01-62FE99EC7DE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D594F733-3ED4-48B0-BA01-62FE99EC7DE2}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -989,6 +979,30 @@ Global
 		{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}.Release|x64.Build.0 = Release|Any CPU
 		{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}.Release|x86.ActiveCfg = Release|Any CPU
 		{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}.Release|x86.Build.0 = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|x64.Build.0 = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Debug|x86.Build.0 = Debug|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|x64.ActiveCfg = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|x64.Build.0 = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|x86.ActiveCfg = Release|Any CPU
+		{01EE6DBD-C9CC-416C-9830-655253324056}.Release|x86.Build.0 = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|x64.Build.0 = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Debug|x86.Build.0 = Debug|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|x64.ActiveCfg = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|x64.Build.0 = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|x86.ActiveCfg = Release|Any CPU
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1030,5 +1044,7 @@ Global
 		{C868ED52-633B-428E-8843-6C3C4816F369} = {A73F2606-6D4C-3EEE-1759-0E59DCFEF523}
 		{36B67A4A-E700-4BAE-8473-BE80645DDE65} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{AB3D812B-EA00-4ADB-96FC-33D48C08E4E1} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{01EE6DBD-C9CC-416C-9830-655253324056} = {A73F2606-6D4C-3EEE-1759-0E59DCFEF523}
+		{90BE5C34-B62F-48EA-96BF-C470F96A801A} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

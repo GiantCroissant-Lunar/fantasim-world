@@ -27,7 +27,7 @@
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Serializers\Geosphere.Plate.Topology.Serializers.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Testing.Storage\Geosphere.Plate.Testing.Storage.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
   </ItemGroup>
 
 </Project>

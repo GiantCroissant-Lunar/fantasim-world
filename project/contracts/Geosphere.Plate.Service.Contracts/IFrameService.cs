@@ -7,7 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Service for computing reference frame transforms.

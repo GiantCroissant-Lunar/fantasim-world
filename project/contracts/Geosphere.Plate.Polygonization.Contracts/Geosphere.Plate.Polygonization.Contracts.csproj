@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
   <ItemGroup>

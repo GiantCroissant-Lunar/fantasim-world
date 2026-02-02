@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>FantaSim.World.Plates.Tests</RootNamespace>
-    <AssemblyName>FantaSim.World.Plates.Tests</AssemblyName>
+    <RootNamespace>FantaSim.Geosphere.Plate.Service.Contracts.Tests</RootNamespace>
+    <AssemblyName>Geosphere.Plate.Service.Contracts.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\contracts\FantaSim.World.Plates\FantaSim.World.Plates.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Service.Contracts\Geosphere.Plate.Service.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
 </Project>

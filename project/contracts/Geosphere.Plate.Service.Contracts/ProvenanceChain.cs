@@ -5,7 +5,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Captures the complete provenance of a reconstruction query result per RFC-V2-0045 Section 5.

@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Raster.Contracts\Raster.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
 </Project>

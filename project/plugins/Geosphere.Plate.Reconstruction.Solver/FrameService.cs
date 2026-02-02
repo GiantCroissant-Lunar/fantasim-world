@@ -5,7 +5,7 @@ using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
-using FantaSim.World.Plates;
+using FantaSim.Geosphere.Plate.Service.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Geosphere.Plate.Reconstruction.Solver;

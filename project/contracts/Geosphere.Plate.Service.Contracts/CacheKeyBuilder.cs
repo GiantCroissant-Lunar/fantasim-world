@@ -7,7 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Velocity.Contracts;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Builds cache keys for reconstruction query results per RFC-V2-0045 Section 4.2.1.

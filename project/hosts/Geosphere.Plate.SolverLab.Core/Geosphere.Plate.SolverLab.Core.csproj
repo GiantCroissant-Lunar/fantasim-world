@@ -4,8 +4,8 @@
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Motion.Contracts\Geosphere.Plate.Motion.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
   </ItemGroup>
 
   <ItemGroup>

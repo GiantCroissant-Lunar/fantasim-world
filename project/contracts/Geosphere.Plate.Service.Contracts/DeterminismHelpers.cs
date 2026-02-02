@@ -3,7 +3,7 @@ using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Provides deterministic ordering and comparison utilities per RFC-V2-0045 Section 6.

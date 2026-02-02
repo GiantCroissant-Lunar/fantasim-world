@@ -13,11 +13,11 @@
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
 
-    <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Hosting\PluginArchi.Extensibility.Hosting.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Extensibility.Hosting\PluginArchi.Extensibility.Hosting.csproj" />
 
-    <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Core\ServiceArchi.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Core\ServiceArchi.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

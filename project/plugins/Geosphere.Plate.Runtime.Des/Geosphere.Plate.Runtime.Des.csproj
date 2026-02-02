@@ -13,12 +13,12 @@
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Runtime.Des.Contracts\Geosphere.Plate.Runtime.Des.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
     <ProjectReference Include="..\..\..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
-    <ProjectReference Include="..\..\..\..\plugin-archi\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

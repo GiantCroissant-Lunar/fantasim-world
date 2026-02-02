@@ -547,24 +547,22 @@ def sync_rules() -> int:
 # =============================================================================
 
 def create_gemini_command_stub(cmd_name: str, description: str) -> str:
-    """Create a TOML stub for Gemini commands."""
-    # Gemini commands use TOML format
-    return f'''# Auto-generated pointer to .agent/commands/{cmd_name}.md
-# Edit the source file, not this stub.
+    """Create an MD stub for Gemini commands."""
+    return f"""---
+name: {cmd_name}
+description: {description}
+source: .agent/commands/{cmd_name}.md
+---
 
-[command]
-name = "{cmd_name}"
-description = "{description}"
+# {cmd_name}
 
-[command.prompt]
-# Read the full command from the source:
-# .agent/commands/{cmd_name}.md
-text = """
-This command is defined in .agent/commands/{cmd_name}.md
+**This is a pointer file. Read the full command from the source.**
 
-Please read and execute the instructions from that file.
+Source: [.agent/commands/{cmd_name}.md](../../.agent/commands/{cmd_name}.md)
+
+When this command is invoked, read and follow the complete instructions at:
+`.agent/commands/{cmd_name}.md`
 """
-'''
 
 
 def create_workflow_stub(cmd_name: str, description: str, depth: int = 2) -> str:
@@ -625,7 +623,7 @@ def sync_commands() -> int:
 
         for stem, filename, description in commands_data:
             stub_content = create_gemini_command_stub(stem, description)
-            target_path = gemini_target / f"{stem}.toml"
+            target_path = gemini_target / f"{stem}.md"
             target_path.write_text(stub_content, encoding="utf-8")
             print(f"  [OK] {filename} -> {target_path}")
             cmd_count += 1

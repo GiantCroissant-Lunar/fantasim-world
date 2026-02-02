@@ -12,9 +12,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Runtime.Des.Contracts\Geosphere.Plate.Runtime.Des.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-ecs\dotnet\src\UnifyEcs\UnifyEcs.csproj" />
-    <ProjectReference Include="..\..\..\..\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-ecs\dotnet\src\UnifyEcs\UnifyEcs.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

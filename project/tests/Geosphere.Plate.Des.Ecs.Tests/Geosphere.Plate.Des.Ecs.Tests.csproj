@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Des.Ecs\Geosphere.Plate.Des.Ecs.csproj" />
-    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Pcg\TimeDete.Determinism.Pcg.csproj" />
   </ItemGroup>
 
 </Project>
