@@ -4,7 +4,9 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 
-namespace FantaSim.World.Plates.Tests;
+using FantaSim.Geosphere.Plate.Service.Contracts;
+
+namespace FantaSim.Geosphere.Plate.Service.Contracts.Tests;
 
 /// <summary>
 /// Test gates for RFC-V2-0045 determinism requirements (Section 7).

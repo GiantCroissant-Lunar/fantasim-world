@@ -4,7 +4,9 @@ using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using Plate.TimeDete.Time.Primitives;
 
-namespace FantaSim.World.Plates.Tests;
+using FantaSim.Geosphere.Plate.Service.Contracts;
+
+namespace FantaSim.Geosphere.Plate.Service.Contracts.Tests;
 
 /// <summary>
 /// Test gates for RFC-V2-0045 cache key requirements (Section 4.2.1).

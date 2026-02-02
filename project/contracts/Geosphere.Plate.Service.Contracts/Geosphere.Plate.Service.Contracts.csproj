@@ -4,9 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>FantaSim.World.Plates</RootNamespace>
-    <PackageId>GiantCroissant.FantaSim.World.Plates</PackageId>
-    <AssemblyName>FantaSim.World.Plates</AssemblyName>
+    <RootNamespace>FantaSim.Geosphere.Plate.Service.Contracts</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Service.Contracts</PackageId>
+    <AssemblyName>Geosphere.Plate.Service.Contracts</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

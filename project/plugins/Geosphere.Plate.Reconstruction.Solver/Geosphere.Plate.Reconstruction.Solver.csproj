@@ -3,7 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Reconstruction.Contracts\Geosphere.Plate.Reconstruction.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
-    <ProjectReference Include="..\..\contracts\FantaSim.World.Plates\FantaSim.World.Plates.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Service.Contracts\Geosphere.Plate.Service.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Operations\UnifyGeometry.Operations.csproj" />
   </ItemGroup>
 

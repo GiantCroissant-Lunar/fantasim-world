@@ -8,7 +8,7 @@ using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Options for Reconstruct query operations per RFC-V2-0045 Section 3.1.

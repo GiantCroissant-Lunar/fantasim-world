@@ -5,7 +5,7 @@ using MessagePack;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 #region Reconstruct Query
 

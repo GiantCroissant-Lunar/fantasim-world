@@ -1,4 +1,4 @@
-namespace FantaSim.World.Plates;
+namespace FantaSim.Geosphere.Plate.Service.Contracts;
 
 /// <summary>
 /// Defines the confidence level for plate assignment operations.

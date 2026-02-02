@@ -7,7 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
-using FantaSim.World.Plates;
+using FantaSim.Geosphere.Plate.Service.Contracts;
 using FluentAssertions;
 using Plate.TimeDete.Time.Primitives;
 using Xunit;
