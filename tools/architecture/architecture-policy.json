@@ -1,0 +1,15 @@
+{
+    "$schema": "./architecture-policy.schema.json",
+    "constitution": {
+        "description": "Rules that cannot be overridden/downgraded.",
+        "nonOverridableDiagnostics": [
+            "FW1001",
+            "FW1002",
+            "FW1003",
+            "FW1004",
+            "FW3001",
+            "FW3002"
+        ]
+    },
+    "overlays": []
+}
