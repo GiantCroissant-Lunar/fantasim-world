@@ -133,17 +133,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Partition.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Partition.Tests", "tests\Geosphere.Plate.Partition.Tests\Geosphere.Plate.Partition.Tests.csproj", "{AB3D812B-EA00-4ADB-96FC-33D48C08E4E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Analyzers", "tools\architecture\Fantasim.Architecture.Analyzers\Fantasim.Architecture.Analyzers.csproj", "{1B5420EB-E228-4AC4-ABF1-252F62E5190C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Analyzers", "tools\architecture\Architecture.Analyzers\Architecture.Analyzers.csproj", "{1B5420EB-E228-4AC4-ABF1-252F62E5190C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Policy", "tools\architecture\Fantasim.Architecture.Policy\Fantasim.Architecture.Policy.csproj", "{310347AF-92E5-465F-9CCF-0FE71F81CA9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Policy", "tools\architecture\Architecture.Policy\Architecture.Policy.csproj", "{310347AF-92E5-465F-9CCF-0FE71F81CA9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Router", "tools\architecture\Fantasim.Architecture.Router\Fantasim.Architecture.Router.csproj", "{8CE7D148-F34D-428C-9577-FEEE09DD7925}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Router", "tools\architecture\Architecture.Router\Architecture.Router.csproj", "{8CE7D148-F34D-428C-9577-FEEE09DD7925}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Analyzers.Tests", "tools\architecture\Fantasim.Architecture.Analyzers.Tests\Fantasim.Architecture.Analyzers.Tests.csproj", "{1452F5ED-4885-45CF-A905-ABBAB6D838AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Analyzers.Tests", "tools\architecture\Architecture.Analyzers.Tests\Architecture.Analyzers.Tests.csproj", "{1452F5ED-4885-45CF-A905-ABBAB6D838AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Policy.Tests", "tools\architecture\Fantasim.Architecture.Policy.Tests\Fantasim.Architecture.Policy.Tests.csproj", "{3A9CA0B6-8B4D-4DFF-AFF4-70FBD76CE2E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Policy.Tests", "tools\architecture\Architecture.Policy.Tests\Architecture.Policy.Tests.csproj", "{3A9CA0B6-8B4D-4DFF-AFF4-70FBD76CE2E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantasim.Architecture.Router.Tests", "tools\architecture\Fantasim.Architecture.Router.Tests\Fantasim.Architecture.Router.Tests.csproj", "{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Router.Tests", "tools\architecture\Architecture.Router.Tests\Architecture.Router.Tests.csproj", "{BB67DA24-2C9C-48A0-AEF3-8BA65C4C61AE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Space.Region.Contracts", "contracts\Space.Region.Contracts\Space.Region.Contracts.csproj", "{01EE6DBD-C9CC-416C-9830-655253324056}"
 EndProject

@@ -43,11 +43,11 @@ public sealed class PlateTopologyState : IPlateTopologyIndexedStateView
 
     TruthStreamIdentity IPlateTopologyStateView.Identity => Identity;
 
-    IReadOnlyDictionary<PlateId, PlateEntity> IPlateTopologyStateView.Plates => Plates;
+    IReadOnlyDictionary<PlateId, PlateEntity> IPlateTopologyStateView.Plates => (IReadOnlyDictionary<PlateId, PlateEntity>)Plates;
 
-    IReadOnlyDictionary<BoundaryId, BoundaryEntity> IPlateTopologyStateView.Boundaries => Boundaries;
+    IReadOnlyDictionary<BoundaryId, BoundaryEntity> IPlateTopologyStateView.Boundaries => (IReadOnlyDictionary<BoundaryId, BoundaryEntity>)Boundaries;
 
-    IReadOnlyDictionary<JunctionId, JunctionEntity> IPlateTopologyStateView.Junctions => Junctions;
+    IReadOnlyDictionary<JunctionId, JunctionEntity> IPlateTopologyStateView.Junctions => (IReadOnlyDictionary<JunctionId, JunctionEntity>)Junctions;
 
     long IPlateTopologyStateView.LastEventSequence => LastEventSequence;
 }
