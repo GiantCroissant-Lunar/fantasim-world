@@ -17,11 +17,11 @@ skills:
   source: .agent/skills
 
 # Commands configuration
-# Gemini uses TOML format for commands
+# Gemini uses MD format for commands
 commands:
   enabled: true
   target: .gemini/commands
-  format: toml
+  format: md
 
 # No cleanup needed
 cleanup: []

@@ -15,7 +15,7 @@
     <ProjectReference Include="..\Geosphere.Plate.Topology.Materializer\Geosphere.Plate.Topology.Materializer.csproj" />
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
-    <ProjectReference Include="..\..\..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
+    <ProjectReference Include="..\..\..\..\fantasim-shared\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
     <ProjectReference Include="..\..\..\..\plugin-archi\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
