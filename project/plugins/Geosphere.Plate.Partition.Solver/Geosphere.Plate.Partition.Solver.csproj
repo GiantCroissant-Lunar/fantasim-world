@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Cache.Contracts\Geosphere.Plate.Cache.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Partition.Contracts\Geosphere.Plate.Partition.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Polygonization.Contracts\Geosphere.Plate.Polygonization.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />

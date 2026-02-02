@@ -90,6 +90,7 @@ public sealed class PlatePartitionService : IPlatePartitionService
             // Step 2: Check cache
             var streamIdentity = _identityComputer.ComputeStreamIdentity(
                 topology.Identity,
+                request.Tick,
                 topology.LastEventSequence,
                 request.TolerancePolicy);
 

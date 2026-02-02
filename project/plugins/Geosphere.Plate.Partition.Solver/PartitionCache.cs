@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using FantaSim.Geosphere.Plate.Partition.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using Microsoft.Extensions.Logging;
+using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Geosphere.Plate.Partition.Solver;
 
@@ -94,13 +95,16 @@ public sealed class PartitionCache
     /// </summary>
     public bool TryGet(
         TruthStreamIdentity topologyStream,
+        CanonicalTick tick,
+        long sliceLastSequence,
         TolerancePolicy tolerancePolicy,
         StreamIdentityComputer identityComputer,
         out PlatePartitionResult result)
     {
         var streamIdentity = identityComputer.ComputeStreamIdentity(
             topologyStream,
-            0, // Version not used for cache lookup
+            tick,
+            sliceLastSequence,
             tolerancePolicy);
 
         return TryGet(streamIdentity, out result);
