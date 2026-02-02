@@ -80,3 +80,7 @@ specs/
 
 ref-projects/
 *.DotSettings
+
+build_output*.txt
+TestResults/
+nul
