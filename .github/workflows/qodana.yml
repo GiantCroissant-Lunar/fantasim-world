@@ -19,8 +19,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0  # a full history is required for pull request analysis
-      - name: 'Pull latest Qodana image'
-        run: docker pull jetbrains/qodana-dotnet:latest
+      - name: 'Remove old Qodana images'
+        run: docker rmi $(docker images "jetbrains/qodana-*" -q) 2>/dev/null || true
+      - name: 'Pull latest Qodana images'
+        run: |
+          docker pull jetbrains/qodana-dotnet:latest
+          docker pull jetbrains/qodana-cdnet:latest
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2025.2
         with:
