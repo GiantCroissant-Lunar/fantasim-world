@@ -8,13 +8,13 @@ namespace FantaSim.Geosphere.Plate.Des.Ecs;
 
 /// <summary>
 /// ECS system for deterministic execution of DES work items.
-/// 
+///
 /// Per RFC-V2-0015, executes work items in order:
 /// 1. When (CanonicalTick) - ascending
 /// 2. Sphere (SphereId) - by enum order
 /// 3. Kind (WorkKind) - by enum order
 /// 4. TieBreak (ulong) - ascending
-/// 
+///
 /// Only executes work items scheduled for the current tick.
 /// </summary>
 public sealed class DesExecutionSystem : ISystem
@@ -42,7 +42,7 @@ public sealed class DesExecutionSystem : ISystem
 
         // Query all entities with DesWorkItemComponent
         var query = _ecsWorld.Query<DesWorkItemComponent>();
-        
+
         // Filter and sort work items for current tick
         var workItems = query
             .Where(entity =>
@@ -81,7 +81,7 @@ public sealed class DesExecutionSystem : ISystem
             if (component.DriverHandle != DriverHandle.Empty)
             {
                 var driver = _context.DriverRegistry.Resolve<object>(component.DriverHandle);
-                
+
                 // Execute driver (polymorphic call)
                 if (driver is IExecutableDriver executableDriver)
                 {
@@ -97,7 +97,7 @@ public sealed class DesExecutionSystem : ISystem
             if (component.TriggerHandle != TriggerHandle.Empty)
             {
                 var trigger = _context.TriggerRegistry.Resolve<object>(component.TriggerHandle);
-                
+
                 // Execute trigger (polymorphic call)
                 if (trigger is IExecutableTrigger executableTrigger)
                 {

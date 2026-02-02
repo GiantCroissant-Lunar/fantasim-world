@@ -8,7 +8,7 @@ namespace FantaSim.Geosphere.Plate.Des.Ecs;
 
 /// <summary>
 /// ECS adapter for deterministic execution system (DES).
-/// 
+///
 /// Per RFC-V2-0015, provides bridge between legacy DES and new ECS runtime:
 /// - Registers drivers and triggers with monotonic handles
 /// - Schedules work items with RFC-compliant ordering
@@ -145,11 +145,11 @@ public sealed class DesEcsAdapter : IDisposable
     public void ExecuteTick(CanonicalTick tick)
     {
         _context.BeginTick(tick);
-        
+
         // ECS world update will execute DesExecutionSystem
         // which processes all DesWorkItemComponents for the current tick
         _ecsWorld.Update(0f);
-        
+
         _context.EndTick();
     }
 
@@ -168,17 +168,17 @@ public sealed class DesEcsAdapter : IDisposable
     public void Dispose()
     {
         _ecsWorld.RemoveSystem(_executionSystem);
-        
+
         foreach (var entity in _driverToEntity.Values)
         {
             entity.Destroy();
         }
-        
+
         foreach (var entity in _triggerToEntity.Values)
         {
             entity.Destroy();
         }
-        
+
         _driverToEntity.Clear();
         _triggerToEntity.Clear();
     }
