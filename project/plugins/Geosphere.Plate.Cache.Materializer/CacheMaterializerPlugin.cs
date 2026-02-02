@@ -24,6 +24,8 @@ public sealed class CacheMaterializerPlugin : ILifecyclePlugin
 {
     private IRegistry? _registry;
     private ArtifactCache? _cache;
+    private DerivedProductCache? _derivedProductCache;
+    private AutoInvalidatingCache? _autoInvalidatingCache;
     private IArtifactStorage? _storage;
 
     public IPluginDescriptor Descriptor { get; } = new PluginDescriptor
@@ -72,6 +74,20 @@ public sealed class CacheMaterializerPlugin : ILifecyclePlugin
         registry.Register<IDerivedArtifactCache>(_cache);
         registry.Register<IArtifactStorage>(_storage);
 
+        var auditSink = context.Services.GetService<IDerivedProductAuditSink>();
+        _derivedProductCache = new DerivedProductCache(_cache, auditSink);
+
+        var invalidationNotifier = context.Services.GetService<IInvalidationNotifier>();
+        if (invalidationNotifier != null)
+        {
+            _autoInvalidatingCache = new AutoInvalidatingCache(_derivedProductCache, invalidationNotifier);
+            registry.Register<IDerivedProductCache>(_autoInvalidatingCache);
+        }
+        else
+        {
+            registry.Register<IDerivedProductCache>(_derivedProductCache);
+        }
+
         return ValueTask.CompletedTask;
     }
 
@@ -79,6 +95,11 @@ public sealed class CacheMaterializerPlugin : ILifecyclePlugin
     {
         _registry?.UnregisterAll<IArtifactStorage>();
         _registry?.UnregisterAll<IDerivedArtifactCache>();
+        _registry?.UnregisterAll<IDerivedProductCache>();
+
+        _autoInvalidatingCache?.Dispose();
+        _autoInvalidatingCache = null;
+        _derivedProductCache = null;
 
         _cache = null;
         _storage = null;
