@@ -1,8 +1,11 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using FantaSim.Geosphere.Plate.Cache.Contracts.Hashing;
+using FantaSim.Geosphere.Plate.Cache.Contracts.Models;
 using FantaSim.Geosphere.Plate.Partition.Contracts;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using Plate.TimeDete.Time.Primitives;
 
 namespace FantaSim.Geosphere.Plate.Partition.Solver;
 
@@ -30,18 +33,18 @@ public sealed class StreamIdentityComputer
     /// <param name="topologyStream">The topology stream identity.</param>
     /// <param name="tolerancePolicy">The tolerance policy used.</param>
     /// <returns>A stable hash string suitable for cache keys.</returns>
-    public string ComputeCacheKey(TruthStreamIdentity topologyStream, TolerancePolicy tolerancePolicy)
+    public string ComputeCacheKey(string topologySliceHash, TolerancePolicy tolerancePolicy)
     {
         ArgumentNullException.ThrowIfNull(tolerancePolicy);
+        ArgumentException.ThrowIfNullOrWhiteSpace(topologySliceHash);
 
         using var sha256 = SHA256.Create();
 
         // Build hash input
         var buffer = new List<byte>();
 
-        // Topology stream components (domain + stream key)
-        AddString(buffer, topologyStream.Domain.Value.ToString());
-        AddString(buffer, topologyStream.ToStreamKey());
+        // Topology slice hash (stream + tick + sliceLastSequence + schema)
+        AddString(buffer, topologySliceHash);
 
         // Polygonizer version
         AddString(buffer, _polygonizerVersion);
@@ -50,7 +53,7 @@ public sealed class StreamIdentityComputer
         AddTolerancePolicy(buffer, tolerancePolicy);
 
         var hash = sha256.ComputeHash(buffer.ToArray());
-        return Convert.ToHexString(hash)[..16]; // Use first 16 chars for compactness
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     /// <summary>
@@ -58,13 +61,33 @@ public sealed class StreamIdentityComputer
     /// </summary>
     public StreamIdentity ComputeStreamIdentity(
         TruthStreamIdentity topologyStream,
-        long topologyVersion,
+        long sliceLastSequence,
         TolerancePolicy tolerancePolicy)
     {
-        var cacheKey = ComputeCacheKey(topologyStream, tolerancePolicy);
+        return ComputeStreamIdentity(
+            topologyStream: topologyStream,
+            tick: CanonicalTick.Genesis,
+            sliceLastSequence: sliceLastSequence,
+            tolerancePolicy: tolerancePolicy);
+    }
+
+    /// <summary>
+    /// Computes a full stream identity including all components.
+    /// </summary>
+    public StreamIdentity ComputeStreamIdentity(
+        TruthStreamIdentity topologyStream,
+        CanonicalTick tick,
+        long sliceLastSequence,
+        TolerancePolicy tolerancePolicy)
+    {
+        if (sliceLastSequence < -1)
+            throw new ArgumentOutOfRangeException(nameof(sliceLastSequence), "Slice last sequence must be >= -1");
+
+        var topologySliceHash = ComputeTopologySliceHash(topologyStream, tick, sliceLastSequence);
+        var cacheKey = ComputeCacheKey(topologySliceHash, tolerancePolicy);
 
         return new StreamIdentity(
-            TopologyStreamHash: ComputeTopologyHash(topologyStream),
+            TopologyStreamHash: topologySliceHash,
             PolygonizerVersion: _polygonizerVersion,
             TolerancePolicyHash: ComputeTolerancePolicyHash(tolerancePolicy),
             CombinedHash: cacheKey);
@@ -73,16 +96,18 @@ public sealed class StreamIdentityComputer
     /// <summary>
     /// Computes a hash of the topology stream identity.
     /// </summary>
-    private string ComputeTopologyHash(TruthStreamIdentity topologyStream)
+    private static string ComputeTopologySliceHash(
+        TruthStreamIdentity topologyStream,
+        CanonicalTick tick,
+        long sliceLastSequence)
     {
-        using var sha256 = SHA256.Create();
-        var buffer = new List<byte>();
+        var identity = new TopologySliceIdentity(
+            Stream: topologyStream,
+            Tick: tick,
+            SliceLastSequence: sliceLastSequence,
+            SchemaVersion: 1);
 
-        AddString(buffer, topologyStream.Domain.Value.ToString());
-        AddString(buffer, topologyStream.ToStreamKey());
-
-        var hash = sha256.ComputeHash(buffer.ToArray());
-        return Convert.ToHexString(hash)[..16];
+        return SliceIdentityHashComputer.ComputeTopologySliceHash(identity);
     }
 
     /// <summary>
@@ -96,7 +121,7 @@ public sealed class StreamIdentityComputer
         AddTolerancePolicy(buffer, tolerancePolicy);
 
         var hash = sha256.ComputeHash(buffer.ToArray());
-        return Convert.ToHexString(hash)[..16];
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static void AddString(List<byte> buffer, string value)
