@@ -12,7 +12,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Tests;
 
 /// <summary>
 /// Golden tests for MessagePackEventSerializer.
-/// 
+///
 /// These tests verify that serializer produces deterministic output for event serialization.
 /// For now, we do basic round-trip tests without checking golden hashes,
 /// since golden fixture infrastructure is not yet in place.
@@ -26,7 +26,7 @@ public class SerializerGoldenTests
         var plateId = PlateId.New();
         var eventId = Guid.NewGuid();
         var tick = CanonicalTick.FromInt64(100);
-        
+
         var @event = new PlateCreatedEvent(
             eventId,
             plateId,
@@ -55,7 +55,7 @@ public class SerializerGoldenTests
         var plateId = PlateId.New();
         var eventId = Guid.NewGuid();
         var tick = CanonicalTick.FromInt64(200);
-        
+
         var @event = new PlateRetiredEvent(
             eventId,
             plateId,
@@ -84,7 +84,7 @@ public class SerializerGoldenTests
         var boundaryId = BoundaryId.New();
         var eventId = Guid.NewGuid();
         var tick = CanonicalTick.FromInt64(300);
-        
+
         var @event = new BoundaryCreatedEvent(
             eventId,
             boundaryId,
@@ -113,7 +113,7 @@ public class SerializerGoldenTests
         var plateId = PlateId.New();
         var eventId = Guid.NewGuid();
         var tick = CanonicalTick.FromInt64(400);
-        
+
         var @event = new PlateCreatedEvent(
             eventId,
             plateId,

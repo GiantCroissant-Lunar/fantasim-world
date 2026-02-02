@@ -126,15 +126,15 @@ public sealed class EcsBootstrapTests
         // Assert: No handle reuse after disposal
         var oldDriverHandleValue = driverValues.Last();
         _context.ClearDrafts();
-        
+
         // Re-register should allocate new handles, not reuse
         var driver4 = CreateDriver("Driver4", SphereId.Crust, WorkKind.BoundaryUpdate);
         var newDriverHandles = _context.DriverRegistry.GetHandles<MockExecutableDriver>();
         var newDriverValues = newDriverHandles.Select(h => h.Value).OrderBy(v => v).ToArray();
-        
+
         Assert.That(newDriverValues, Has.Length.EqualTo(driverValues.Length + 1),
             "New driver should allocate new handle, not reuse old handle");
-        
+
         var newDriverHandleValue = newDriverValues.Max();
         Assert.That(newDriverHandleValue, Is.GreaterThan(oldDriverHandleValue),
             "New handle must be greater than old handle (no reuse)");
@@ -179,7 +179,7 @@ public sealed class EcsBootstrapTests
         // Assert: Execution order is deterministic within each tick
         Assert.That(tick100Execution.Select(r => r.Name), Is.EqualTo(new[] { "Driver2", "Driver1" }),
             "Tick 100 execution order must be deterministic");
-        
+
         Assert.That(tick101Execution.Select(r => r.Name), Is.EqualTo(new[] { "Driver2", "Driver1" }),
             "Tick 101 execution order must be deterministic and match tick 100");
     }

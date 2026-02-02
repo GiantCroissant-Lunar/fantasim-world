@@ -141,7 +141,7 @@ public static class MessagePackEventSerializer
             throw new InvalidOperationException($"Invalid event envelope. Expected 2 elements, got {length}");
 
         var eventType = reader.ReadString();
-        
+
         // Validate event type matches T
         var expectedTypeId = EventTypeRegistry.GetId(typeof(T));
         if (eventType != expectedTypeId)
