@@ -12,7 +12,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts;
 /// </summary>
 public static class EventTypeRegistry
 {
-    private static readonly Dictionary<string, Type> IdToType = new();
+    private static readonly Dictionary<string, Type> IdToType = new(StringComparer.Ordinal);
     private static readonly Dictionary<Type, string> TypeToId = new();
 
     static EventTypeRegistry()
@@ -80,39 +80,5 @@ public static class EventTypeRegistry
     public static bool TryResolve(string id, out Type? type)
     {
         return IdToType.TryGetValue(id, out type);
-    }
-}
-
-/// <summary>
-/// Exception thrown when an unknown event type ID is encountered during deserialization.
-/// </summary>
-public sealed class UnknownEventTypeException : InvalidOperationException
-{
-    /// <summary>
-    /// Gets the unknown event type ID that caused this exception.
-    /// </summary>
-    public string UnknownEventTypeId { get; }
-
-    public UnknownEventTypeException(string unknownEventTypeId)
-        : base($"Unknown event type ID: {unknownEventTypeId}")
-    {
-        UnknownEventTypeId = unknownEventTypeId;
-    }
-}
-
-/// <summary>
-/// Exception thrown when attempting to get the type ID for an unregistered event type.
-/// </summary>
-public sealed class UnregisteredEventTypeException : InvalidOperationException
-{
-    /// <summary>
-    /// Gets the unregistered event type that caused this exception.
-    /// </summary>
-    public Type UnregisteredType { get; }
-
-    public UnregisteredEventTypeException(Type unregisteredType)
-        : base($"Event type is not registered in EventTypeRegistry: {unregisteredType.FullName}")
-    {
-        UnregisteredType = unregisteredType;
     }
 }

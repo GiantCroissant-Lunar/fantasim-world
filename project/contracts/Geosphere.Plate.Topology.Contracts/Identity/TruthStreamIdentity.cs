@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using UnifySerialization.Abstractions;
@@ -60,7 +61,7 @@ public readonly record struct TruthStreamIdentity(
             return false;
         }
 
-        if (!parts[2].StartsWith("L", StringComparison.Ordinal) || !int.TryParse(parts[2].Substring(1), out var lLevel))
+        if (!parts[2].StartsWith("L", StringComparison.Ordinal) || !int.TryParse(parts[2].Substring(1), CultureInfo.InvariantCulture, out var lLevel))
         {
             return false;
         }

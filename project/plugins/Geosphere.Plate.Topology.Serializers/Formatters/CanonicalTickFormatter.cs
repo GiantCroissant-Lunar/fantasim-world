@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for CanonicalTick.
 /// Per RFC-V2-0010 and RFC-V2-0005, CanonicalTick is encoded as raw Int64.
 /// </summary>
-internal class CanonicalTickFormatter : IMessagePackFormatter<CanonicalTick>
+internal sealed class CanonicalTickFormatter : IMessagePackFormatter<CanonicalTick>
 {
     public void Serialize(ref MessagePackWriter writer, CanonicalTick value, MessagePackSerializerOptions options)
     {

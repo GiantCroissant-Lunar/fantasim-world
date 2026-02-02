@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for PlateId.
 /// Encoded as raw Guid (binary).
 /// </summary>
-internal class PlateIdFormatter : IMessagePackFormatter<PlateId>
+internal sealed class PlateIdFormatter : IMessagePackFormatter<PlateId>
 {
     public void Serialize(ref MessagePackWriter writer, PlateId value, MessagePackSerializerOptions options)
     {

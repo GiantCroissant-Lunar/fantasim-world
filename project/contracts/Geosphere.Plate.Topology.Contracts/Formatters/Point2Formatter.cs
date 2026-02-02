@@ -1,15 +1,13 @@
-using System;
 using MessagePack;
 using MessagePack.Formatters;
 using UnifyGeometry;
 
-namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
+namespace FantaSim.Geosphere.Plate.Topology.Contracts;
 
 /// <summary>
-/// Custom MessagePack formatter for Point2.
-/// Format: [x, y]
+/// MessagePack formatter for Point2 type.
 /// </summary>
-internal sealed class Point2Formatter : IMessagePackFormatter<Point2>
+public sealed class Point2Formatter : IMessagePackFormatter<Point2>
 {
     public void Serialize(ref MessagePackWriter writer, Point2 value, MessagePackSerializerOptions options)
     {
@@ -20,15 +18,10 @@ internal sealed class Point2Formatter : IMessagePackFormatter<Point2>
 
     public Point2 Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
-        if (reader.TryReadNil())
+        var length = reader.ReadArrayHeader();
+        if (length != 2)
         {
-            throw new InvalidOperationException("Point2 cannot be nil");
-        }
-
-        var count = reader.ReadArrayHeader();
-        if (count != 2)
-        {
-            throw new InvalidOperationException($"Point2 expected 2 elements, got {count}");
+            throw new MessagePackSerializationException($"Invalid Point2 format. Expected 2 elements but got {length}");
         }
 
         var x = reader.ReadDouble();

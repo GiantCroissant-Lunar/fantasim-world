@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for BoundaryId.
 /// Encoded as raw Guid (binary).
 /// </summary>
-internal class BoundaryIdFormatter : IMessagePackFormatter<BoundaryId>
+internal sealed class BoundaryIdFormatter : IMessagePackFormatter<BoundaryId>
 {
     public void Serialize(ref MessagePackWriter writer, BoundaryId value, MessagePackSerializerOptions options)
     {

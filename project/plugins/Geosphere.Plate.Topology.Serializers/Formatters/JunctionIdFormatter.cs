@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for JunctionId.
 /// Encoded as raw Guid (binary).
 /// </summary>
-internal class JunctionIdFormatter : IMessagePackFormatter<JunctionId>
+internal sealed class JunctionIdFormatter : IMessagePackFormatter<JunctionId>
 {
     public void Serialize(ref MessagePackWriter writer, JunctionId value, MessagePackSerializerOptions options)
     {

@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for EventId.
 /// Encoded as raw Guid (binary).
 /// </summary>
-internal class EventIdFormatter : IMessagePackFormatter<EventId>
+internal sealed class EventIdFormatter : IMessagePackFormatter<EventId>
 {
     public void Serialize(ref MessagePackWriter writer, EventId value, MessagePackSerializerOptions options)
     {

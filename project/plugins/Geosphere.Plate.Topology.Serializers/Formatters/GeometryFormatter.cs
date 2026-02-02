@@ -12,7 +12,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// LineSegment: [1, startX, startY, endX, endY]
 /// Polyline: [2, x1, y1, x2, y2, ...]
 /// </summary>
-internal class GeometryFormatter : IMessagePackFormatter<IGeometry?>
+internal sealed class GeometryFormatter : IMessagePackFormatter<IGeometry?>
 {
     public void Serialize(ref MessagePackWriter writer, IGeometry? value, MessagePackSerializerOptions options)
     {

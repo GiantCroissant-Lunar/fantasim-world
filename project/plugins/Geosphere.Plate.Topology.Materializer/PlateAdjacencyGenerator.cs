@@ -64,25 +64,4 @@ public sealed class PlateAdjacencyGenerator : IDerivedProductGenerator<PlateAdja
 
         return new PlateAdjacencyGraph(projected);
     }
-
-    private sealed class PlateIdRfcComparer : IComparer<PlateId>
-    {
-        public static PlateIdRfcComparer Instance { get; } = new();
-
-        public int Compare(PlateId x, PlateId y) => GuidOrdering.CompareRfc4122(x.Value, y.Value);
-    }
-
-    private sealed class PlateAdjacencySortComparer : IComparer<(PlateAdjacency adjacency, Guid boundaryIdGuid)>
-    {
-        public static PlateAdjacencySortComparer Instance { get; } = new();
-
-        public int Compare((PlateAdjacency adjacency, Guid boundaryIdGuid) x, (PlateAdjacency adjacency, Guid boundaryIdGuid) y)
-        {
-            var plateCmp = GuidOrdering.CompareRfc4122(x.adjacency.PlateId.Value, y.adjacency.PlateId.Value);
-            if (plateCmp != 0)
-                return plateCmp;
-
-            return GuidOrdering.CompareRfc4122(x.boundaryIdGuid, y.boundaryIdGuid);
-        }
-    }
 }

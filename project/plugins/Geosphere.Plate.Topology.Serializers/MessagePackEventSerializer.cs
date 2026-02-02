@@ -144,7 +144,7 @@ public static class MessagePackEventSerializer
 
         // Validate event type matches T
         var expectedTypeId = EventTypeRegistry.GetId(typeof(T));
-        if (eventType != expectedTypeId)
+        if (!string.Equals(eventType, expectedTypeId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Event type mismatch. Expected {expectedTypeId}, got {eventType}");
         }

@@ -43,7 +43,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     /// Ensures read-modify-write atomicity within a single process.
     /// Key is the stream prefix string for efficient lookup.
     /// </summary>
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _streamLocks = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _streamLocks = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Opens or creates an event store at the specified path.
@@ -436,7 +436,7 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         if (lastValue != null && MessagePackEventRecordSerializer.TryDeserializeRecord(lastValue, out var lastRecord))
         {
-            return new StreamHead(lastSequence, lastRecord.Hash);
+            return new StreamHead(lastSequence, lastRecord.Hash, lastRecord.Tick);
         }
 
         // Stream has head key but no event - shouldn't happen but return empty

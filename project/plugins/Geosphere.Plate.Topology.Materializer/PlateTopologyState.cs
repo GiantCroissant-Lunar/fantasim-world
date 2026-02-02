@@ -19,17 +19,17 @@ public sealed class PlateTopologyState : IPlateTopologyIndexedStateView
 
     public TruthStreamIdentity Identity { get; }
 
-    public Dictionary<PlateId, PlateEntity> Plates { get; } = new();
+    public IDictionary<PlateId, PlateEntity> Plates { get; } = new Dictionary<PlateId, PlateEntity>();
 
-    public Dictionary<BoundaryId, BoundaryEntity> Boundaries { get; } = new();
+    public IDictionary<BoundaryId, BoundaryEntity> Boundaries { get; } = new Dictionary<BoundaryId, BoundaryEntity>();
 
-    public Dictionary<JunctionId, JunctionEntity> Junctions { get; } = new();
+    public IDictionary<JunctionId, JunctionEntity> Junctions { get; } = new Dictionary<JunctionId, JunctionEntity>();
 
     public long LastEventSequence { get; private set; }
 
     public PlateTopologyIndices Indices { get; private set; }
 
-    public List<InvariantViolation> Violations { get; } = new();
+    public IList<InvariantViolation> Violations { get; } = new List<InvariantViolation>();
 
     internal void SetLastEventSequence(long sequence)
     {

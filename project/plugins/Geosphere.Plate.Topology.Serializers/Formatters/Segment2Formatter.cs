@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for Segment2.
 /// Format: [start_x, start_y, end_x, end_y]
 /// </summary>
-internal class Segment2Formatter : IMessagePackFormatter<Segment2>
+internal sealed class Segment2Formatter : IMessagePackFormatter<Segment2>
 {
     public void Serialize(ref MessagePackWriter writer, Segment2 value, MessagePackSerializerOptions options)
     {

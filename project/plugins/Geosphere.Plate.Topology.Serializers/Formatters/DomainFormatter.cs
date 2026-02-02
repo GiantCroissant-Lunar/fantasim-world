@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for Domain type.
 /// Domain has a private constructor which requires custom serialization.
 /// </summary>
-internal class DomainFormatter : IMessagePackFormatter<Domain>
+internal sealed class DomainFormatter : IMessagePackFormatter<Domain>
 {
     public void Serialize(ref MessagePackWriter writer, Domain value, MessagePackSerializerOptions options)
     {

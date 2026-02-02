@@ -9,7 +9,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Serializers.Formatters;
 /// Custom MessagePack formatter for Polyline2.
 /// Format: [x1, y1, x2, y2, ...]
 /// </summary>
-internal class Polyline2Formatter : IMessagePackFormatter<Polyline2?>
+internal sealed class Polyline2Formatter : IMessagePackFormatter<Polyline2?>
 {
     public void Serialize(ref MessagePackWriter writer, Polyline2? value, MessagePackSerializerOptions options)
     {
