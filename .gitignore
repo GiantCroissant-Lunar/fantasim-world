@@ -84,3 +84,5 @@ ref-projects/
 build_output*.txt
 TestResults/
 nul
+
+models.json
