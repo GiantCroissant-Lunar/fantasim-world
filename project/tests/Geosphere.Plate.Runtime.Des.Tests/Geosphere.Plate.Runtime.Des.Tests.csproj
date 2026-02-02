@@ -27,7 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\plugins\Geosphere.Plate.Runtime.Des\Geosphere.Plate.Runtime.Des.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\fantasim-shared\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
+    <ProjectReference Include="..\..\..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
   </ItemGroup>
 
 </Project>

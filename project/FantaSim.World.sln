@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.NamespaceUsingScope
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeDete.Time.Primitives", "..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj", "{ED18EF5D-9DDB-4FA4-AA47-5A68E327E878}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantaSim.Shared", "..\..\fantasim-shared\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj", "{75DF1F4D-1D75-47D4-8168-5A32C85E030A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FantaSim.Shared", "..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj", "{75DF1F4D-1D75-47D4-8168-5A32C85E030A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "General.AutoToString", "..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString\General.AutoToString.csproj", "{A210AF81-ECC6-40C6-AD93-62C7CBE0D648}"
 EndProject

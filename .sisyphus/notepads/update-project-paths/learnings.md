@@ -1,15 +1,16 @@
 Changes made:
-- Updated project/FantaSim.World.sln to reference the double-nested fantasim-shared path
+- Reverted references that previously pointed to the incorrect double-nested path and updated them to the single-directory layout.
+- Updated project/FantaSim.World.sln to reference "..\\..\\fantasim-shared\\project\\contracts\\FantaSim.Shared\\FantaSim.Shared.csproj"
 - Updated two project references:
   - project/plugins/Geosphere.Plate.Runtime.Des/Geosphere.Plate.Runtime.Des.csproj
   - project/tests/Geosphere.Plate.Runtime.Des.Tests/Geosphere.Plate.Runtime.Des.Tests.csproj
-- Updated project/Directory.Build.targets to import from $(FantaSimSharedRoot)project\build\FantaSim.Shared.targets
+- Ensured project/Directory.Build.targets sets FantaSimSharedRoot to "$(MSBuildThisFileDirectory)..\\..\\fantasim-shared\\" and imports $(FantaSimSharedRoot)project\\build\\FantaSim.Shared.targets
 
 Why:
-- The fantasim-shared repo was cloned creating fantasim-shared/fantasim-shared; paths must include extra nesting.
+- The fantasim-shared repo was added with a single directory structure: fantasim-shared/project/..., not fantasim-shared/fantasim-shared/project/...
 
 Successful approach:
-- Searched for occurrences of FantaSim.Shared.csproj and FantaSimSharedRoot, updated occurrences precisely.
+- Searched for exact occurrences of FantaSim.Shared.csproj and FantaSimSharedRoot, updated only those references.
 
 Gotchas:
-- Committing triggered git hooks that normalized line endings; I re-ran commit after hooks fixed mixed line endings.
+- Earlier edits (by a teammate or prior run) introduced a wrong double-nested path; this change restores the intended single-directory layout.
