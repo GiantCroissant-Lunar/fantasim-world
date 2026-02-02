@@ -25,6 +25,18 @@ repos:
         args: [--disable, MD013, MD031, MD032, MD033, MD034, MD036, MD040, MD041, --]
         exclude: '^(node_modules/|docs/_inbox/)'
 
+  # Ruff - Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      # Run the linter with auto-fix
+      - id: ruff
+        args: [--fix]
+        files: ^scripts/.*\.py$
+      # Run the formatter
+      - id: ruff-format
+        files: ^scripts/.*\.py$
+
   # Local hooks
   - repo: local
     hooks:

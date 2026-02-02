@@ -15,12 +15,14 @@ The wrapper is encoded as a MessagePack **array(2)**:
 ```
 
 ### Index 0: `externalEventTypeId` (MessagePack **str**)
+
 - The event type discriminator string
 - Encoded as `str8`, `str16`, or `str32` (auto-selected by MessagePack based on length)
 - Examples: `"PlateCreatedEvent"`, `"BoundaryCreatedEvent"`, `"JunctionRetiredEvent"`
 - Must match a key in `EventTypeRegistry.IdToType` mapping
 
 ### Index 1: `payloadBytes` (MessagePack **bin**)
+
 - The serialized event payload
 - Encoded as `bin8`, `bin16`, or `bin32` (auto-selected by MessagePack based on length)
 - Contains the full event object with RFC-V2-0002 envelope fields:
@@ -36,11 +38,13 @@ The wrapper is encoded as a MessagePack **array(2)**:
 ## MessagePack Encoding Details
 
 ### str Encoding
+
 - ASCII-compatible strings use `str8` (0xC9) or `str16` (0xDA)
 - UTF-8 strings with multi-byte characters use `str16` (0xDA) or `str32` (0xDB)
 - Format selection is automatic based on byte length
 
 ### bin Encoding
+
 - `< 2^8` bytes: `bin8` (0xC4)
 - `< 2^16` bytes: `bin16` (0xC5)
 - `< 2^32` bytes: `bin32` (0xC6)
@@ -49,6 +53,7 @@ The wrapper is encoded as a MessagePack **array(2)**:
 ## Example
 
 ### Serialized Wrapper (hex)
+
 ```
 96 92 50 6C 61 74 65 43 72 65 61 74 65 64 45 76 65 6E 74 C4 2A 81 ...
 ```
@@ -61,6 +66,7 @@ Breakdown:
 - `81 ...` = payload bytes (first byte indicates map(1))
 
 ### Event Payload Structure
+
 The payload (inside `bin`) contains the full event with RFC envelope fields:
 
 ```
@@ -98,6 +104,7 @@ Event type IDs are stable string identifiers registered in `EventTypeRegistry`:
 | `JunctionRetiredEvent` | `JunctionRetiredEvent` | Lifecycle |
 
 ### Validation
+
 - Type IDs are validated at startup in `EventTypeRegistry` static constructor
 - Duplicate IDs throw `InvalidOperationException`
 - Unregistered types throw `UnregisteredEventTypeException`
