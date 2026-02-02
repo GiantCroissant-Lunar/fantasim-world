@@ -20,7 +20,6 @@ Usage:
 """
 
 import re
-import shutil
 from pathlib import Path
 from typing import Any
 
@@ -264,7 +263,7 @@ def sync_rules() -> int:
         count = sync_single_file(tool_name, target_path)
         total_count += count
 
-    print(f"\nSync complete!")
+    print("\nSync complete!")
     print(f"Total rule files processed: {total_count}")
     return total_count
 

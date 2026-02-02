@@ -1,30 +1,34 @@
+import argparse
+import datetime
 import os
 import re
-import datetime
-import argparse
 import sys
 
 # Configuration
 DOCS_DIR = "docs"
 TODAY = datetime.date.today().isoformat()
 
+
 def get_file_stats(filepath):
     """Returns basic file stats for logging."""
     return f"{filepath}"
 
+
 def to_kebab_case(string):
     """Converts a string to kebab-case."""
     string = string.lower()
-    string = re.sub(r'[^a-z0-9\s-]', '', string)
-    string = re.sub(r'\s+', '-', string)
+    string = re.sub(r"[^a-z0-9\s-]", "", string)
+    string = re.sub(r"\s+", "-", string)
     return string
+
 
 def extract_title_from_content(content):
     """Extracts title from the first H1 header in markdown content."""
-    match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+    match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
     if match:
         return match.group(1).strip()
     return None
+
 
 def parse_pseudo_frontmatter(content):
     """
@@ -44,34 +48,35 @@ def parse_pseudo_frontmatter(content):
 
         # Check for "**Key**: Value" or "Key: Value"
         # Regex to match: optional bold chars, Key, optional bold chars, colon, whitespace, Value
-        match = re.match(r'^(\*\*)?([a-zA-Z0-9\s]+)(\*\*)?:\s*(.+)$', line)
+        match = re.match(r"^(\*\*)?([a-zA-Z0-9\s]+)(\*\*)?:\s*(.+)$", line)
         if match:
             key = match.group(2).strip().lower()
             value = match.group(4).strip()
 
             # Map common keys
-            if key in ['status', 'state']:
-                metadata['status'] = value
-            elif key in ['date', 'created']:
-                metadata['date'] = value
-            elif key in ['tags', 'keywords']:
-                metadata['tags'] = [t.strip() for t in value.split(',')]
-            elif key in ['reference', 'refs']:
-                 metadata['reference'] = value
+            if key in ["status", "state"]:
+                metadata["status"] = value
+            elif key in ["date", "created"]:
+                metadata["date"] = value
+            elif key in ["tags", "keywords"]:
+                metadata["tags"] = [t.strip() for t in value.split(",")]
+            elif key in ["reference", "refs"]:
+                metadata["reference"] = value
             # We don't preserve everything, essentially we consume lines that look like metadata
         elif line.strip() == "":
-            pass # Skip empty lines while scanning
+            pass  # Skip empty lines while scanning
         elif line.startswith("#"):
-            scanning = False # Header stops scanning
+            scanning = False  # Header stops scanning
             new_lines.append(line)
         else:
-            scanning = False # Regular text stops scanning
+            scanning = False  # Regular text stops scanning
             new_lines.append(line)
         idx += 1
 
     # Append the rest of the file
     new_lines.extend(lines[idx:])
     return metadata, "\n".join(new_lines)
+
 
 def generate_frontmatter_yaml(meta):
     """Generates the YAML frontmatter string."""
@@ -91,20 +96,21 @@ def generate_frontmatter_yaml(meta):
     if tags:
         yaml += "tags:\n"
         for tag in tags:
-            yaml += f'  - {tag}\n'
+            yaml += f"  - {tag}\n"
     else:
         yaml += "tags: []\n"
 
     # Add any extra fields we decided to keep
     for k, v in meta.items():
-        if k not in ['title', 'id', 'description', 'date', 'tags']:
+        if k not in ["title", "id", "description", "date", "tags"]:
             yaml += f'{k}: "{v}"\n'
 
     yaml += "---\n\n"
     return yaml
 
+
 def process_markdown_file(filepath, dry_run=False):
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
     # Check if already has frontmatter
@@ -114,21 +120,21 @@ def process_markdown_file(filepath, dry_run=False):
         # If it has frontmatter, check for duplicate H1
         fm_end = content.find("\n---\n", 4)
         if fm_end != -1:
-            fm_end_idx = fm_end + 5 # include \n---\n
+            fm_end_idx = fm_end + 5  # include \n---\n
             frontmatter = content[:fm_end_idx]
             body = content[fm_end_idx:]
 
             # Look for H1 at start of body
-            match = re.search(r'^\s*#\s+(.+)$', body, re.MULTILINE)
-            if match and match.start() < 50: # Should be near top
+            match = re.search(r"^\s*#\s+(.+)$", body, re.MULTILINE)
+            if match and match.start() < 50:  # Should be near top
                 if dry_run:
-                     print(f"[DRY RUN] Would remove duplicate H1 in {filepath}: '{match.group(1)}'")
+                    print(f"[DRY RUN] Would remove duplicate H1 in {filepath}: '{match.group(1)}'")
                 else:
-                     # Remove H1
-                     new_body = body[:match.start()] + body[match.end():].lstrip()
-                     with open(filepath, 'w', encoding='utf-8') as f:
-                         f.write(frontmatter + new_body)
-                     print(f"[FIX] Removed duplicate H1 from {filepath}")
+                    # Remove H1
+                    new_body = body[: match.start()] + body[match.end() :].lstrip()
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        f.write(frontmatter + new_body)
+                    print(f"[FIX] Removed duplicate H1 from {filepath}")
         return
 
     filename = os.path.basename(filepath)
@@ -136,10 +142,10 @@ def process_markdown_file(filepath, dry_run=False):
 
     # Defaults
     meta = {
-        'id': to_kebab_case(name_no_ext),
-        'title': name_no_ext.replace('-', ' ').replace('_', ' ').title(),
-        'date': TODAY,
-        'tags': []
+        "id": to_kebab_case(name_no_ext),
+        "title": name_no_ext.replace("-", " ").replace("_", " ").title(),
+        "date": TODAY,
+        "tags": [],
     }
 
     # Extract pseudo-frontmatter
@@ -149,11 +155,13 @@ def process_markdown_file(filepath, dry_run=False):
     # Try to find a better title from the content if not explicitly set in pseudo
     content_title = extract_title_from_content(remaining_content)
     if content_title:
-        if 'title' not in pseudo_meta:
-            meta['title'] = content_title
+        if "title" not in pseudo_meta:
+            meta["title"] = content_title
 
         # Remove the H1 from remaining_content since we moved it to frontmatter
-        remaining_content = re.sub(r'^\s*#\s+.+\n?', '', remaining_content, count=1, flags=re.MULTILINE).lstrip()
+        remaining_content = re.sub(
+            r"^\s*#\s+.+\n?", "", remaining_content, count=1, flags=re.MULTILINE
+        ).lstrip()
 
     # Construct new content
     frontmatter = generate_frontmatter_yaml(meta)
@@ -164,28 +172,29 @@ def process_markdown_file(filepath, dry_run=False):
         print(f"  > Generated Title: {meta['title']}")
         print(f"  > Generated ID:    {meta['id']}")
     else:
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(new_content)
         print(f"[UPDATE] Updated {filepath}")
 
+
 def process_text_file(filepath, dry_run=False):
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
     filename = os.path.basename(filepath)
     name_no_ext = os.path.splitext(filename)[0]
 
     meta = {
-        'id': to_kebab_case(name_no_ext),
-        'title': name_no_ext.replace('-', ' ').replace('_', ' ').title(),
-        'date': TODAY,
-        'tags': ['conversation-export']
+        "id": to_kebab_case(name_no_ext),
+        "title": name_no_ext.replace("-", " ").replace("_", " ").title(),
+        "date": TODAY,
+        "tags": ["conversation-export"],
     }
 
     # Try to extract date from filename (e.g. 2026-01-26-...)
-    date_match = re.match(r'(\d{4}-\d{2}-\d{2})', filename)
+    date_match = re.match(r"(\d{4}-\d{2}-\d{2})", filename)
     if date_match:
-        meta['date'] = date_match.group(1)
+        meta["date"] = date_match.group(1)
 
     frontmatter = generate_frontmatter_yaml(meta)
 
@@ -197,14 +206,17 @@ def process_text_file(filepath, dry_run=False):
     if dry_run:
         print(f"[DRY RUN] Would convert {filepath} -> {new_filepath}")
     else:
-        with open(new_filepath, 'w', encoding='utf-8') as f:
+        with open(new_filepath, "w", encoding="utf-8") as f:
             f.write(new_content)
         os.remove(filepath)
         print(f"[CONVERT] Converted {filepath} -> {new_filepath}")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Organize docs and add frontmatter.")
-    parser.add_argument("--dry-run", action="store_true", help="Print actions without modifying files.")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print actions without modifying files."
+    )
     args = parser.parse_args()
 
     root_dir = os.path.abspath(DOCS_DIR)
@@ -226,6 +238,7 @@ def main():
             else:
                 # print(f"[IGNORE] Skipping {file}")
                 pass
+
 
 if __name__ == "__main__":
     main()

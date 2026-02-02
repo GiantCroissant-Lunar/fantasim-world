@@ -34,6 +34,7 @@ from typing import Any, TypeVar
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -103,6 +104,7 @@ HOOKS_TARGETS = {
 # Adapter Config Loading
 # =============================================================================
 
+
 def load_adapter_config(tool: str) -> dict[str, Any]:
     """Load adapter config for a tool from .agent/adapters/<tool>/config.yaml."""
     if tool in _adapter_configs:
@@ -164,6 +166,7 @@ def run_cleanup(tool: str) -> None:
 # Utilities
 # =============================================================================
 
+
 def extract_frontmatter(content: str) -> dict[str, str]:
     """Extract YAML frontmatter from markdown content."""
     match = re.match(r"^---\r?\n(.+?)\r?\n---", content, re.DOTALL)
@@ -193,6 +196,7 @@ def clean_dir(path: Path) -> None:
     if not path.exists():
         return
     import shutil
+
     for item in path.iterdir():
         if item.is_dir():
             shutil.rmtree(item)
@@ -211,6 +215,7 @@ def clean_files_in_dir(path: Path, pattern: str) -> None:
 # =============================================================================
 # Skills Sync
 # =============================================================================
+
 
 def create_skill_stub(skill_name: str, name: str, description: str) -> str:
     """Create stub SKILL.md content for skills."""
@@ -301,8 +306,7 @@ def sync_skills() -> int:
                     if extra_file.is_file() and extra_file.name != "SKILL.md":
                         target_extra = target_skill_dir / extra_file.name
                         target_extra.write_text(
-                            extra_file.read_text(encoding="utf-8"),
-                            encoding="utf-8"
+                            extra_file.read_text(encoding="utf-8"), encoding="utf-8"
                         )
             else:
                 # Create stub content (default)
@@ -340,6 +344,7 @@ def sync_skills_for_tools(tools: set[str] | None) -> int:
 # Rules Sync
 # =============================================================================
 
+
 def create_rule_stub(rule_name: str, name: str, description: str, depth: int = 3) -> str:
     """Create stub rule content that points to source."""
     relative_prefix = "../" * depth
@@ -351,7 +356,7 @@ description: {description}
 source: .agent/rules/{rule_name}
 ---
 
-# {to_title_case(name.replace('-', ' '))}
+# {to_title_case(name.replace("-", " "))}
 
 **This is a pointer file. Read the full rule from the source.**
 
@@ -425,7 +430,9 @@ def create_concat_rules_stub(
     else:
         lines.append("## Learnings")
         lines.append("")
-        lines.append("No reflections yet. Use `@reflect` after completing features to capture learnings.")
+        lines.append(
+            "No reflections yet. Use `@reflect` after completing features to capture learnings."
+        )
         lines.append("")
 
     return "\n".join(lines)
@@ -537,7 +544,9 @@ def sync_rules() -> int:
     for tool, target_file in RULES_CONCAT_TARGETS.items():
         stub_content = create_concat_rules_stub(tool, rules_data, reflections_data)
         target_file.write_text(stub_content, encoding="utf-8")
-        print(f"  [OK] {len(rules_data)} rules + {len(reflections_data)} reflections -> {target_file}")
+        print(
+            f"  [OK] {len(rules_data)} rules + {len(reflections_data)} reflections -> {target_file}"
+        )
 
     return rule_count
 
@@ -545,6 +554,7 @@ def sync_rules() -> int:
 # =============================================================================
 # Commands/Workflows Sync
 # =============================================================================
+
 
 def create_gemini_command_stub(cmd_name: str, description: str) -> str:
     """Create an MD stub for Gemini commands."""
@@ -576,7 +586,7 @@ description: {description}
 source: .agent/commands/{cmd_name}.md
 ---
 
-# {to_title_case(cmd_name.replace('.', ' ').replace('-', ' '))}
+# {to_title_case(cmd_name.replace(".", " ").replace("-", " "))}
 
 **This is a pointer file. Read the full workflow from the source.**
 
@@ -694,6 +704,7 @@ def sync_commands() -> int:
 # =============================================================================
 # Hooks Sync
 # =============================================================================
+
 
 def create_hook_stub(hook_name: str, description: str, depth: int = 2) -> str:
     """Create a hook stub that points to the source."""
@@ -815,6 +826,7 @@ def sync_hooks_for_tools(tools: set[str] | None) -> int:
 # Main
 # =============================================================================
 
+
 def run_all_cleanups() -> None:
     """Run cleanup for all tools with adapter configs."""
     if not ADAPTERS_DIR.exists():
@@ -830,7 +842,9 @@ def run_all_cleanups() -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Sync agent configuration to tool-specific directories")
+    parser = argparse.ArgumentParser(
+        description="Sync agent configuration to tool-specific directories"
+    )
     parser.add_argument("--skills", action="store_true", help="Sync skills only")
     parser.add_argument("--rules", action="store_true", help="Sync rules only")
     parser.add_argument("--commands", action="store_true", help="Sync commands/workflows only")
@@ -871,7 +885,7 @@ def main():
     if sync_all:
         run_all_cleanups()
 
-    print(f"\nSync complete!")
+    print("\nSync complete!")
     print(f"Total items synced: {total}")
 
 

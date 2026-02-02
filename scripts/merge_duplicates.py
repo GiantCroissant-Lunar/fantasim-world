@@ -9,13 +9,13 @@ Intelligently merges files with partial duplication by:
 4. Removing redundant source files
 """
 
-import json
-from pathlib import Path
-from typing import List, Dict, Set, Tuple
 import argparse
+import hashlib
+import json
 import sys
 from difflib import SequenceMatcher
-import hashlib
+from pathlib import Path
+from typing import List, Tuple
 
 
 class DocumentMerger:
@@ -34,7 +34,7 @@ class DocumentMerger:
             print("Run 'task docs:analyze-inbox' first to generate analysis")
             sys.exit(1)
 
-        with open(self.analysis_path, 'r', encoding='utf-8') as f:
+        with open(self.analysis_path, "r", encoding="utf-8") as f:
             self.analysis_data = json.load(f)
 
         print(f"Loaded analysis: {self.analysis_data['summary']['total_files']} files")
@@ -42,19 +42,17 @@ class DocumentMerger:
     def read_file(self, filename: str) -> Tuple[str, List[str]]:
         """Read file content and return (content, lines)."""
         file_path = self.inbox_path / filename
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
         return content, content.splitlines()
 
     def get_line_hashes(self, lines: List[str]) -> List[str]:
         """Get hash for each line."""
-        return [
-            hashlib.md5(line.strip().encode()).hexdigest()
-            for line in lines
-            if line.strip()
-        ]
+        return [hashlib.md5(line.strip().encode()).hexdigest() for line in lines if line.strip()]
 
-    def find_unique_sections(self, lines1: List[str], lines2: List[str]) -> Tuple[List[str], List[str], List[str]]:
+    def find_unique_sections(
+        self, lines1: List[str], lines2: List[str]
+    ) -> Tuple[List[str], List[str], List[str]]:
         """
         Find unique and common sections between two files.
         Returns (unique_to_file1, common, unique_to_file2)
@@ -73,7 +71,7 @@ class DocumentMerger:
         for match in matcher.get_matching_blocks():
             if match.size > 0:
                 # Add common section
-                common.extend(lines1[match.a:match.a + match.size])
+                common.extend(lines1[match.a : match.a + match.size])
 
                 # Mark as processed
                 for i in range(match.a, match.a + match.size):
@@ -108,28 +106,28 @@ class DocumentMerger:
 
         # Header
         merged.append(f"# Merged Document: {file1} + {file2}\n")
-        merged.append(f"*This document combines content from multiple sources*\n\n")
+        merged.append("*This document combines content from multiple sources*\n\n")
         merged.append("---\n\n")
 
         # Common content (appears in both)
         if common:
             merged.append("## Common Content\n\n")
-            merged.extend(line + '\n' for line in common)
+            merged.extend(line + "\n" for line in common)
             merged.append("\n---\n\n")
 
         # Unique content from file1
         if unique1:
             merged.append(f"## Additional Content from {file1}\n\n")
-            merged.extend(line + '\n' for line in unique1)
+            merged.extend(line + "\n" for line in unique1)
             merged.append("\n---\n\n")
 
         # Unique content from file2
         if unique2:
             merged.append(f"## Additional Content from {file2}\n\n")
-            merged.extend(line + '\n' for line in unique2)
+            merged.extend(line + "\n" for line in unique2)
             merged.append("\n")
 
-        return ''.join(merged)
+        return "".join(merged)
 
     def merge_multiple_files(self, files: List[str]) -> str:
         """
@@ -157,26 +155,26 @@ class DocumentMerger:
 
             # Rebuild
             new_result = []
-            new_result.append(f"# Merged Document: {', '.join(files[:i+1])}\n")
-            new_result.append(f"*Combined from {i+1} sources*\n\n")
+            new_result.append(f"# Merged Document: {', '.join(files[: i + 1])}\n")
+            new_result.append(f"*Combined from {i + 1} sources*\n\n")
             new_result.append("---\n\n")
 
             if common:
                 new_result.append("## Common Content\n\n")
-                new_result.extend(line + '\n' for line in common)
+                new_result.extend(line + "\n" for line in common)
                 new_result.append("\n---\n\n")
 
             if unique_result:
-                new_result.append(f"## Additional Content from Previous Merge\n\n")
-                new_result.extend(line + '\n' for line in unique_result)
+                new_result.append("## Additional Content from Previous Merge\n\n")
+                new_result.extend(line + "\n" for line in unique_result)
                 new_result.append("\n---\n\n")
 
             if unique_next:
                 new_result.append(f"## Additional Content from {files[i]}\n\n")
-                new_result.extend(line + '\n' for line in unique_next)
+                new_result.extend(line + "\n" for line in unique_next)
                 new_result.append("\n")
 
-            result = ''.join(new_result)
+            result = "".join(new_result)
 
         return result
 
@@ -191,18 +189,18 @@ class DocumentMerger:
 
     def process_exact_duplicates(self):
         """Handle exact duplicates - just delete extras."""
-        exact_dupes = self.analysis_data.get('exact_duplicates', [])
+        exact_dupes = self.analysis_data.get("exact_duplicates", [])
 
         if not exact_dupes:
             print("\n✓ No exact duplicates to process")
             return
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Processing {len(exact_dupes)} groups of exact duplicates")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         for i, group in enumerate(exact_dupes, 1):
-            files = group['files']
+            files = group["files"]
             print(f"\nGroup {i}: {len(files)} identical files")
 
             # Keep first, delete rest
@@ -223,32 +221,29 @@ class DocumentMerger:
         """
         Process similar files by merging those with high overlap.
         """
-        similar = self.analysis_data.get('similar_pairs', [])
+        similar = self.analysis_data.get("similar_pairs", [])
 
         if not similar:
             print("\n✓ No similar files to process")
             return
 
         # Filter by minimum overlap
-        candidates = [
-            pair for pair in similar
-            if pair.get('line_overlap', 0) >= min_overlap
-        ]
+        candidates = [pair for pair in similar if pair.get("line_overlap", 0) >= min_overlap]
 
         if not candidates:
             print(f"\n✓ No files with ≥{min_overlap:.0%} line overlap")
             return
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Processing {len(candidates)} similar file pairs (≥{min_overlap:.0%} overlap)")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Track which files have been merged
         merged_files = set()
 
         for i, pair in enumerate(candidates, 1):
-            file1 = pair['file1']
-            file2 = pair['file2']
+            file1 = pair["file1"]
+            file2 = pair["file2"]
 
             # Skip if already merged
             if file1 in merged_files or file2 in merged_files:
@@ -271,7 +266,7 @@ class DocumentMerger:
 
             if not self.dry_run:
                 # Write merged file
-                with open(merged_path, 'w', encoding='utf-8') as f:
+                with open(merged_path, "w", encoding="utf-8") as f:
                     f.write(merged_content)
                 print(f"    ✓ Created: {merged_name}")
 
@@ -291,42 +286,35 @@ class DocumentMerger:
         self.load_analysis()
 
         mode = "DRY RUN" if self.dry_run else "LIVE"
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Smart Document Merger - {mode}")
         print(f"Minimum overlap threshold: {min_overlap:.0%}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         self.process_exact_duplicates()
         self.process_similar_files(min_overlap)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("Merge Complete!")
         if self.dry_run:
             print("\nThis was a DRY RUN. No changes were made.")
             print("Run without --dry-run to apply changes.")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Intelligently merge files with partial duplication"
     )
+    parser.add_argument("--inbox-path", type=Path, default=None, help="Path to _inbox directory")
     parser.add_argument(
-        '--inbox-path',
-        type=Path,
-        default=None,
-        help='Path to _inbox directory'
+        "--dry-run", action="store_true", help="Preview merges without making changes"
     )
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview merges without making changes'
-    )
-    parser.add_argument(
-        '--min-overlap',
+        "--min-overlap",
         type=float,
         default=0.4,
-        help='Minimum line overlap to trigger merge (0.0-1.0, default: 0.4)'
+        help="Minimum line overlap to trigger merge (0.0-1.0, default: 0.4)",
     )
 
     args = parser.parse_args()
@@ -335,15 +323,15 @@ def main():
     if args.inbox_path is None:
         script_dir = Path(__file__).parent
         project_root = script_dir.parent
-        inbox_path = project_root / 'docs' / '_inbox'
+        inbox_path = project_root / "docs" / "_inbox"
     else:
         inbox_path = args.inbox_path
 
-    analysis_path = inbox_path / '_analysis' / 'duplicates.json'
+    analysis_path = inbox_path / "_analysis" / "duplicates.json"
 
     merger = DocumentMerger(inbox_path, analysis_path, dry_run=args.dry_run)
     merger.run(min_overlap=args.min_overlap)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

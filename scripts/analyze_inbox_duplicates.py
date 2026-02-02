@@ -6,20 +6,19 @@ Analyzes docs/_inbox for content similarity and partial duplicates.
 Provides interactive merging and cleanup recommendations.
 """
 
-import os
-import re
+import argparse
 import hashlib
-from pathlib import Path
-from typing import Dict, List, Set, Tuple
+import json
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-import json
-import argparse
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 
 @dataclass
 class FileInfo:
     """Information about a file in the inbox."""
+
     path: Path
     size: int
     hash: str  # Hash of entire file content
@@ -35,6 +34,7 @@ class FileInfo:
 @dataclass
 class SimilarityMatch:
     """Represents a similarity match between two files."""
+
     file1: str
     file2: str
     similarity: float  # Content similarity (0.0-1.0)
@@ -59,16 +59,16 @@ class InboxAnalyzer:
         """Load all markdown and text files from inbox."""
         print(f"Loading files from {self.inbox_path}...")
 
-        for file_path in self.inbox_path.rglob('*'):
+        for file_path in self.inbox_path.rglob("*"):
             if not file_path.is_file():
                 continue
 
             # Only process text-based files
-            if file_path.suffix.lower() not in ['.md', '.txt']:
+            if file_path.suffix.lower() not in [".md", ".txt"]:
                 continue
 
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
 
                 # Hash entire file
@@ -88,7 +88,7 @@ class InboxAnalyzer:
                     hash=file_hash,
                     content=content,
                     lines=lines,
-                    line_hashes=line_hashes
+                    line_hashes=line_hashes,
                 )
             except Exception as e:
                 print(f"Warning: Could not read {file_path}: {e}")
@@ -105,10 +105,7 @@ class InboxAnalyzer:
                 hash_to_files[info.hash] = []
             hash_to_files[info.hash].append(path)
 
-        self.exact_duplicates = {
-            h: files for h, files in hash_to_files.items()
-            if len(files) > 1
-        }
+        self.exact_duplicates = {h: files for h, files in hash_to_files.items() if len(files) > 1}
 
         if self.exact_duplicates:
             print(f"Found {len(self.exact_duplicates)} groups of exact duplicates:")
@@ -123,7 +120,9 @@ class InboxAnalyzer:
         """Calculate similarity ratio between two texts."""
         return SequenceMatcher(None, content1, content2).ratio()
 
-    def calculate_line_overlap(self, line_hashes1: List[str], line_hashes2: List[str]) -> Tuple[float, int]:
+    def calculate_line_overlap(
+        self, line_hashes1: List[str], line_hashes2: List[str]
+    ) -> Tuple[float, int]:
         """
         Calculate what percentage of lines are shared between two files.
         Returns (overlap_ratio, common_line_count)
@@ -140,15 +139,16 @@ class InboxAnalyzer:
         overlap_ratio = len(common) / total
         return overlap_ratio, len(common)
 
-    def find_common_sections(self, lines1: List[str], lines2: List[str],
-                            min_section_lines: int = 10) -> List[Tuple[int, int, str]]:
+    def find_common_sections(
+        self, lines1: List[str], lines2: List[str], min_section_lines: int = 10
+    ) -> List[Tuple[int, int, str]]:
         """Find common sections between two files."""
         common_sections = []
         matcher = SequenceMatcher(None, lines1, lines2)
 
         for match in matcher.get_matching_blocks():
             if match.size >= min_section_lines:
-                section_content = '\n'.join(lines1[match.a:match.a + match.size])
+                section_content = "\n".join(lines1[match.a : match.a + match.size])
                 common_sections.append((match.a, match.a + match.size, section_content))
 
         return common_sections
@@ -162,7 +162,7 @@ class InboxAnalyzer:
         comparison_count = 0
 
         for i, (path1, info1) in enumerate(file_list):
-            for path2, info2 in file_list[i+1:]:
+            for path2, info2 in file_list[i + 1 :]:
                 comparison_count += 1
                 if comparison_count % 100 == 0:
                     print(f"  Progress: {comparison_count}/{total_comparisons} comparisons...")
@@ -178,7 +178,10 @@ class InboxAnalyzer:
                 )
 
                 # Consider files similar if EITHER metric exceeds threshold
-                if similarity >= self.similarity_threshold or line_overlap >= self.similarity_threshold:
+                if (
+                    similarity >= self.similarity_threshold
+                    or line_overlap >= self.similarity_threshold
+                ):
                     # Find common sections
                     common_sections = self.find_common_sections(
                         info1.lines, info2.lines, min_section_lines=10
@@ -195,7 +198,7 @@ class InboxAnalyzer:
                         common_lines=common_lines,
                         unique_common_lines=unique_common,
                         total_lines=total_lines,
-                        duplicate_sections=common_sections
+                        duplicate_sections=common_sections,
                     )
                     self.similar_pairs.append(match)
 
@@ -208,43 +211,45 @@ class InboxAnalyzer:
                 print(f"\n  {match.file1}")
                 print(f"  ↔ {match.file2}")
                 print(f"  Content similarity: {match.similarity:.1%}")
-                print(f"  Line overlap: {match.line_overlap:.1%} ({match.unique_common_lines} unique shared lines)")
+                print(
+                    f"  Line overlap: {match.line_overlap:.1%} ({match.unique_common_lines} unique shared lines)"
+                )
         else:
             print("No similar files found")
 
     def generate_report(self, output_path: Path):
         """Generate a detailed analysis report."""
         report = {
-            'summary': {
-                'total_files': len(self.files),
-                'exact_duplicate_groups': len(self.exact_duplicates),
-                'similar_pairs': len(self.similar_pairs),
-                'similarity_threshold': self.similarity_threshold
+            "summary": {
+                "total_files": len(self.files),
+                "exact_duplicate_groups": len(self.exact_duplicates),
+                "similar_pairs": len(self.similar_pairs),
+                "similarity_threshold": self.similarity_threshold,
             },
-            'exact_duplicates': [
+            "exact_duplicates": [
                 {
-                    'hash': hash_val[:16],
-                    'files': [Path(f).name for f in files],
-                    'size': self.files[files[0]].size
+                    "hash": hash_val[:16],
+                    "files": [Path(f).name for f in files],
+                    "size": self.files[files[0]].size,
                 }
                 for hash_val, files in self.exact_duplicates.items()
             ],
-            'similar_pairs': [
+            "similar_pairs": [
                 {
-                    'file1': match.file1,
-                    'file2': match.file2,
-                    'similarity': round(match.similarity, 3),
-                    'line_overlap': round(match.line_overlap, 3),
-                    'common_lines': match.common_lines,
-                    'unique_common_lines': match.unique_common_lines,
-                    'total_lines': match.total_lines,
-                    'sections': len(match.duplicate_sections)
+                    "file1": match.file1,
+                    "file2": match.file2,
+                    "similarity": round(match.similarity, 3),
+                    "line_overlap": round(match.line_overlap, 3),
+                    "common_lines": match.common_lines,
+                    "unique_common_lines": match.unique_common_lines,
+                    "total_lines": match.total_lines,
+                    "sections": len(match.duplicate_sections),
                 }
                 for match in self.similar_pairs
-            ]
+            ],
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
 
         print(f"\nReport saved to: {output_path}")
@@ -256,7 +261,7 @@ class InboxAnalyzer:
             f"**Analysis Date**: {Path.cwd()}\n",
             f"**Total Files**: {len(self.files)}\n",
             f"**Similarity Threshold**: {self.similarity_threshold:.0%}\n\n",
-            "---\n\n"
+            "---\n\n",
         ]
 
         # Exact duplicates section
@@ -280,22 +285,30 @@ class InboxAnalyzer:
         if self.similar_pairs:
             for i, match in enumerate(self.similar_pairs, 1):
                 lines.append(f"### Pair {i}\n\n")
-                lines.append(f"**Files**:\n")
+                lines.append("**Files**:\n")
                 lines.append(f"- `{match.file1}`\n")
                 lines.append(f"- `{match.file2}`\n\n")
-                lines.append(f"**Metrics**:\n")
+                lines.append("**Metrics**:\n")
                 lines.append(f"- Content similarity: {match.similarity:.1%}\n")
-                lines.append(f"- Line overlap: {match.line_overlap:.1%} ({match.unique_common_lines} unique shared lines)\n")
+                lines.append(
+                    f"- Line overlap: {match.line_overlap:.1%} ({match.unique_common_lines} unique shared lines)\n"
+                )
                 lines.append(f"- Common sections: {len(match.duplicate_sections)} blocks\n")
                 lines.append(f"- Total lines: {match.total_lines}\n\n")
 
                 # Recommendation based on line overlap (more actionable)
                 if match.line_overlap > 0.7:
-                    lines.append("**Recommendation**: High line overlap - strong candidate for merging\n\n")
+                    lines.append(
+                        "**Recommendation**: High line overlap - strong candidate for merging\n\n"
+                    )
                 elif match.line_overlap > 0.4:
-                    lines.append("**Recommendation**: Moderate line overlap - review for consolidation\n\n")
+                    lines.append(
+                        "**Recommendation**: Moderate line overlap - review for consolidation\n\n"
+                    )
                 else:
-                    lines.append("**Recommendation**: Low line overlap - may share common topics or boilerplate\n\n")
+                    lines.append(
+                        "**Recommendation**: Low line overlap - may share common topics or boilerplate\n\n"
+                    )
         else:
             lines.append("*No similar files found*\n\n")
 
@@ -305,7 +318,7 @@ class InboxAnalyzer:
         lines.append("2. Examine similar pairs for merge opportunities\n")
         lines.append("3. Use `task docs:merge-duplicates` to interactively merge files\n")
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
 
         print(f"Markdown report saved to: {output_path}")
@@ -317,16 +330,16 @@ class InboxAnalyzer:
         self.find_similar_files()
 
         # Generate reports
-        report_dir = self.inbox_path / '_analysis'
+        report_dir = self.inbox_path / "_analysis"
         report_dir.mkdir(exist_ok=True)
 
-        self.generate_report(report_dir / 'duplicates.json')
-        self.generate_markdown_report(report_dir / 'duplicates-report.md')
+        self.generate_report(report_dir / "duplicates.json")
+        self.generate_markdown_report(report_dir / "duplicates-report.md")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("Analysis Complete!")
-        print("="*60)
-        print(f"\nSummary:")
+        print("=" * 60)
+        print("\nSummary:")
         print(f"  Total files: {len(self.files)}")
         print(f"  Exact duplicate groups: {len(self.exact_duplicates)}")
         print(f"  Similar pairs: {len(self.similar_pairs)}")
@@ -338,16 +351,13 @@ def main():
         description="Analyze docs/_inbox for duplicates and similar content"
     )
     parser.add_argument(
-        '--inbox-path',
+        "--inbox-path",
         type=Path,
         default=None,
-        help='Path to _inbox directory (default: auto-detect)'
+        help="Path to _inbox directory (default: auto-detect)",
     )
     parser.add_argument(
-        '--threshold',
-        type=float,
-        default=0.3,
-        help='Similarity threshold (0.0-1.0, default: 0.3)'
+        "--threshold", type=float, default=0.3, help="Similarity threshold (0.0-1.0, default: 0.3)"
     )
 
     args = parser.parse_args()
@@ -356,7 +366,7 @@ def main():
     if args.inbox_path is None:
         script_dir = Path(__file__).parent
         project_root = script_dir.parent
-        inbox_path = project_root / 'docs' / '_inbox'
+        inbox_path = project_root / "docs" / "_inbox"
     else:
         inbox_path = args.inbox_path
 
@@ -370,5 +380,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

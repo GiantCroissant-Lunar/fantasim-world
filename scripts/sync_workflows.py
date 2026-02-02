@@ -70,7 +70,7 @@ def sync_workflows() -> int:
             print(f"     [OK] {filename}")
             workflow_count += 1
 
-    print(f"\nSync complete!")
+    print("\nSync complete!")
     print(f"Workflows synced: {workflow_count}")
     return workflow_count
 
