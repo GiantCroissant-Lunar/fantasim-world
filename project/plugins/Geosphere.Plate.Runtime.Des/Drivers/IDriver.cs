@@ -5,12 +5,6 @@ using FantaSim.Geosphere.Plate.Runtime.Des.Runtime;
 
 namespace FantaSim.Geosphere.Plate.Runtime.Des.Drivers;
 
-public readonly record struct DriverId(string Value);
-
-public record DriverOutput(
-    object? Signal // Opaque for now
-);
-
 public interface IDriver
 {
     DriverId Id { get; }
