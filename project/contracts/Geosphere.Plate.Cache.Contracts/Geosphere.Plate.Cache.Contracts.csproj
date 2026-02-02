@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
   </ItemGroup>
 
   <ItemGroup>
