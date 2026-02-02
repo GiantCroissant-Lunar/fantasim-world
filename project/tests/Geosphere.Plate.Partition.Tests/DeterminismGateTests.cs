@@ -127,7 +127,7 @@ public sealed class DeterminismGateTests
         var identities = new List<StreamIdentity>();
         for (int i = 0; i < 5; i++)
         {
-            identities.Add(identityComputer.ComputeStreamIdentity(topologyStream, 1, policy));
+            identities.Add(identityComputer.ComputeStreamIdentity(topologyStream, TestTick, 1, policy));
         }
 
         // Assert: All identities should be identical
@@ -150,11 +150,11 @@ public sealed class DeterminismGateTests
 
         // Act: Compute with different policies
         var strictIdentity = identityComputer.ComputeStreamIdentity(
-            topologyStream, 1, new TolerancePolicy.StrictPolicy());
+            topologyStream, TestTick, 1, new TolerancePolicy.StrictPolicy());
         var lenientIdentity = identityComputer.ComputeStreamIdentity(
-            topologyStream, 1, new TolerancePolicy.LenientPolicy(1e-9));
+            topologyStream, TestTick, 1, new TolerancePolicy.LenientPolicy(1e-9));
         var defaultIdentity = identityComputer.ComputeStreamIdentity(
-            topologyStream, 1, new TolerancePolicy.PolygonizerDefaultPolicy());
+            topologyStream, TestTick, 1, new TolerancePolicy.PolygonizerDefaultPolicy());
 
         // Assert: Different policies should yield different identities
         strictIdentity.CombinedHash.Should().NotBe(lenientIdentity.CombinedHash);
@@ -174,7 +174,7 @@ public sealed class DeterminismGateTests
         for (int i = 0; i < 5; i++)
         {
             identities.Add(identityComputer.ComputeStreamIdentity(
-                topologyStream, 1, new TolerancePolicy.LenientPolicy(1e-9)));
+                topologyStream, TestTick, 1, new TolerancePolicy.LenientPolicy(1e-9)));
         }
 
         // Assert: All identical
@@ -363,13 +363,13 @@ public sealed class DeterminismGateTests
                 if (i % 3 == 0)
                 {
                     // Write
-                    var id = identityComputer.ComputeStreamIdentity(streamId, i, policy);
+                    var id = identityComputer.ComputeStreamIdentity(streamId, TestTick, i, policy);
                     cache.Set(id, result);
                 }
                 else if (i % 3 == 1)
                 {
                     // Read
-                    var id = identityComputer.ComputeStreamIdentity(streamId, i / 2, policy);
+                    var id = identityComputer.ComputeStreamIdentity(streamId, TestTick, i / 2, policy);
                     cache.TryGet(id, out _);
                 }
                 else

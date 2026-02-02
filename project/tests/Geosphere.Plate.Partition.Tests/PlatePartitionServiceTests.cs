@@ -112,7 +112,7 @@ public sealed class PlatePartitionServiceTests
         var streamId = CreateFakeStreamIdentity();
         var policy = new TolerancePolicy.StrictPolicy();
 
-        var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
+        var identity = identityComputer.ComputeStreamIdentity(streamId, TestTick, 1, policy);
 
         // Act: First request should be a miss
         var hit = cache.TryGet(identity, out var result);
@@ -132,7 +132,7 @@ public sealed class PlatePartitionServiceTests
         var streamId = CreateFakeStreamIdentity();
         var policy = new TolerancePolicy.StrictPolicy();
 
-        var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
+        var identity = identityComputer.ComputeStreamIdentity(streamId, TestTick, 1, policy);
         var fakeResult = CreateFakePartitionResult();
 
         // Act: Store and retrieve
@@ -156,8 +156,8 @@ public sealed class PlatePartitionServiceTests
         var strictPolicy = new TolerancePolicy.StrictPolicy();
         var lenientPolicy = new TolerancePolicy.LenientPolicy(1e-9);
 
-        var strictIdentity = identityComputer.ComputeStreamIdentity(streamId, 1, strictPolicy);
-        var lenientIdentity = identityComputer.ComputeStreamIdentity(streamId, 1, lenientPolicy);
+        var strictIdentity = identityComputer.ComputeStreamIdentity(streamId, TestTick, 1, strictPolicy);
+        var lenientIdentity = identityComputer.ComputeStreamIdentity(streamId, TestTick, 1, lenientPolicy);
 
         var strictResult = CreateFakePartitionResult();
         var lenientResult = CreateFakePartitionResult(withDifferentData: true);
@@ -182,7 +182,7 @@ public sealed class PlatePartitionServiceTests
         for (int i = 0; i < 5; i++)
         {
             // Use different stream identities (not just different versions) to create distinct cache entries
-            var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity($"stream-{i}"), 1, new TolerancePolicy.StrictPolicy());
+            var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity($"stream-{i}"), TestTick, 1, new TolerancePolicy.StrictPolicy());
             cache.Set(identity, CreateFakePartitionResult());
         }
 

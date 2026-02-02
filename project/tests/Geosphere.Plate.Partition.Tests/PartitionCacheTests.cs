@@ -7,6 +7,7 @@ using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FluentAssertions;
 using NSubstitute;
 using Microsoft.Extensions.Logging;
+using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.Partition.Tests;
@@ -27,7 +28,7 @@ public sealed class PartitionCacheTests
         var identityComputer = new StreamIdentityComputer("test-v1");
         var streamId = CreateFakeStreamIdentity();
         var policy = new TolerancePolicy.StrictPolicy();
-        var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
+        var identity = identityComputer.ComputeStreamIdentity(streamId, new CanonicalTick(1), 1, policy);
         var result = CreateFakePartitionResult();
 
         // Act
@@ -49,7 +50,7 @@ public sealed class PartitionCacheTests
         var identityComputer = new StreamIdentityComputer("test-v1");
         var streamId = CreateFakeStreamIdentity();
         var policy = new TolerancePolicy.StrictPolicy();
-        var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
+        var identity = identityComputer.ComputeStreamIdentity(streamId, new CanonicalTick(1), 1, policy);
 
         // Act
         var hit = cache.TryGet(identity, out var retrieved);
@@ -70,8 +71,8 @@ public sealed class PartitionCacheTests
         var streamId = CreateFakeStreamIdentity();
         var differentStreamId = CreateFakeStreamIdentity("different-stream"); // Different stream for miss
         var policy = new TolerancePolicy.StrictPolicy();
-        var identity = identityComputer.ComputeStreamIdentity(streamId, 1, policy);
-        var differentIdentity = identityComputer.ComputeStreamIdentity(differentStreamId, 1, policy);
+        var identity = identityComputer.ComputeStreamIdentity(streamId, new CanonicalTick(1), 1, policy);
+        var differentIdentity = identityComputer.ComputeStreamIdentity(differentStreamId, new CanonicalTick(1), 1, policy);
         var result = CreateFakePartitionResult();
 
         // Act: 1 hit, 1 miss
@@ -90,9 +91,9 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
 
-        var identity1 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream1"), 1, new TolerancePolicy.StrictPolicy());
-        var identity2 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream2"), 1, new TolerancePolicy.StrictPolicy());
-        var identity3 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream3"), 1, new TolerancePolicy.StrictPolicy());
+        var identity1 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream1"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var identity2 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream2"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var identity3 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("stream3"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         var result1 = CreateFakePartitionResult(plateId: 1);
         var result2 = CreateFakePartitionResult(plateId: 2);
@@ -123,7 +124,7 @@ public sealed class PartitionCacheTests
         // Arrange: Very short expiration
         var cache = new PartitionCache(TimeSpan.FromMilliseconds(10));
         var identityComputer = new StreamIdentityComputer("test-v1");
-        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
         var result = CreateFakePartitionResult();
 
         // Act
@@ -141,7 +142,7 @@ public sealed class PartitionCacheTests
         // Arrange: Long expiration
         var cache = new PartitionCache(TimeSpan.FromMinutes(5));
         var identityComputer = new StreamIdentityComputer("test-v1");
-        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
         var result = CreateFakePartitionResult();
 
         // Act
@@ -158,7 +159,7 @@ public sealed class PartitionCacheTests
         // Arrange
         var cache = new PartitionCache(TimeSpan.FromMilliseconds(10));
         var identityComputer = new StreamIdentityComputer("test-v1");
-        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
         var result = CreateFakePartitionResult();
 
         // Act
@@ -177,8 +178,8 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache(TimeSpan.FromMilliseconds(50));
         var identityComputer = new StreamIdentityComputer("test-v1");
 
-        var expiredIdentity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("old"), 1, new TolerancePolicy.StrictPolicy());
-        var freshIdentity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("new"), 1, new TolerancePolicy.StrictPolicy());
+        var expiredIdentity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("old"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var freshIdentity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("new"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         // Act
         cache.Set(expiredIdentity, CreateFakePartitionResult());
@@ -210,7 +211,7 @@ public sealed class PartitionCacheTests
             try
             {
                 var identity = identityComputer.ComputeStreamIdentity(
-                    CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
+                    CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
                 cache.Set(identity, CreateFakePartitionResult(plateId: i));
             }
             catch (Exception ex)
@@ -231,7 +232,7 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
         var baseIdentity = identityComputer.ComputeStreamIdentity(
-            CreateFakeStreamIdentity("shared"), 1, new TolerancePolicy.StrictPolicy());
+            CreateFakeStreamIdentity("shared"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
         cache.Set(baseIdentity, CreateFakePartitionResult());
 
         var exceptions = new ConcurrentBag<Exception>();
@@ -248,7 +249,7 @@ public sealed class PartitionCacheTests
                 else
                 {
                     var identity = identityComputer.ComputeStreamIdentity(
-                        CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
+                        CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
                     cache.Set(identity, CreateFakePartitionResult(plateId: i));
                 }
             }
@@ -273,8 +274,8 @@ public sealed class PartitionCacheTests
         for (int i = 0; i < 50; i++)
         {
             var identity = identityComputer.ComputeStreamIdentity(
-                CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
-            cache.Set(identity, CreateFakePartitionResult(plateId: i));
+                CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+            cache.Set(identity, CreateFakePartitionResult());
         }
 
         var exceptions = new ConcurrentBag<Exception>();
@@ -288,12 +289,12 @@ public sealed class PartitionCacheTests
                 {
                     case 0:
                         var identity = identityComputer.ComputeStreamIdentity(
-                            CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
+                            CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
                         cache.Set(identity, CreateFakePartitionResult());
                         break;
                     case 1:
                         cache.TryGet(identityComputer.ComputeStreamIdentity(
-                            CreateFakeStreamIdentity("stream0"), 1, new TolerancePolicy.StrictPolicy()), out _);
+                            CreateFakeStreamIdentity("stream0"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy()), out _);
                         break;
                     case 2:
                         cache.Clear();
@@ -317,7 +318,7 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
         var identity = identityComputer.ComputeStreamIdentity(
-            CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+            CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
         cache.Set(identity, CreateFakePartitionResult());
 
         // Act: Concurrent reads
@@ -341,9 +342,9 @@ public sealed class PartitionCacheTests
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
 
-        var id1 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("prefix-abc"), 1, new TolerancePolicy.StrictPolicy());
-        var id2 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("prefix-def"), 1, new TolerancePolicy.StrictPolicy());
-        var id3 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("other-xyz"), 1, new TolerancePolicy.StrictPolicy());
+        var id1 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("prefix-abc"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var id2 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("prefix-def"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var id3 = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity("other-xyz"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         cache.Set(id1, CreateFakePartitionResult());
         cache.Set(id2, CreateFakePartitionResult());
@@ -366,7 +367,7 @@ public sealed class PartitionCacheTests
         for (int i = 0; i < 10; i++)
         {
             var identity = identityComputer.ComputeStreamIdentity(
-                CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
+                CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
             cache.Set(identity, CreateFakePartitionResult());
         }
 
@@ -392,8 +393,8 @@ public sealed class PartitionCacheTests
         var streamId1 = CreateFakeStreamIdentity("stream1");
         var streamId2 = CreateFakeStreamIdentity("stream2");
 
-        var identity1 = identityComputer.ComputeStreamIdentity(streamId1, 1, new TolerancePolicy.StrictPolicy());
-        var identity2 = identityComputer.ComputeStreamIdentity(streamId2, 1, new TolerancePolicy.StrictPolicy());
+        var identity1 = identityComputer.ComputeStreamIdentity(streamId1, new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
+        var identity2 = identityComputer.ComputeStreamIdentity(streamId2, new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         var result = CreateFakePartitionResult();
 
@@ -419,7 +420,7 @@ public sealed class PartitionCacheTests
         var logger = Substitute.For<ILogger<PartitionCache>>();
         var cache = new PartitionCache(logger: logger);
         var identityComputer = new StreamIdentityComputer("test-v1");
-        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         // Act
         cache.Set(identity, CreateFakePartitionResult());
@@ -451,7 +452,7 @@ public sealed class PartitionCacheTests
         // Arrange
         var cache = new PartitionCache();
         var identityComputer = new StreamIdentityComputer("test-v1");
-        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), 1, new TolerancePolicy.StrictPolicy());
+        var identity = identityComputer.ComputeStreamIdentity(CreateFakeStreamIdentity(), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
 
         var result1 = CreateFakePartitionResult(plateId: 1);
         var result2 = CreateFakePartitionResult(plateId: 2);
@@ -477,12 +478,29 @@ public sealed class PartitionCacheTests
         for (int i = 0; i < 5; i++)
         {
             var identity = identityComputer.ComputeStreamIdentity(
-                CreateFakeStreamIdentity($"stream{i}"), 1, new TolerancePolicy.StrictPolicy());
+                CreateFakeStreamIdentity($"stream{i}"), new CanonicalTick(1), 1, new TolerancePolicy.StrictPolicy());
             cache.Set(identity, CreateFakePartitionResult());
         }
 
         // Assert
         cache.Count.Should().Be(5);
+    }
+
+    [Fact]
+    public void CacheIdentity_DifferentTicks_DifferentKeys()
+    {
+        // Arrange
+        var identityComputer = new StreamIdentityComputer("test-v1");
+        var streamId = CreateFakeStreamIdentity();
+        var policy = new TolerancePolicy.StrictPolicy();
+
+        // Act
+        var idTick1 = identityComputer.ComputeStreamIdentity(streamId, new CanonicalTick(1), 1, policy);
+        var idTick2 = identityComputer.ComputeStreamIdentity(streamId, new CanonicalTick(2), 1, policy);
+
+        // Assert
+        idTick1.CombinedHash.Should().NotBe(idTick2.CombinedHash);
+        idTick1.TopologyStreamHash.Should().NotBe(idTick2.TopologyStreamHash);
     }
 
     #endregion
