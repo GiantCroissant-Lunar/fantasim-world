@@ -19,7 +19,7 @@ public class StorageModeIndependenceTests
         var paramsHash = ParamsHashComputer.Compute(parameters);
 
         var embeddedFingerprint = InputFingerprintComputer.Compute(
-            sourceStream: stream.ToString(),
+            sourceStream: stream.ToEventStreamIdString(),
             boundaryKind: "sequence",
             lastSequence: 10,
             generatorId: "TestGen",
@@ -27,7 +27,7 @@ public class StorageModeIndependenceTests
             paramsHash: paramsHash);
 
         var externalFingerprint = InputFingerprintComputer.Compute(
-            sourceStream: stream.ToString(),
+            sourceStream: stream.ToEventStreamIdString(),
             boundaryKind: "sequence",
             lastSequence: 10,
             generatorId: "TestGen",
@@ -46,7 +46,7 @@ public class StorageModeIndependenceTests
         var parameters = new Dictionary<string, object?>(StringComparer.Ordinal);
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             1,
             "TestGen",

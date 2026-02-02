@@ -74,7 +74,7 @@ public class EndToEndCacheTests
         var parameters = new Dictionary<string, object?>(StringComparer.Ordinal);
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             2,
             generator.GeneratorId,
@@ -119,7 +119,7 @@ public class EndToEndCacheTests
         var parameters = new Dictionary<string, object?>(StringComparer.Ordinal);
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             1,
             generator.GeneratorId,
@@ -166,7 +166,7 @@ public class EndToEndCacheTests
         var paramsHash = ParamsHashComputer.Compute(parameters);
 
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             3,
             generator.GeneratorId,
@@ -212,7 +212,7 @@ public class EndToEndCacheTests
         var parameters = new Dictionary<string, object?>(StringComparer.Ordinal);
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             4,
             generator.GeneratorId,
@@ -259,7 +259,7 @@ public class EndToEndCacheTests
         for (var i = 0; i < 3; i++)
         {
             var inputFingerprint = InputFingerprintComputer.Compute(
-                stream.ToString(),
+                stream.ToEventStreamIdString(),
                 "sequence",
                 (ulong)i,
                 generator.GeneratorId,
@@ -304,7 +304,7 @@ public class EndToEndCacheTests
         for (var i = 0; i < 3; i++)
         {
             var inputFingerprint = InputFingerprintComputer.Compute(
-                stream.ToString(),
+                stream.ToEventStreamIdString(),
                 "sequence",
                 (ulong)i,
                 generator.GeneratorId,

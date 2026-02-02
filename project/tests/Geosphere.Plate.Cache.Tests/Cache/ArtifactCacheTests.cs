@@ -22,7 +22,7 @@ public class ArtifactCacheTests
         var parameters = new Dictionary<string, object> { ["compression"] = "lz4" };
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             10,
             "TestGen",
@@ -101,7 +101,7 @@ public class ArtifactCacheTests
         var parameters = new Dictionary<string, object>();
         var paramsHash = ParamsHashComputer.Compute(parameters);
         var inputFingerprint = InputFingerprintComputer.Compute(
-            stream.ToString(),
+            stream.ToEventStreamIdString(),
             "sequence",
             1,
             "TestGen",
