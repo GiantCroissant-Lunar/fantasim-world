@@ -308,3 +308,5 @@ public static class DeterminismHelpers
     }
 
     #endregion
+
+}
