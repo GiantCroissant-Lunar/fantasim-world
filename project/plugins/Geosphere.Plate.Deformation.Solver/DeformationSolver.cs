@@ -74,10 +74,24 @@ public sealed class DeformationSolver : IDeformationService
     // This is the safest bet for FantaSim internal logic unless specified otherwise.
 
     private const double SphereRadius = 1.0;
+    
+    // Tolerance for determining if a grid spans the full 360° longitude (global grid)
+    private const double LongitudeSpanTolerance = 1e-6;
 
     public DeformationSolver(ISamplingService samplingService)
     {
         _samplingService = samplingService;
+    }
+
+    /// <summary>
+    /// Determines if a sampling domain represents a global grid (covers full 360° longitude).
+    /// Note: This assumes MinLon <= MaxLon. Grids crossing the antimeridian (180°/-180°)
+    /// where MaxLon < MinLon are not currently supported and will be treated as regional.
+    /// </summary>
+    private static bool IsGlobalGrid(SamplingDomain domain)
+    {
+        double lonSpan = domain.Extent.MaxLon - domain.Extent.MinLon;
+        return Math.Abs(lonSpan - 360.0) < LongitudeSpanTolerance;
     }
 
     public StrainRateCoverage ComputeStrainRate(
@@ -108,8 +122,7 @@ public sealed class DeformationSolver : IDeformationService
         double dLatRad = (grid.ResolutionDeg * Math.PI) / 180.0;
 
         // Check if grid is global (longitude spans 360°)
-        double lonSpan = domain.Extent.MaxLon - domain.Extent.MinLon;
-        bool isGlobalGrid = Math.Abs(lonSpan - 360.0) < 1e-6;
+        bool isGlobalGrid = IsGlobalGrid(domain);
 
         // Metric terms
         double invRaLat = 1.0 / (SphereRadius * dLatRad); // 1 / dy
@@ -294,8 +307,7 @@ public sealed class DeformationSolver : IDeformationService
         double invRaLat = 1.0 / (SphereRadius * dLatRad);
 
         // Check if grid is global (longitude spans 360°)
-        double lonSpan = domain.Extent.MaxLon - domain.Extent.MinLon;
-        bool isGlobalGrid = Math.Abs(lonSpan - 360.0) < 1e-6;
+        bool isGlobalGrid = IsGlobalGrid(domain);
 
         var comps = velocityCoverage.Components;
 
@@ -332,7 +344,7 @@ public sealed class DeformationSolver : IDeformationService
                     iPrev = Math.Max(0, i - 1);
                     iNext = Math.Min(nLon - 1, i + 1);
                 }
-                
+
                 int idxPrevX = j * nLon + iPrev;
                 int idxNextX = j * nLon + iNext;
 
