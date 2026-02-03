@@ -1027,10 +1027,11 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 }
                 else
                 {
-                    var points = boundary.Polyline!
-                        .Select(p => new Point2(p[0], p[1]))
-                        .ToArray();
-                    geometry = new Polyline2(points);
+                    // Only body_lonlat_degrees is currently supported for boundary geometry.
+                    // Other conventions validated by PlatesDatasetManifestValidator should be implemented.
+                    throw new InvalidOperationException(
+                        $"Unsupported angular convention for boundary geometry: '{angularConvention}'. " +
+                        $"Only 'body_lonlat_degrees' is currently implemented.");
                 }
 
                 var tick = new CanonicalTick(boundary.Tick ?? 0);

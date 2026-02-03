@@ -117,19 +117,30 @@ public sealed class FrameAwareVelocityCalculator
     /// <returns>Angular velocity of the frame.</returns>
     /// <remarks>
     /// <para>
-    /// <b>MantleFrame:</b> Returns zero (mantle is the "stationary" reference).
-    /// In the full RFC implementation with area-weighted net rotation, this would
-    /// return the negative of the net rotation rate, but for simplicity we treat
-    /// mantle as stationary here.
+    /// <b>⚠️ LIMITATION:</b> This is a simplified implementation with known limitations:
     /// </para>
     /// <para>
-    /// <b>PlateAnchor:</b> Returns the angular velocity of the anchor plate.
+    /// <b>MantleFrame:</b> Returns zero (treats mantle as stationary reference).
+    /// ⚠️ Full RFC-V2-0046 implementation should return the negative of the area-weighted
+    /// net lithospheric rotation rate. Current implementation produces incorrect results
+    /// if the net rotation is non-zero.
     /// </para>
     /// <para>
-    /// <b>AbsoluteFrame:</b> Returns zero (or TPW rate if integrated).
+    /// <b>PlateAnchor:</b> Returns the angular velocity of the anchor plate. ✅ Fully implemented.
     /// </para>
     /// <para>
-    /// <b>CustomFrame:</b> Evaluates the frame chain (simplified: returns zero).
+    /// <b>AbsoluteFrame:</b> Returns zero (no TPW integration).
+    /// ⚠️ Full implementation should include True Polar Wander rotation rate when
+    /// ITruePolarWanderModel is available. Current implementation ignores TPW motion.
+    /// </para>
+    /// <para>
+    /// <b>CustomFrame:</b> Recursively evaluates base frame (assumes static transforms).
+    /// ⚠️ Full implementation should compute time derivatives of custom frame transforms.
+    /// Current implementation ignores time-dependent frame motion.
+    /// </para>
+    /// <para>
+    /// TODO: Wire up mantle net-rotation provider, TPW model integration, and custom
+    /// frame transform rates to achieve full RFC-V2-0046 compliance for frame-aware velocities.
     /// </para>
     /// </remarks>
     public AngularVelocity3d GetFrameAngularVelocity(
@@ -140,11 +151,13 @@ public sealed class FrameAwareVelocityCalculator
         ArgumentNullException.ThrowIfNull(frame);
         ArgumentNullException.ThrowIfNull(kinematics);
 
+        // NOTE: This implementation has known limitations for MantleFrame, AbsoluteFrame, and CustomFrame.
+        // See method documentation for details.
         return frame switch
         {
-            MantleFrame => AngularVelocity3d.Zero, // Mantle is the stationary reference
+            MantleFrame => AngularVelocity3d.Zero, // TODO: Should query mantle net-rotation provider
             PlateAnchor anchor => _velocitySolver.GetAngularVelocity(kinematics, anchor.PlateId, tick),
-            AbsoluteFrame => AngularVelocity3d.Zero, // No TPW integration in this basic implementation
+            AbsoluteFrame => AngularVelocity3d.Zero, // TODO: Should integrate TPW rate when available
             CustomFrame custom => GetCustomFrameAngularVelocity(custom, tick, kinematics),
             _ => throw new NotSupportedException($"Frame type {frame.GetType().Name} is not supported.")
         };
@@ -229,6 +242,12 @@ public sealed class FrameAwareVelocityCalculator
     /// <summary>
     /// Gets angular velocity for a custom frame by evaluating its chain.
     /// </summary>
+    /// <remarks>
+    /// ⚠️ LIMITATION: This implementation assumes custom frame transforms are static
+    /// (no time-dependent rotation rates). It only accounts for the base frame's angular
+    /// velocity. Full RFC-V2-0046 compliance would require computing the time derivative
+    /// of the transform chain to capture frame motion.
+    /// </remarks>
     private AngularVelocity3d GetCustomFrameAngularVelocity(
         CustomFrame custom,
         CanonicalTick tick,
@@ -246,6 +265,7 @@ public sealed class FrameAwareVelocityCalculator
         // Recursively get the base frame's angular velocity
         var baseFrameAngularVel = GetFrameAngularVelocity(activeLink.BaseFrame, tick, kinematics);
 
+        // TODO: Add time derivative of activeLink.Transform to capture time-dependent frame motion
         // The custom frame's angular velocity is the base frame's angular velocity
         // plus any additional rotation rate from the transform (which is typically zero
         // for static custom frames)
