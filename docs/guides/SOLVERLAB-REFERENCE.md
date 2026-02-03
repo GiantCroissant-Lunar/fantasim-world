@@ -35,7 +35,7 @@ SolverLab is part of the plate simulation infrastructure supporting:
 
 ### 1.2 Location
 
-```
+```text
 fantasim-world/
 └── project/hosts/
     ├── Geosphere.Plate.SolverLab.Core/       # Framework infrastructure
@@ -60,7 +60,7 @@ fantasim-world/
 
 ### 1.4 Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    SolverLab.Runner                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
