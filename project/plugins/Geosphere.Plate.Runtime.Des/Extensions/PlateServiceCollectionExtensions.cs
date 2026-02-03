@@ -1,5 +1,9 @@
+using FantaSim.Geosphere.Plate.Kinematics.Materializer;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Query;
 using FantaSim.Geosphere.Plate.Reconstruction.Solver;
 using FantaSim.Geosphere.Plate.Service.Contracts;
+using FantaSim.Geosphere.Plate.Topology.Materializer;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FantaSim.Geosphere.Plate.Runtime.Des.Extensions;
@@ -17,6 +21,10 @@ public static class PlateServiceCollectionExtensions
     {
         // T1 Interface -> T3 Service Implementation
         services.AddScoped<IFrameService, FrameService>();
+        services.AddScoped<IPlateReconstructionSolver, NaivePlateReconstructionSolver>();
+        services.AddScoped<PlateTopologyTimeline>();
+        services.AddScoped<PlateKinematicsMaterializer>();
+        services.AddScoped<IPlateReconstructionQueryService, PlateReconstructionQueryService>();
 
         // Note: IPlatePartitionService registration skipped due to net9.0/net8.0
         // framework version mismatch with Partition.Solver.

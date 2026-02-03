@@ -159,6 +159,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Deformation
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Deformation.Tests", "tests\Geosphere.Plate.Deformation.Tests\Geosphere.Plate.Deformation.Tests.csproj", "{83CC8802-AA87-49D1-86C7-59A392A361D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Reconstruction.Query", "plugins\Geosphere.Plate.Reconstruction.Query\Geosphere.Plate.Reconstruction.Query.csproj", "{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architecture", "{D1F71883-10CE-41EF-018C-B718EB50DBB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1045,6 +1051,18 @@ Global
 		{83CC8802-AA87-49D1-86C7-59A392A361D8}.Release|x64.Build.0 = Release|Any CPU
 		{83CC8802-AA87-49D1-86C7-59A392A361D8}.Release|x86.ActiveCfg = Release|Any CPU
 		{83CC8802-AA87-49D1-86C7-59A392A361D8}.Release|x86.Build.0 = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|x64.Build.0 = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Debug|x86.Build.0 = Debug|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|x64.ActiveCfg = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|x64.Build.0 = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|x86.ActiveCfg = Release|Any CPU
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1091,5 +1109,7 @@ Global
 		{DA0B3D5D-F1D7-48E0-965C-B8BDB6F7AED7} = {A73F2606-6D4C-3EEE-1759-0E59DCFEF523}
 		{8A30830B-831A-4ADC-9D8E-13A6BEA8E658} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{83CC8802-AA87-49D1-86C7-59A392A361D8} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{056EEA33-BA97-4568-9F9A-831BFD7F4CC6} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{D1F71883-10CE-41EF-018C-B718EB50DBB9} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 	EndGlobalSection
 EndGlobal
