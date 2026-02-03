@@ -1,9 +1,12 @@
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Cache;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Output;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Provenance;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using UnifyGeometry;
@@ -113,6 +116,88 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver,
 
         return reconstructed;
     }
+
+    /// <summary>
+    /// Reconstructs boundaries with full provenance and metadata per RFC-V2-0045.
+    /// </summary>
+    /// <param name="topology">Topology state view at the reference tick.</param>
+    /// <param name="kinematics">Kinematics state view for rotation queries.</param>
+    /// <param name="policy">Reconstruction policy defining frame, model, and strictness.</param>
+    /// <param name="targetTick">The target tick for reconstruction.</param>
+    /// <returns>A <see cref="ReconstructResult"/> containing features, provenance chain, and query metadata.</returns>
+    public ReconstructResult ReconstructWithProvenance(
+        IPlateTopologyStateView topology,
+        IPlateKinematicsStateView kinematics,
+        ReconstructionPolicy policy,
+        CanonicalTick targetTick)
+    {
+        ArgumentNullException.ThrowIfNull(topology);
+        ArgumentNullException.ThrowIfNull(kinematics);
+        ArgumentNullException.ThrowIfNull(policy);
+
+        // Reconstruct boundaries using existing logic
+        var boundaries = ReconstructBoundaries(topology, kinematics, policy, targetTick);
+
+        // Convert to ReconstructedFeature array (boundaries as features)
+        var features = boundaries
+            .Select(b => new ReconstructedFeature(
+                new FeatureId(b.BoundaryId.Value),
+                b.PlateIdProvenance,
+                b.Geometry))
+            .ToArray();
+
+        // Compute stream hashes from identity strings
+        var topologyStreamHash = topology.Identity.ToEventStreamIdString();
+        var kinematicsStreamHash = kinematics.Identity.ToEventStreamIdString();
+
+        // Collect source boundary IDs for provenance
+        var sourceBoundaryIds = boundaries.Select(b => b.BoundaryId).ToArray();
+
+        // Build provenance chain using ProvenanceBuilder
+        var provenance = ProvenanceBuilder.Create()
+            .WithSourceBoundaryIds(sourceBoundaryIds)
+            .WithPlateAssignment(
+                new PlateId(Guid.Empty), // Aggregate provenance - no single plate
+                PlateAssignmentMethod.Explicit,
+                confidence: 1.0)
+            .WithKinematics(
+                policy.Frame,
+                Array.Empty<Guid>(), // Motion segment IDs not tracked at boundary level
+                "identity-fallback")
+            .WithStreamHashes(
+                topologyStreamHash,
+                kinematicsStreamHash,
+                targetTick,  // Topology reference tick
+                targetTick)  // Kinematics reference tick
+            .WithQueryMetadata(
+                targetTick,
+                SolverVersion)
+            .Build();
+
+        // Build query metadata
+        var metadata = new QueryMetadata
+        {
+            QueryContractVersion = "RFC-V2-0045",
+            SolverImplementation = SolverImplementation,
+            CacheHit = false,
+            CacheKey = PolicyCacheKey.ComputeCacheKey(targetTick, policy, topologyStreamHash, kinematicsStreamHash),
+            TopologyStreamHash = topologyStreamHash,
+            KinematicsStreamHash = kinematicsStreamHash,
+            TopologyReferenceTick = targetTick,
+            QueryTick = targetTick,
+            Warnings = Array.Empty<string>()
+        };
+
+        return new ReconstructResult
+        {
+            Features = features,
+            Provenance = provenance,
+            Metadata = metadata
+        };
+    }
+
+    private const string SolverVersion = "NaivePlateReconstructionSolver-1.0.0";
+    private const string SolverImplementation = "NaivePlateReconstructionSolver";
 
     private static IGeometry ApplyRotation(IGeometry geometry, Quaterniond rotation)
     {
