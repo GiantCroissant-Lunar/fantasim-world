@@ -1,6 +1,7 @@
 using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts.TruePolarWander;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -30,7 +31,8 @@ public interface IFrameService
         CanonicalTick tick,
         FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics,
-        IPlateTopologyStateView topology);
+        IPlateTopologyStateView topology,
+        ITruePolarWanderModel? tpwModel = null);
 
     /// <summary>
     /// Validates a custom frame definition for cycles and other issues.

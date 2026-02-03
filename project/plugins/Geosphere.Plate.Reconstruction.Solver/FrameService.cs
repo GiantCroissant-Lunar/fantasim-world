@@ -1,6 +1,7 @@
 using FantaSim.Geosphere.Plate.Kinematics.Contracts;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
+using FantaSim.Geosphere.Plate.Kinematics.Contracts.TruePolarWander;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
@@ -18,10 +19,11 @@ public sealed class FrameService : IFrameService
         CanonicalTick tick,
         FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
         IPlateKinematicsStateView kinematics,
-        IPlateTopologyStateView topology)
+        IPlateTopologyStateView topology,
+        ITruePolarWanderModel? tpwModel = null)
     {
-        var fromToMantle = GetFrameToMantleTransform(fromFrame, tick, modelId, kinematics);
-        var toToMantle = GetFrameToMantleTransform(toFrame, tick, modelId, kinematics);
+        var fromToMantle = GetFrameToMantleTransform(fromFrame, tick, modelId, kinematics, tpwModel);
+        var toToMantle = GetFrameToMantleTransform(toFrame, tick, modelId, kinematics, tpwModel);
 
         // from -> mantle -> to = (from -> mantle) ∘ (mantle -> to)
         var transform = fromToMantle.Transform.Compose(toToMantle.Transform.Inverted());
@@ -46,7 +48,8 @@ public sealed class FrameService : IFrameService
         ReferenceFrameId frame,
         CanonicalTick tick,
         FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
-        IPlateKinematicsStateView kinematics)
+        IPlateKinematicsStateView kinematics,
+        ITruePolarWanderModel? tpwModel)
     {
         switch (frame)
         {
@@ -95,9 +98,13 @@ public sealed class FrameService : IFrameService
                 };
 
             case AbsoluteFrame:
+                // RFC-V2-0046 §3.3:
+                // - Without TPW data, AbsoluteFrame MUST behave as identity transform.
+                // - If TPW data is available, it MUST be applied consistently.
+                var tpwRotation = tpwModel?.GetRotationAt(tick) ?? FiniteRotation.Identity;
                 return new FrameTransformResult
                 {
-                    Transform = FiniteRotation.Identity,
+                    Transform = tpwRotation,
                     Provenance = new FrameTransformProvenance
                     {
                         FromFrame = frame,
@@ -109,7 +116,7 @@ public sealed class FrameService : IFrameService
                 };
 
             case CustomFrame custom:
-                return EvaluateCustomFrame(custom, tick, modelId, kinematics);
+                return EvaluateCustomFrame(custom, tick, modelId, kinematics, tpwModel);
 
             default:
                 throw new NotImplementedException($"Frame type {frame.GetType().Name} not supported");
@@ -120,7 +127,8 @@ public sealed class FrameService : IFrameService
         CustomFrame custom,
         CanonicalTick tick,
         FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies.ModelId modelId,
-        IPlateKinematicsStateView kinematics)
+        IPlateKinematicsStateView kinematics,
+        ITruePolarWanderModel? tpwModel)
     {
         var activeLink = custom.Definition.Chain
             .Select((link, index) => (link, index))
@@ -146,7 +154,7 @@ public sealed class FrameService : IFrameService
             };
         }
 
-        var baseToMantle = GetFrameToMantleTransform(activeLink.BaseFrame, tick, modelId, kinematics);
+        var baseToMantle = GetFrameToMantleTransform(activeLink.BaseFrame, tick, modelId, kinematics, tpwModel);
 
         // base -> custom is activeLink.Transform, therefore custom -> base is inverse.
         // custom -> mantle = (custom -> base) ∘ (base -> mantle)

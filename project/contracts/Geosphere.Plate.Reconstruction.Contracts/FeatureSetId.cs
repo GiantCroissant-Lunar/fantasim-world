@@ -1,7 +1,6 @@
-using System;
 using MessagePack;
 
-namespace FantaSim.Geosphere.Plate.Service.Contracts;
+namespace FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 
 /// <summary>
 /// Feature set identifier for batch reconstruction operations.

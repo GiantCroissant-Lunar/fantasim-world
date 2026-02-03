@@ -1,6 +1,5 @@
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Output;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
-using FantaSim.Geosphere.Plate.Service.Contracts;
 using Plate.TimeDete.Time.Primitives;
 using UnifyGeometry;
 

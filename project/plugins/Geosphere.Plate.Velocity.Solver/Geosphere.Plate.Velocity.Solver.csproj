@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Reconstruction.Contracts\Geosphere.Plate.Reconstruction.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
