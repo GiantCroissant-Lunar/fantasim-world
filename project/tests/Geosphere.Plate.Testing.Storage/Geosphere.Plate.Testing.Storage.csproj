@@ -11,6 +11,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Runtime.RocksDb\UnifyStorage.Runtime.RocksDb.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Runtime.Parquet\UnifyStorage.Runtime.Parquet.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
+    <ProjectReference Include="..\..\plugins\Geosphere.Plate.Runtime.Des\Geosphere.Plate.Runtime.Des.csproj" />
   </ItemGroup>
 
 </Project>

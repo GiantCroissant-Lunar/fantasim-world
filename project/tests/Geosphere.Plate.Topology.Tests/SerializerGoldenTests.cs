@@ -23,16 +23,16 @@ public class SerializerGoldenTests
     public void Serialize_PlateCreatedEvent_RoundTrip_Succeeds()
     {
         // Arrange
-        var plateId = PlateId.New();
+        var plateId = PlateId.NewId();
         var eventId = Guid.NewGuid();
-        var tick = CanonicalTick.FromInt64(100);
+        var tick = new CanonicalTick(100L);
 
         var @event = new PlateCreatedEvent(
             eventId,
             plateId,
             tick,
             0L,
-            TruthStreamIdentity.Create(1),
+            new TruthStreamIdentity("test", "main", 2, Domain.Parse("geo.plates"), "0"),
             ReadOnlyMemory<byte>.Empty,
             ReadOnlyMemory<byte>.Empty
         );
@@ -52,16 +52,17 @@ public class SerializerGoldenTests
     public void Serialize_PlateRetiredEvent_RoundTrip_Succeeds()
     {
         // Arrange
-        var plateId = PlateId.New();
+        var plateId = PlateId.NewId();
         var eventId = Guid.NewGuid();
-        var tick = CanonicalTick.FromInt64(200);
+        var tick = new CanonicalTick(200L);
 
         var @event = new PlateRetiredEvent(
             eventId,
             plateId,
+            null,
             tick,
             1L,
-            TruthStreamIdentity.Create(1),
+            new TruthStreamIdentity("test", "main", 2, Domain.Parse("geo.plates"), "0"),
             ReadOnlyMemory<byte>.Empty,
             ReadOnlyMemory<byte>.Empty
         );
@@ -81,16 +82,22 @@ public class SerializerGoldenTests
     public void Serialize_BoundaryCreatedEvent_RoundTrip_Succeeds()
     {
         // Arrange
-        var boundaryId = BoundaryId.New();
+        var leftPlateId = PlateId.NewId();
+        var rightPlateId = PlateId.NewId();
+        var boundaryId = BoundaryId.NewId();
         var eventId = Guid.NewGuid();
-        var tick = CanonicalTick.FromInt64(300);
+        var tick = new CanonicalTick(300L);
 
         var @event = new BoundaryCreatedEvent(
             eventId,
             boundaryId,
+            leftPlateId,
+            rightPlateId,
+            BoundaryType.Divergent,
+            null!,
             tick,
             2L,
-            TruthStreamIdentity.Create(1),
+            new TruthStreamIdentity("test", "main", 2, Domain.Parse("geo.plates"), "0"),
             ReadOnlyMemory<byte>.Empty,
             ReadOnlyMemory<byte>.Empty
         );
@@ -110,16 +117,16 @@ public class SerializerGoldenTests
     public void Deserialize_Polymorphic_DispatchesCorrectly()
     {
         // Arrange
-        var plateId = PlateId.New();
+        var plateId = PlateId.NewId();
         var eventId = Guid.NewGuid();
-        var tick = CanonicalTick.FromInt64(400);
+        var tick = new CanonicalTick(400L);
 
         var @event = new PlateCreatedEvent(
             eventId,
             plateId,
             tick,
             0L,
-            TruthStreamIdentity.Create(1),
+            new TruthStreamIdentity("test", "main", 2, Domain.Parse("geo.plates"), "0"),
             ReadOnlyMemory<byte>.Empty,
             ReadOnlyMemory<byte>.Empty
         );
