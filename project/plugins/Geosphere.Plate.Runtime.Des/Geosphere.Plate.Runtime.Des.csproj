@@ -18,8 +18,8 @@
     <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Determinism.Abstractions\TimeDete.Determinism.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\time-dete\dotnet\src\TimeDete.Time.Primitives\TimeDete.Time.Primitives.csproj" />
     <ProjectReference Include="..\..\..\..\fantasim-shared\project\contracts\FantaSim.Shared\FantaSim.Shared.csproj" />
-    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />

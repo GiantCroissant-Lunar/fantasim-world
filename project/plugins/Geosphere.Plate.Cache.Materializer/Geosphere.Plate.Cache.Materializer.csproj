@@ -5,8 +5,8 @@
     <ProjectReference Include="..\..\contracts\Geosphere.Plate.Topology.Contracts\Geosphere.Plate.Topology.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.Contracts\PluginArchi.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.Extensibility.Abstractions\PluginArchi.Extensibility.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\plate-shared\dotnet\source-generators\DI.ConstructorInjection.Set\DI.ConstructorInjection.Attributes\DI.ConstructorInjection.Attributes.csproj" />
   </ItemGroup>

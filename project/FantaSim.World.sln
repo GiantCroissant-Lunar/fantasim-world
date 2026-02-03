@@ -55,9 +55,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "contracts", "contracts", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geosphere.Plate.Kinematics.Contracts", "contracts\Geosphere.Plate.Kinematics.Contracts\Geosphere.Plate.Kinematics.Contracts.csproj", "{F9C529E6-F6B4-4C21-A2C1-03642B239D14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.SourceGenerators.Proxy", "..\..\..\plate-projects\plugin-archi\src\PluginArchi.SourceGenerators.Proxy\PluginArchi.SourceGenerators.Proxy.csproj", "{C032CCB6-A38B-484C-9916-1590D9494682}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.SourceGenerators.Proxy", "..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.SourceGenerators.Proxy\PluginArchi.SourceGenerators.Proxy.csproj", "{C032CCB6-A38B-484C-9916-1590D9494682}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.Analyzers", "..\..\..\plate-projects\plugin-archi\dotnet\PluginArchi.Analyzers\PluginArchi.Analyzers.csproj", "{DFECBF21-73E0-4AAF-BD7C-96D8275A5AB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginArchi.Analyzers", "..\..\..\plate-projects\plugin-archi\dotnet\src\PluginArchi.Analyzers\PluginArchi.Analyzers.csproj", "{DFECBF21-73E0-4AAF-BD7C-96D8275A5AB2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceArchi.SourceGen", "..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.SourceGen\ServiceArchi.SourceGen.csproj", "{03E5CA0A-135F-4E57-9DEE-F24B615A62F4}"
 EndProject
