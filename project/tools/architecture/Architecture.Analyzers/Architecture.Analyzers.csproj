@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);MA0009</NoWarn>
+    <ArchitectureSkipAnalyzers>true</ArchitectureSkipAnalyzers>
   </PropertyGroup>
 
   <ItemGroup>
