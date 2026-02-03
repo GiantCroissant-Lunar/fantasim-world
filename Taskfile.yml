@@ -11,15 +11,15 @@ tasks:
       - task --list
 
   combine-cs:
-    desc: "Combine all C# source files under project/ into scripts/combined_all_cs.cs"
+    desc: "Combine all C# source files under project/ into scripts/output/combined_all_cs.cs"
     cmds:
-      - python scripts/combine_cs.py
+      - python scripts/dev/combine_cs.py
     silent: false
 
   combine-cs-no-tests:
     desc: "Combine C# source files excluding tests/"
     cmds:
-      - python scripts/combine_cs.py --exclude-tests
+      - python scripts/dev/combine_cs.py --exclude-tests
     silent: false
 
   list-project-tree:
@@ -72,68 +72,68 @@ tasks:
   agent:sync:opencode:
     desc: Sync OpenCode (.opencode + opencode.json) from .agent
     cmds:
-      - python scripts/sync_opencode.py
+      - python scripts/agent/opencode.py
 
   agent:sync:windsurf:
     desc: Sync Windsurf (.windsurf) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=windsurf
-      - python scripts/sync_skills.py --skills --tools=windsurf
-      - python scripts/sync_skills.py --commands --tools=windsurf
+      - python scripts/agent/sync.py --rules --tools=windsurf
+      - python scripts/agent/sync.py --skills --tools=windsurf
+      - python scripts/agent/sync.py --commands --tools=windsurf
 
   agent:sync:claude:
     desc: Sync Claude Code (.claude + CLAUDE.md) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=claude
-      - python scripts/sync_skills.py --skills --tools=claude
+      - python scripts/agent/sync.py --rules --tools=claude
+      - python scripts/agent/sync.py --skills --tools=claude
 
   agent:sync:cline:
     desc: Sync Cline (.clinerules + .cline) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=cline
-      - python scripts/sync_skills.py --skills --tools=cline
-      - python scripts/sync_skills.py --commands --tools=cline
-      - python scripts/sync_skills.py --hooks --tools=cline
+      - python scripts/agent/sync.py --rules --tools=cline
+      - python scripts/agent/sync.py --skills --tools=cline
+      - python scripts/agent/sync.py --commands --tools=cline
+      - python scripts/agent/sync.py --hooks --tools=cline
 
   agent:sync:kilocode:
     desc: Sync Kilo Code (.kilocode) from .agent
     cmds:
-      - python scripts/sync_workflows.py
-      - python scripts/sync_skills.py --rules --tools=kilocode
-      - python scripts/sync_skills.py --skills --tools=kilocode
+      - python scripts/agent/workflows.py
+      - python scripts/agent/sync.py --rules --tools=kilocode
+      - python scripts/agent/sync.py --skills --tools=kilocode
 
   agent:sync:codex:
     desc: Sync Codex (AGENTS.md + .codex) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=codex
-      - python scripts/sync_skills.py --skills --tools=codex
+      - python scripts/agent/sync.py --rules --tools=codex
+      - python scripts/agent/sync.py --skills --tools=codex
 
   agent:sync:cursor:
     desc: Sync Cursor (.cursor) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=cursor
-      - python scripts/sync_skills.py --skills --tools=cursor
-      - python scripts/sync_skills.py --commands --tools=cursor
+      - python scripts/agent/sync.py --rules --tools=cursor
+      - python scripts/agent/sync.py --skills --tools=cursor
+      - python scripts/agent/sync.py --commands --tools=cursor
 
   agent:sync:gemini:
     desc: Sync Gemini (.gemini + GEMINI.md) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=gemini
-      - python scripts/sync_skills.py --skills --tools=gemini
-      - python scripts/sync_skills.py --commands --tools=gemini
+      - python scripts/agent/sync.py --rules --tools=gemini
+      - python scripts/agent/sync.py --skills --tools=gemini
+      - python scripts/agent/sync.py --commands --tools=gemini
 
   agent:sync:roo:
     desc: Sync Roo Code (.roo) from .agent
     cmds:
-      - python scripts/sync_skills.py --rules --tools=roo
-      - python scripts/sync_skills.py --skills --tools=roo
-      - python scripts/sync_skills.py --commands --tools=roo
+      - python scripts/agent/sync.py --rules --tools=roo
+      - python scripts/agent/sync.py --skills --tools=roo
+      - python scripts/agent/sync.py --commands --tools=roo
 
   agent:sync-skills:
     desc: Sync skill stubs from .agent/skills to tool-specific directories
     aliases: ["agent:skills"]
     cmds:
-      - python scripts/sync_skills.py --skills
+      - python scripts/agent/sync.py --skills
     sources:
       - .agent/skills/**/SKILL.md
     generates:
@@ -148,7 +148,7 @@ tasks:
     desc: Sync command stubs from .agent/commands to .opencode/commands
     aliases: ["agent:commands"]
     cmds:
-      - python scripts/sync_commands.py
+      - python scripts/agent/commands.py
     sources:
       - .agent/commands/*.md
     generates:
@@ -158,7 +158,7 @@ tasks:
     desc: Sync workflows from .agent/workflows to tool-specific directories
     aliases: ["agent:workflows"]
     cmds:
-      - python scripts/sync_workflows.py
+      - python scripts/agent/workflows.py
     sources:
       - .agent/workflows/*.md
       - .agent/adapters/*/workflows/*.md
@@ -169,7 +169,7 @@ tasks:
     desc: Sync rules from .agent/rules to tool-specific directories and AGENTS.md/CLAUDE.md
     aliases: ["agent:rules"]
     cmds:
-      - python scripts/sync_rules.py
+      - python scripts/agent/rules.py
     sources:
       - .agent/rules/*.md
       - .agent/adapters/*/rules/*.md
@@ -186,13 +186,13 @@ tasks:
     desc: Generate .kilocode from .agent (skills + workflows + rules)
     aliases: ["agent:kilocode"]
     cmds:
-      - python scripts/sync_kilocode.py
+      - python scripts/agent/kilocode.py
 
   agent:sync-opencode:
     desc: Generate .opencode from .agent (seed files + agents + commands + skills)
     aliases: ["agent:opencode"]
     cmds:
-      - python scripts/sync_opencode.py
+      - python scripts/agent/opencode.py
 
   # =============================================================================
   # Spec Kit Workflow
@@ -219,8 +219,8 @@ tasks:
         - Worktree: ../{{.REPO_NAME}}--001-<feature-name>
         - Spec folder: specs/001-<feature-name>/
     cmds:
-      - >-
-        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode new -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
+        - >-
+          pwsh -NoProfile -File scripts/dev/spec_worktree.ps1 -Mode new -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
 
   spec:list:
     desc: List active spec worktrees
@@ -234,8 +234,8 @@ tasks:
 
       Usage: task spec:backfill -- <feature-name>
     cmds:
-      - >-
-        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode backfill -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
+        - >-
+          pwsh -NoProfile -File scripts/dev/spec_worktree.ps1 -Mode backfill -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
 
   spec:specify:
     desc: Run specify phase for a feature
@@ -286,8 +286,8 @@ tasks:
         - All changes committed and pushed
         - PR merged to main
     cmds:
-      - >-
-        pwsh -NoProfile -File scripts/spec_worktree.ps1 -Mode done -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
+        - >-
+          pwsh -NoProfile -File scripts/dev/spec_worktree.ps1 -Mode done -Feature "{{.FEATURE}}" -CliArgs "{{.CLI_ARGS}}" -RepoName "{{.REPO_NAME}}" -WorktreeBase "{{.WORKTREE_BASE}}"
 
   # =============================================================================
   # Documentation Maintenance
@@ -303,7 +303,7 @@ tasks:
 
       Generates detailed reports in docs/_inbox/_analysis/
     cmds:
-      - python scripts/analyze_inbox_duplicates.py
+      - python scripts/docs/analyze_duplicates.py
 
   docs:analyze-inbox:threshold:
     desc: Analyze with custom similarity threshold
@@ -315,7 +315,7 @@ tasks:
       Threshold range: 0.0 (no similarity) to 1.0 (identical)
       Default: 0.3
     cmds:
-      - python scripts/analyze_inbox_duplicates.py --threshold {{.THRESHOLD}}
+      - python scripts/docs/analyze_duplicates.py --threshold {{.THRESHOLD}}
 
   docs:merge-duplicates:
     desc: Intelligently merge files with partial duplication
@@ -329,12 +329,12 @@ tasks:
       Default: merges files with ≥40% line overlap
       Run docs:analyze-inbox first to generate analysis.
     cmds:
-      - python scripts/merge_duplicates.py
+      - python scripts/docs/merge_duplicates.py
 
   docs:merge-duplicates:dry-run:
     desc: Preview merges without making changes
     cmds:
-      - python scripts/merge_duplicates.py --dry-run
+      - python scripts/docs/merge_duplicates.py --dry-run
 
   docs:merge-duplicates:threshold:
     desc: Merge with custom overlap threshold
@@ -346,7 +346,7 @@ tasks:
       - 0.6: high overlap
       - 0.8: very high overlap
     cmds:
-      - python scripts/merge_duplicates.py --min-overlap {{.MIN_OVERLAP}}
+      - python scripts/docs/merge_duplicates.py --min-overlap {{.MIN_OVERLAP}}
 
   docs:organize-inbox:
     desc: Organize docs/_inbox files into categorized subfolders
@@ -362,12 +362,12 @@ tasks:
 
       Run AFTER docs:merge-duplicates for final organization.
     cmds:
-      - python scripts/organize_inbox.py
+      - python scripts/docs/organize_inbox.py
 
   docs:organize-inbox:dry-run:
     desc: Preview inbox organization without moving files
     cmds:
-      - python scripts/organize_inbox.py --dry-run
+      - python scripts/docs/organize_inbox.py --dry-run
 
   # =============================================================================
   # Build Tasks
