@@ -370,32 +370,61 @@ tasks:
       - python scripts/docs/organize_inbox.py --dry-run
 
   # =============================================================================
-  # Build Tasks
+  # Build Tasks (unify-build)
   # =============================================================================
 
+  restore:
+    desc: Restore dotnet tools
+    cmds:
+      - dotnet tool restore
+
   build:
-    desc: Compile the solution
+    desc: Build the solution using unify-build
+    deps: [restore]
+    cmds:
+      - dotnet unify-build compile
+
+  pack:
+    desc: Create NuGet packages using unify-build
+    deps: [restore]
+    cmds:
+      - dotnet unify-build pack
+
+  test:
+    desc: Run all tests using unify-build
+    deps: [restore]
+    cmds:
+      - dotnet unify-build test
+
+  clean:
+    desc: Clean build artifacts using unify-build
+    cmds:
+      - dotnet unify-build clean
+
+  # Legacy build tasks (preserved for compatibility)
+  build-legacy:
+    desc: Compile the solution (legacy - uses build.cmd)
     cmds:
       - ./build/build.cmd Compile
 
-  build-pack:
-    desc: Create NuGet packages for contracts
+  build-pack-legacy:
+    desc: Create NuGet packages for contracts (legacy - uses build.cmd)
     cmds:
       - ./build/build.cmd PackProjects
 
-  build-publish:
-    desc: Publish hosts and plugins
+  build-publish-legacy:
+    desc: Publish hosts and plugins (legacy - uses build.cmd)
     cmds:
       - ./build/build.cmd PublishProjects
 
-  build-all:
-    desc: Compile, pack, and publish all artifacts
+  build-all-legacy:
+    desc: Compile, pack, and publish all artifacts (legacy - uses build.cmd)
     cmds:
-      - task: build
-      - task: build-pack
-      - task: build-publish
+      - task: build-legacy
+      - task: build-pack-legacy
+      - task: build-publish-legacy
 
-  build-latest:
-    desc: Pack projects and sync to latest folder
+  build-latest-legacy:
+    desc: Pack projects and sync to latest folder (legacy - uses build.cmd)
     cmds:
       - ./build/build.cmd PackProjectsLatest

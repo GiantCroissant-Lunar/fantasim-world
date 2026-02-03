@@ -2,26 +2,71 @@
   "$schema": "./build.config.schema.json",
   "solution": "project/FantaSim.World.sln",
   "versionEnv": "Version",
-  "artifactsVersion": null,
+  "artifactsVersion": "0.1.1",
 
   "projectGroups": {
     "contracts": {
       "sourceDir": "project/contracts",
       "action": "pack",
-      "include": []
+      "include": [
+        "Geosphere.Plate.Cache.Contracts",
+        "Geosphere.Plate.Datasets.Contracts",
+        "Geosphere.Plate.Junction.Contracts",
+        "Geosphere.Plate.Kinematics.Contracts",
+        "Geosphere.Plate.Motion.Contracts",
+        "Geosphere.Plate.Partition.Contracts",
+        "Geosphere.Plate.Polygonization.Contracts",
+        "Geosphere.Plate.Reconstruction.Contracts",
+        "Geosphere.Plate.Runtime.Des.Contracts",
+        "Geosphere.Plate.Sampling.Contracts",
+        "Geosphere.Plate.Service.Contracts",
+        "Geosphere.Plate.Topology.Contracts",
+        "Geosphere.Plate.Velocity.Contracts",
+        "Raster.Contracts",
+        "Space.Region.Contracts",
+        "Space.Stellar.Contracts"
+      ],
+      "exclude": []
     },
     "hosts": {
       "sourceDir": "project/hosts",
       "action": "publish",
-      "include": []
+      "include": [
+        "Geosphere.Plate.PluginSmokeHost",
+        "Geosphere.Plate.SolverLab.Core",
+        "Geosphere.Plate.SolverLab.Runner"
+      ],
+      "exclude": []
     },
     "plugins": {
       "sourceDir": "project/plugins",
       "action": "publish",
-      "include": []
+      "include": [
+        "Geosphere.Plate.Cache.Materializer",
+        "Geosphere.Plate.Datasets.Import",
+        "Geosphere.Plate.Des.Ecs",
+        "Geosphere.Plate.Junction.Solver",
+        "Geosphere.Plate.Kinematics.Materializer",
+        "Geosphere.Plate.Kinematics.Serializers",
+        "Geosphere.Plate.Motion.Solver",
+        "Geosphere.Plate.Partition.Solver",
+        "Geosphere.Plate.Polygonization.Solver",
+        "Geosphere.Plate.Reconstruction.Solver",
+        "Geosphere.Plate.Runtime.Des",
+        "Geosphere.Plate.Topology.Materializer",
+        "Geosphere.Plate.Topology.Serializers",
+        "Geosphere.Plate.Velocity.Solver",
+        "Raster.Core",
+        "Raster.GeoTiff",
+        "Raster.Masking.Plate",
+        "Raster.Registry",
+        "Space.Stellar.Solvers.Reference"
+      ],
+      "exclude": []
     }
   },
 
+  "packIncludeSymbols": false,
   "packProperties": {
     "GeneratePackageOnBuild": "false"
   },
