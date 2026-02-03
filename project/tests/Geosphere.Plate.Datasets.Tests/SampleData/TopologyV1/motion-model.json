@@ -1,0 +1,19 @@
+{
+  "schema": "segments-v1",
+  "modelId": "M0",
+  "plates": [
+    {
+      "plateKey": "p1",
+      "segments": [
+        {
+          "tickA": 0,
+          "tickB": 10,
+          "axisAzimuthMicroDeg": 0,
+          "axisElevationMicroDeg": 0,
+          "angleMicroDeg": 90000000
+        }
+      ]
+    }
+  ]
+}
+

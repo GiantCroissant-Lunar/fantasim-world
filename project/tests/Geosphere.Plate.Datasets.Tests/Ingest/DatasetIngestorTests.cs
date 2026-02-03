@@ -8,10 +8,13 @@ using FantaSim.Geosphere.Plate.Kinematics.Contracts.Events;
 using FantaSim.Geosphere.Plate.Kinematics.Materializer;
 using FantaSim.Geosphere.Plate.Testing.Storage;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
+using FantaSim.Geosphere.Plate.Topology.Materializer;
 using FluentAssertions;
 using Plate.TimeDete.Time.Primitives;
+using UnifyGeometry;
 using UnifyStorage.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Datasets.Tests.Ingest;
@@ -160,7 +163,9 @@ public sealed class DatasetIngestorTests
     public async Task IngestAsync_ModeIngest_FeatureSetTarget_FailsDeterministically()
     {
         var store = new RecordingKinematicsEventStore();
-        var ingestor = new PlatesDatasetIngestor(new JsonPlatesDatasetLoader(), store);
+        var kv = new InMemoryOrderedKeyValueStore();
+        using var topoStore = new PlateTopologyEventStore(kv);
+        var ingestor = new PlatesDatasetIngestor(new JsonPlatesDatasetLoader(), topoStore, store);
 
         var datasetRoot = GetSampleRoot("ValidSphere");
         var stream = new TruthStreamIdentity("main", "trunk", 0, Domain.GeoPlatesTopology, "M0");
@@ -172,8 +177,38 @@ public sealed class DatasetIngestorTests
 
         r.IsSuccess.Should().BeFalse();
         r.Errors.Should().NotBeEmpty();
-        r.Errors[0].Code.Should().Be("ingest_target.kind.not_supported");
+        r.Errors[0].Code.Should().Be("topology.format.unsupported");
         store.AppendCalls.Should().BeEmpty();
+        (await topoStore.GetLastSequenceAsync(stream, CancellationToken.None)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task IngestAsync_ModeIngest_TopologyV1FeatureSet_MaterializesTopology()
+    {
+        var kv = new InMemoryOrderedKeyValueStore();
+        using var topoStore = new PlateTopologyEventStore(kv);
+        var ingestor = new PlatesDatasetIngestor(new JsonPlatesDatasetLoader(), topoStore, kinematicsEventStore: null);
+
+        var datasetRoot = GetSampleRoot("TopologyV1");
+        var stream = new TruthStreamIdentity("main", "trunk", 0, Domain.GeoPlatesTopology, "M0");
+
+        var spec = new PlatesDatasetIngestSpec(
+            IngestMode.Ingest,
+            new[] { new PlatesAssetIngestTarget(PlatesAssetKind.FeatureSet, "topo1", stream) });
+
+        var r = await ingestor.IngestAsync(datasetRoot, spec, null, CancellationToken.None);
+        r.IsSuccess.Should().BeTrue();
+
+        var materializer = new PlateTopologyMaterializer(topoStore);
+        var state = await materializer.MaterializeAsync(stream, CancellationToken.None);
+
+        state.Plates.Count.Should().Be(2);
+        state.Boundaries.Count.Should().Be(1);
+        state.Junctions.Count.Should().Be(0);
+
+        // Verify boundary geometry is Polyline3 (not Polyline2)
+        var boundary = state.Boundaries.Values.First();
+        boundary.Geometry.Should().BeOfType<Polyline3>("because topology-v1 ingest should convert lon/lat to unit-sphere Polyline3");
     }
 
     private static string GetSampleRoot(string folderName)
@@ -233,10 +268,14 @@ public sealed class DatasetIngestorTests
 
         public Task AppendAsync(TruthStreamIdentity stream, IEnumerable<IPlateKinematicsEvent> events, CancellationToken cancellationToken)
         {
-            return AppendAsync(stream, events, AppendOptions.Default, cancellationToken);
+            return AppendAsync(stream, events, FantaSim.Geosphere.Plate.Kinematics.Contracts.Events.AppendOptions.Default, cancellationToken);
         }
 
-        public Task AppendAsync(TruthStreamIdentity stream, IEnumerable<IPlateKinematicsEvent> events, AppendOptions options, CancellationToken cancellationToken)
+        public Task AppendAsync(
+            TruthStreamIdentity stream,
+            IEnumerable<IPlateKinematicsEvent> events,
+            FantaSim.Geosphere.Plate.Kinematics.Contracts.Events.AppendOptions options,
+            CancellationToken cancellationToken)
         {
             AppendCalls.Add((stream, events.ToList()));
             return Task.CompletedTask;

@@ -13,6 +13,7 @@ using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
 using Plate.TimeDete.Time.Primitives;
 using Plate.TimeDete.Traceability.HashChain;
 using Plate.TimeDete.Traceability.Hashing;
@@ -228,6 +229,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                         dataset.Manifest.DatasetId,
                         resolved.AssetId,
                         t.StreamIdentity,
+                        dataset.Manifest.BodyFrame.AngularConvention,
                         topologyErrors,
                         cancellationToken).ConfigureAwait(false);
 
@@ -848,6 +850,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             string datasetId,
             string assetId,
             TruthStreamIdentity stream,
+            string angularConvention,
             List<DatasetValidationError> errors,
             CancellationToken cancellationToken)
         {
@@ -1014,10 +1017,21 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                     ?? DeterministicIdPolicy.DeriveStableId(datasetId, assetId, "boundary", boundary.BoundaryKey);
                 var boundaryId = new BoundaryId(boundaryGuid);
 
-                var points = boundary.Polyline!
-                    .Select(p => new Point2(p[0], p[1]))
-                    .ToArray();
-                IGeometry geometry = new Polyline2(points);
+                IGeometry geometry;
+                if (string.Equals(angularConvention, "body_lonlat_degrees", StringComparison.OrdinalIgnoreCase))
+                {
+                    var points3d = boundary.Polyline!
+                        .Select(p => SurfacePoint.FromLatLon(p[1], p[0]).ToPoint3())
+                        .ToArray();
+                    geometry = new Polyline3(points3d);
+                }
+                else
+                {
+                    var points = boundary.Polyline!
+                        .Select(p => new Point2(p[0], p[1]))
+                        .ToArray();
+                    geometry = new Polyline2(points);
+                }
 
                 var tick = new CanonicalTick(boundary.Tick ?? 0);
 
