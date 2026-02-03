@@ -14,6 +14,9 @@ public sealed class PlateKinematicsEventStore : IKinematicsEventStore, IDisposab
 
     private readonly IKeyValueStore _store;
     private readonly object _lock = new();
+    // Tri-state cache: -1 = false, 0 = unknown, 1 = true
+    private volatile int _supportsIterator;
+    private volatile int _supportsWriteBatch;
 
     public PlateKinematicsEventStore(IKeyValueStore store)
     {
@@ -73,33 +76,75 @@ public sealed class PlateKinematicsEventStore : IKinematicsEventStore, IDisposab
         ApplyTickMonotonicityPolicy(eventsList, options.TickPolicy);
 
         var prefix = BuildStreamPrefix(stream);
-        using var batch = _store.CreateWriteBatch();
+
+        IWriteBatch? batch = null;
+        if (_supportsWriteBatch != -1)
+        {
+            try
+            {
+                batch = _store.CreateWriteBatch();
+                _supportsWriteBatch = 1;
+            }
+            catch (Exception ex) when (ex is NotSupportedException or NotImplementedException)
+            {
+                _supportsWriteBatch = -1;
+            }
+        }
 
         var previousHash = GetPreviousHashForAppend(prefix);
-
-        foreach (var evt in eventsList)
-        {
-            var eventKey = BuildEventKey(prefix, evt.Sequence);
-            var eventBytes = MessagePackKinematicsEventSerializer.Serialize(evt);
-
-            var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
-            var recordSequence = evt.Sequence;
-            var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, recordSequence, previousHash, eventBytes);
-            var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, recordSequence, previousHash, hash, eventBytes);
-
-            batch.Put(eventKey, recordBytes);
-            previousHash = hash;
-        }
 
         var headKey = BuildHeadKey(prefix);
         var lastSequence = eventsList[^1].Sequence;
         Span<byte> headBytes = stackalloc byte[8];
         BinaryPrimitives.WriteInt64BigEndian(headBytes, lastSequence);
-        batch.Put(headKey, headBytes);
 
-        lock (_lock)
+        if (batch is not null)
         {
-            _store.Write(batch);
+            using (batch)
+            {
+                foreach (var evt in eventsList)
+                {
+                    var eventKey = BuildEventKey(prefix, evt.Sequence);
+                    var eventBytes = MessagePackKinematicsEventSerializer.Serialize(evt);
+
+                    var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+                    var recordSequence = evt.Sequence;
+                    var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, recordSequence, previousHash, eventBytes);
+                    var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, recordSequence, previousHash, hash, eventBytes);
+
+                    batch.Put(eventKey, recordBytes);
+                    previousHash = hash;
+                }
+
+                batch.Put(headKey, headBytes);
+
+                lock (_lock)
+                {
+                    _store.Write(batch);
+                }
+            }
+        }
+        else
+        {
+            // Fallback for minimal KV backends without write batches (single-writer MVP only).
+            lock (_lock)
+            {
+                foreach (var evt in eventsList)
+                {
+                    var eventKey = BuildEventKey(prefix, evt.Sequence);
+                    var eventBytes = MessagePackKinematicsEventSerializer.Serialize(evt);
+
+                    var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+                    var recordSequence = evt.Sequence;
+                    var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, recordSequence, previousHash, eventBytes);
+                    var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, recordSequence, previousHash, hash, eventBytes);
+
+                    _store.Put(eventKey, recordBytes);
+                    previousHash = hash;
+                }
+
+                _store.Put(headKey, headBytes);
+            }
         }
 
         return Task.CompletedTask;
@@ -157,15 +202,64 @@ public sealed class PlateKinematicsEventStore : IKinematicsEventStore, IDisposab
         await Task.Yield();
 
         var bytesToYield = new List<byte[]>();
-        lock (_lock)
-        {
-            using var iterator = _store.CreateIterator();
-            iterator.Seek(firstKey);
 
-            while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
+        var useIterator = _supportsIterator != -1;
+        if (useIterator)
+        {
+            lock (_lock)
             {
-                bytesToYield.Add(iterator.Value.ToArray());
-                iterator.Next();
+                IKeyValueIterator? iterator = null;
+                try
+                {
+                    iterator = _store.CreateIterator();
+                    _supportsIterator = 1;
+                }
+                catch (Exception ex) when (ex is NotSupportedException or NotImplementedException)
+                {
+                    _supportsIterator = -1;
+                }
+
+                if (iterator is not null)
+                {
+                    using (iterator)
+                    {
+                        iterator.Seek(firstKey);
+
+                        while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
+                        {
+                            bytesToYield.Add(iterator.Value.ToArray());
+                            iterator.Next();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (_supportsIterator == -1)
+        {
+            var lastSequence = await GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
+            if (lastSequence.HasValue && lastSequence.Value >= fromSequenceInclusive)
+            {
+                for (var seq = fromSequenceInclusive; seq <= lastSequence.Value; seq++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var eventKey = BuildEventKey(prefix, seq);
+                    byte[]? recordBytes;
+                    lock (_lock)
+                    {
+                        recordBytes = ReadBytes(eventKey);
+                    }
+
+                    if (recordBytes == null || recordBytes.Length == 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"Missing kinematics event record at sequence {seq} for stream {stream}. " +
+                            "This suggests partial persistence or corruption.");
+                    }
+
+                    bytesToYield.Add(recordBytes);
+                }
             }
         }
 

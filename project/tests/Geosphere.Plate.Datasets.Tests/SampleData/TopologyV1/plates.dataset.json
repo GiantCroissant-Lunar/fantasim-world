@@ -1,0 +1,27 @@
+{
+  "datasetId": "test.dataset.topology",
+  "bodyId": "test.body",
+  "bodyFrame": {
+    "shape": "sphere",
+    "radius": 1.0,
+    "unit": "m",
+    "angularConvention": "body_lonlat_degrees"
+  },
+  "timeMapping": {
+    "tickUnit": "CTU"
+  },
+  "featureSets": [
+    { "assetId": "topo1", "relativePath": "topology.json", "format": "topology-v1" }
+  ],
+  "rasterSequences": [],
+  "motionModels": [
+    { "assetId": "mm1", "relativePath": "motion-model.json", "format": "segments-v1" }
+  ],
+  "canonicalizationRules": {
+    "version": 1,
+    "stableIdPolicyId": "sha256-guid-v1",
+    "assetOrderingPolicyId": "kind_assetId_path-v1",
+    "quantizationPolicyId": "euler_microdegrees-v1"
+  }
+}
+

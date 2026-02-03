@@ -1,0 +1,24 @@
+{
+  "schema": "topology-v1",
+  "plates": [
+    { "plateKey": "p1" },
+    { "plateKey": "p2" }
+  ],
+  "boundaries": [
+    {
+      "boundaryKey": "b1",
+      "leftPlateKey": "p1",
+      "rightPlateKey": "p2",
+      "boundaryType": "transform",
+      "polyline": [
+        [0.0, 0.0],
+        [10.0, 0.0],
+        [10.0, 10.0],
+        [0.0, 10.0],
+        [0.0, 0.0]
+      ],
+      "tick": 0
+    }
+  ]
+}
+
