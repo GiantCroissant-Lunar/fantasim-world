@@ -87,6 +87,8 @@ public sealed class DeformationSolver : IDeformationService
     {
         if (domain.Grid is null)
             throw new NotSupportedException("Only regular grid sampling domains are supported (SamplingDomain.Grid must be non-null).");
+        if (domain.Extent is null)
+            throw new NotSupportedException("SamplingDomain.Extent must be non-null.");
 
         var grid = domain.Grid;
 
@@ -105,6 +107,10 @@ public sealed class DeformationSolver : IDeformationService
         double dLonRad = (grid.ResolutionDeg * Math.PI) / 180.0;
         double dLatRad = (grid.ResolutionDeg * Math.PI) / 180.0;
 
+        // Check if grid is global (longitude spans 360°)
+        double lonSpan = domain.Extent.MaxLon - domain.Extent.MinLon;
+        bool isGlobalGrid = Math.Abs(lonSpan - 360.0) < 1e-6;
+
         // Metric terms
         double invRaLat = 1.0 / (SphereRadius * dLatRad); // 1 / dy
         // 1 / dx depends on lat: 1 / (R * cos(lat) * dlon)
@@ -113,7 +119,7 @@ public sealed class DeformationSolver : IDeformationService
 
         for (int j = 0; j < nLat; j++)
         {
-            double latDeg = domain.Extent!.MinLat + (j * grid.ResolutionDeg) + (grid.Registration == GridRegistration.Pixel ? grid.ResolutionDeg * 0.5 : 0.0);
+            double latDeg = domain.Extent.MinLat + (j * grid.ResolutionDeg) + (grid.Registration == GridRegistration.Pixel ? grid.ResolutionDeg * 0.5 : 0.0);
             double latRad = (latDeg * Math.PI) / 180.0;
             double cosLat = Math.Cos(latRad);
 
@@ -135,13 +141,20 @@ public sealed class DeformationSolver : IDeformationService
             {
                 int cIdx = j * nLon + i; // center index
 
-                // X indices (East-West) - wrapping
-                // Assumes global grid for wrapping. If not global, clamp?
-                // RFC says "finite difference stencil width is 3 nodes".
-                // Implies we need left/right.
-                // For simplified impl, assume wrapping for lon.
-                int iPrev = (i == 0) ? nLon - 1 : i - 1;
-                int iNext = (i == nLon - 1) ? 0 : i + 1;
+                // X indices (East-West)
+                // For global grids, wrap longitude at boundaries
+                // For regional grids, use one-sided differences at edges
+                int iPrev, iNext;
+                if (isGlobalGrid)
+                {
+                    iPrev = (i == 0) ? nLon - 1 : i - 1;
+                    iNext = (i == nLon - 1) ? 0 : i + 1;
+                }
+                else
+                {
+                    iPrev = Math.Max(0, i - 1);
+                    iNext = Math.Min(nLon - 1, i + 1);
+                }
 
                 int idxPrevX = j * nLon + iPrev;
                 int idxNextX = j * nLon + iNext;
@@ -155,9 +168,28 @@ public sealed class DeformationSolver : IDeformationService
                 double ve = comps[cIdx * 2];
                 double vn = comps[cIdx * 2 + 1];
 
-                // Derivatives
-                double dVe_dE = (comps[idxNextX * 2] - comps[idxPrevX * 2]) * 0.5 * invRaCosLatLon;
-                double dVn_dE = (comps[idxNextX * 2 + 1] - comps[idxPrevX * 2 + 1]) * 0.5 * invRaCosLatLon;
+                // Derivatives in East direction
+                double dVe_dE, dVn_dE;
+                if (!isGlobalGrid && (i == 0 || i == nLon - 1))
+                {
+                    // One-sided difference at boundaries for regional grids
+                    if (i == 0)
+                    {
+                        dVe_dE = (comps[idxNextX * 2] - ve) * invRaCosLatLon;
+                        dVn_dE = (comps[idxNextX * 2 + 1] - vn) * invRaCosLatLon;
+                    }
+                    else
+                    {
+                        dVe_dE = (ve - comps[idxPrevX * 2]) * invRaCosLatLon;
+                        dVn_dE = (vn - comps[idxPrevX * 2 + 1]) * invRaCosLatLon;
+                    }
+                }
+                else
+                {
+                    // Central difference
+                    dVe_dE = (comps[idxNextX * 2] - comps[idxPrevX * 2]) * 0.5 * invRaCosLatLon;
+                    dVn_dE = (comps[idxNextX * 2 + 1] - comps[idxPrevX * 2 + 1]) * 0.5 * invRaCosLatLon;
+                }
 
                 double dVe_dN, dVn_dN;
                 if (jPrev < 0)
@@ -219,6 +251,8 @@ public sealed class DeformationSolver : IDeformationService
     {
         if (domain.Grid is null)
             throw new NotSupportedException("Only regular grid sampling domains are supported (SamplingDomain.Grid must be non-null).");
+        if (domain.Extent is null)
+            throw new NotSupportedException("SamplingDomain.Extent must be non-null.");
 
         // Note: For efficiency, we could implement a method that only computes vorticity without full tensor if needed.
         // But the pipeline described in RFC Section 7.2 implies:
@@ -259,11 +293,15 @@ public sealed class DeformationSolver : IDeformationService
         double dLatRad = (grid.ResolutionDeg * Math.PI) / 180.0;
         double invRaLat = 1.0 / (SphereRadius * dLatRad);
 
+        // Check if grid is global (longitude spans 360°)
+        double lonSpan = domain.Extent.MaxLon - domain.Extent.MinLon;
+        bool isGlobalGrid = Math.Abs(lonSpan - 360.0) < 1e-6;
+
         var comps = velocityCoverage.Components;
 
         for (int j = 0; j < nLat; j++)
         {
-            double latDeg = domain.Extent!.MinLat + (j * grid.ResolutionDeg) + (grid.Registration == GridRegistration.Pixel ? grid.ResolutionDeg * 0.5 : 0.0);
+            double latDeg = domain.Extent.MinLat + (j * grid.ResolutionDeg) + (grid.Registration == GridRegistration.Pixel ? grid.ResolutionDeg * 0.5 : 0.0);
             double latRad = (latDeg * Math.PI) / 180.0;
             double cosLat = Math.Cos(latRad);
             bool isPole = Math.Abs(latDeg - 90.0) < 1e-9 || Math.Abs(latDeg + 90.0) < 1e-9;
@@ -280,9 +318,21 @@ public sealed class DeformationSolver : IDeformationService
             {
                 int cIdx = j * nLon + i;
 
-                // Indices
-                int iPrev = (i == 0) ? nLon - 1 : i - 1;
-                int iNext = (i == nLon - 1) ? 0 : i + 1;
+                // X indices (East-West)
+                // For global grids, wrap longitude at boundaries
+                // For regional grids, use one-sided differences at edges
+                int iPrev, iNext;
+                if (isGlobalGrid)
+                {
+                    iPrev = (i == 0) ? nLon - 1 : i - 1;
+                    iNext = (i == nLon - 1) ? 0 : i + 1;
+                }
+                else
+                {
+                    iPrev = Math.Max(0, i - 1);
+                    iNext = Math.Min(nLon - 1, i + 1);
+                }
+                
                 int idxPrevX = j * nLon + iPrev;
                 int idxNextX = j * nLon + iNext;
 
@@ -293,9 +343,28 @@ public sealed class DeformationSolver : IDeformationService
                 double ve = comps[cIdx * 2];
                 double vn = comps[cIdx * 2 + 1];
 
-                // Derivatives
-                double dVe_dE = (comps[idxNextX * 2] - comps[idxPrevX * 2]) * 0.5 * invRaCosLatLon;
-                double dVn_dE = (comps[idxNextX * 2 + 1] - comps[idxPrevX * 2 + 1]) * 0.5 * invRaCosLatLon;
+                // Derivatives in East direction
+                double dVe_dE, dVn_dE;
+                if (!isGlobalGrid && (i == 0 || i == nLon - 1))
+                {
+                    // One-sided difference at boundaries for regional grids
+                    if (i == 0)
+                    {
+                        dVe_dE = (comps[idxNextX * 2] - ve) * invRaCosLatLon;
+                        dVn_dE = (comps[idxNextX * 2 + 1] - vn) * invRaCosLatLon;
+                    }
+                    else
+                    {
+                        dVe_dE = (ve - comps[idxPrevX * 2]) * invRaCosLatLon;
+                        dVn_dE = (vn - comps[idxPrevX * 2 + 1]) * invRaCosLatLon;
+                    }
+                }
+                else
+                {
+                    // Central difference
+                    dVe_dE = (comps[idxNextX * 2] - comps[idxPrevX * 2]) * 0.5 * invRaCosLatLon;
+                    dVn_dE = (comps[idxNextX * 2 + 1] - comps[idxPrevX * 2 + 1]) * 0.5 * invRaCosLatLon;
+                }
 
                 double dVe_dN, dVn_dN;
                 if (jPrev < 0)
