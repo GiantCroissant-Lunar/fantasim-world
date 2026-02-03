@@ -63,6 +63,16 @@
         "Space.Stellar.Solvers.Reference"
       ],
       "exclude": []
+    },
+    "tools": {
+      "sourceDir": "project/tools/architecture",
+      "action": "pack",
+      "include": [
+        "Architecture.Analyzers",
+        "Architecture.Policy",
+        "Architecture.Router"
+      ],
+      "exclude": []
     }
   },
 
