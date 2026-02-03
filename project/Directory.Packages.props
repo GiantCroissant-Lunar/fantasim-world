@@ -31,7 +31,11 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
 
     <!-- Architecture Tools -->
+    <PackageVersion Include="Riok.Mapperly" Version="4.1.0" />
     <PackageVersion Include="RulesEngine" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="18.0.2" />
+
+    <!-- Storage -->
+    <PackageVersion Include="ZoneTree" Version="1.8.5" />
   </ItemGroup>
 </Project>

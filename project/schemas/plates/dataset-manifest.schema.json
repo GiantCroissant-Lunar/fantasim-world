@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/dataset-manifest/v1.schema.json",
+  "title": "PlatesDatasetManifest",
+  "description": "Manifest describing a plates dataset with body frame, time mapping, and asset references",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["datasetId", "bodyId", "bodyFrame", "timeMapping"],
+  "properties": {
+    "datasetId": {
+      "type": "string",
+      "description": "Unique identifier for this dataset"
+    },
+    "bodyId": {
+      "type": "string",
+      "description": "Reference to the planetary body (e.g., 'Earth', 'Mars')"
+    },
+    "bodyFrame": {
+      "$ref": "#/definitions/BodyFrame"
+    },
+    "timeMapping": {
+      "$ref": "#/definitions/TimeMapping"
+    },
+    "featureSets": {
+      "type": "array",
+      "description": "Feature set assets (geometries, boundaries, etc.)",
+      "items": {
+        "$ref": "#/definitions/FeatureSetAsset"
+      }
+    },
+    "rasterSequences": {
+      "type": "array",
+      "description": "Raster sequence assets (age grids, etc.)",
+      "items": {
+        "$ref": "#/definitions/RasterSequenceAsset"
+      }
+    },
+    "motionModels": {
+      "type": "array",
+      "description": "Motion model assets (rotation models, etc.)",
+      "items": {
+        "$ref": "#/definitions/MotionModelAsset"
+      }
+    },
+    "canonicalizationRules": {
+      "$ref": "#/definitions/CanonicalizationRules"
+    }
+  },
+  "definitions": {
+    "BodyFrame": {
+      "type": "object",
+      "description": "Geodetic reference frame for the planetary body",
+      "required": ["shape", "unit", "angularConvention"],
+      "properties": {
+        "shape": {
+          "type": "string",
+          "description": "Shape of the body",
+          "enum": ["Sphere", "Ellipsoid"]
+        },
+        "radius": {
+          "type": "number",
+          "description": "Radius in meters (for spherical bodies)"
+        },
+        "semiMajor": {
+          "type": "number",
+          "description": "Semi-major axis in meters (for ellipsoids)"
+        },
+        "semiMinor": {
+          "type": "number",
+          "description": "Semi-minor axis in meters (for ellipsoids)"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit of measurement (e.g., 'meters', 'kilometers')"
+        },
+        "angularConvention": {
+          "type": "string",
+          "description": "Angular convention (e.g., 'geo', 'math')"
+        }
+      }
+    },
+    "TimeMapping": {
+      "type": "object",
+      "description": "Time unit configuration for the dataset",
+      "required": ["tickUnit"],
+      "properties": {
+        "tickUnit": {
+          "type": "string",
+          "description": "Unit for simulation ticks (e.g., 'Mya', 'years')"
+        }
+      }
+    },
+    "FeatureSetAsset": {
+      "type": "object",
+      "description": "Reference to a feature set asset (geometries, boundaries)",
+      "required": ["assetId", "relativePath", "format"],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "Unique identifier for this asset"
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Path relative to dataset root"
+        },
+        "format": {
+          "type": "string",
+          "description": "File format (e.g., 'geojson', 'shp', 'gpml')"
+        }
+      }
+    },
+    "RasterSequenceAsset": {
+      "type": "object",
+      "description": "Reference to a raster sequence asset (age grids, etc.)",
+      "required": ["assetId", "relativePath", "format"],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "Unique identifier for this asset"
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Path relative to dataset root"
+        },
+        "format": {
+          "type": "string",
+          "description": "File format (e.g., 'geotiff', 'nc', 'grd')"
+        }
+      }
+    },
+    "MotionModelAsset": {
+      "type": "object",
+      "description": "Reference to a motion model asset (rotation poles, etc.)",
+      "required": ["assetId", "relativePath", "format"],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "Unique identifier for this asset"
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Path relative to dataset root"
+        },
+        "format": {
+          "type": "string",
+          "description": "File format (e.g., 'csv', 'rot', 'grot')"
+        }
+      }
+    },
+    "CanonicalizationRules": {
+      "type": "object",
+      "description": "Rules for canonicalizing dataset elements",
+      "required": ["version", "stableIdPolicyId", "assetOrderingPolicyId", "quantizationPolicyId"],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "description": "Version of canonicalization rules"
+        },
+        "stableIdPolicyId": {
+          "type": "string",
+          "description": "Policy for generating stable identifiers"
+        },
+        "assetOrderingPolicyId": {
+          "type": "string",
+          "description": "Policy for canonical asset ordering"
+        },
+        "quantizationPolicyId": {
+          "type": "string",
+          "description": "Policy for coordinate quantization"
+        }
+      }
+    }
+  }
+}

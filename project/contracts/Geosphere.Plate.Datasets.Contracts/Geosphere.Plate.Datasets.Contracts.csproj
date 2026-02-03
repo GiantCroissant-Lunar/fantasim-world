@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePack" />
+    <PackageReference Include="Riok.Mapperly" />
   </ItemGroup>
 
 </Project>

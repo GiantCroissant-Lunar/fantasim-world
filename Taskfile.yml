@@ -29,6 +29,22 @@ tasks:
     silent: false
 
   # =============================================================================
+  # RFC-021: Schema-Driven Domain Models
+  # =============================================================================
+
+  generate-dtos:
+    desc: "Generate C# DTOs from JSON Schema files (RFC-021)"
+    cmds:
+      - pwsh -NoProfile -File scripts/generate-dtos.ps1
+    silent: false
+
+  generate-dtos:dryrun:
+    desc: "Preview DTO generation without writing files"
+    cmds:
+      - pwsh -NoProfile -File scripts/generate-dtos.ps1 -DryRun
+    silent: false
+
+  # =============================================================================
   # Smoke Host Verification
   # =============================================================================
 

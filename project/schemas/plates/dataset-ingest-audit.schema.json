@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/dataset-ingest-audit/v1.schema.json",
+  "title": "PlatesDatasetIngestAudit",
+  "description": "Audit record for dataset ingestion process",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "datasetId",
+    "bodyId",
+    "manifestFileName",
+    "manifestFileSha256",
+    "manifestCanonicalSha256",
+    "stableIdPolicyId",
+    "assetOrderingPolicyId",
+    "quantizationPolicyId",
+    "assets",
+    "targets",
+    "streams",
+    "auditSha256"
+  ],
+  "properties": {
+    "datasetId": {
+      "type": "string",
+      "description": "Unique identifier for the ingested dataset"
+    },
+    "bodyId": {
+      "type": "string",
+      "description": "Reference to the planetary body"
+    },
+    "manifestFileName": {
+      "type": "string",
+      "description": "Name of the manifest file that was ingested"
+    },
+    "manifestFileSha256": {
+      "type": "string",
+      "description": "SHA256 hash of the manifest file content"
+    },
+    "manifestCanonicalSha256": {
+      "type": "string",
+      "description": "SHA256 hash of the canonicalized manifest"
+    },
+    "stableIdPolicyId": {
+      "type": "string",
+      "description": "Policy used for generating stable identifiers"
+    },
+    "assetOrderingPolicyId": {
+      "type": "string",
+      "description": "Policy used for canonical asset ordering"
+    },
+    "quantizationPolicyId": {
+      "type": "string",
+      "description": "Policy used for coordinate quantization"
+    },
+    "assets": {
+      "type": "array",
+      "description": "Audit records for individual assets",
+      "items": {
+        "$ref": "#/definitions/PlatesDatasetIngestAssetAudit"
+      }
+    },
+    "targets": {
+      "type": "array",
+      "description": "Audit records for ingestion targets",
+      "items": {
+        "$ref": "#/definitions/PlatesDatasetIngestTargetAudit"
+      }
+    },
+    "streams": {
+      "type": "array",
+      "description": "Audit records for event streams",
+      "items": {
+        "$ref": "#/definitions/PlatesDatasetIngestStreamAudit"
+      }
+    },
+    "auditSha256": {
+      "type": "string",
+      "description": "SHA256 hash of this audit record for integrity verification"
+    }
+  },
+  "definitions": {
+    "PlatesDatasetIngestAssetAudit": {
+      "type": "object",
+      "description": "Audit record for a single asset ingestion",
+      "required": ["assetId", "kind", "relativePath", "format", "fileSha256"],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "Unique identifier for the asset"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Type of asset (e.g., 'FeatureSet', 'RasterSequence', 'MotionModel')"
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Path to the asset file relative to dataset root"
+        },
+        "format": {
+          "type": "string",
+          "description": "File format of the asset"
+        },
+        "fileSha256": {
+          "type": "string",
+          "description": "SHA256 hash of the asset file content"
+        }
+      }
+    },
+    "PlatesDatasetIngestTargetAudit": {
+      "type": "object",
+      "description": "Audit record for an ingestion target",
+      "required": ["assetId", "kind", "streamKey"],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "Reference to the source asset"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Type of target (e.g., 'EventStream', 'Cache')"
+        },
+        "streamKey": {
+          "type": "string",
+          "description": "Key identifying the target stream or storage location"
+        }
+      }
+    },
+    "PlatesDatasetIngestStreamAudit": {
+      "type": "object",
+      "description": "Audit record for an event stream",
+      "required": ["streamKey", "eventCount", "firstSequence", "lastSequence", "eventIdDigestSha256"],
+      "properties": {
+        "streamKey": {
+          "type": "string",
+          "description": "Key identifying the event stream"
+        },
+        "eventCount": {
+          "type": "integer",
+          "description": "Number of events written to the stream",
+          "minimum": 0
+        },
+        "firstSequence": {
+          "type": "integer",
+          "description": "First sequence number in the stream",
+          "minimum": 0
+        },
+        "lastSequence": {
+          "type": "integer",
+          "description": "Last sequence number in the stream",
+          "minimum": 0
+        },
+        "eventIdDigestSha256": {
+          "type": "string",
+          "description": "SHA256 hash of all event IDs in the stream"
+        }
+      }
+    }
+  }
+}

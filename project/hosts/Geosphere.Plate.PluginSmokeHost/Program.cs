@@ -182,7 +182,11 @@ for (var i = 0; i < 5; i++)
 
     // Register the shared registry instance and other required services per-iteration
     services.AddSingleton<IRegistry>(registry);
-    services.AddSingleton<IKeyValueStore, InMemoryOrderedKeyValueStore>();
+
+    // Configure ZoneTree storage with disk persistence
+    StorageConfiguration.ClearStorage();
+    services.AddSingleton<IKeyValueStore>(_ => StorageConfiguration.CreateStore());
+
     services.AddSingleton<ITopologyEventStore, NullTopologyEventStore>();
     services.AddSingleton<IPlateTopologySnapshotStore, NullPlateTopologySnapshotStore>();
     services.AddSingleton<PlateTopologyTimeline>();
