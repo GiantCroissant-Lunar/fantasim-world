@@ -217,10 +217,13 @@ public sealed class FrameAwareVelocityCalculator
         var northComponent = Dot(tangentVel, north);
         var eastComponent = Dot(tangentVel, east);
 
-        // Azimuth: angle from north, clockwise positive
-        // atan2(east, north) gives angle from north, counterclockwise positive
-        // We want clockwise positive, so negate the east component
-        return Math.Atan2(eastComponent, northComponent);
+        // Azimuth: angle from north, clockwise positive (0 = north, π/2 = east, π = south, 3π/2 = west)
+        // atan2(east, north) gives angle from north in the range [-π, π]
+        // Normalize to [0, 2π) for consistent output
+        var azimuth = Math.Atan2(eastComponent, northComponent);
+        if (azimuth < 0)
+            azimuth += 2 * Math.PI;
+        return azimuth;
     }
 
     /// <summary>
