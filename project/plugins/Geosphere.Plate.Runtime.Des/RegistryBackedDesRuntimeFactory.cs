@@ -54,7 +54,6 @@ internal sealed class RegistryBackedDesRuntimeFactory : IDesRuntimeFactory
 
         var queue = new PriorityQueueDesQueue();
         var appender = new PlateTopologyEventAppender(eventStore);
-        var scheduler = new DesScheduler(queue);
 
         var dispatcher = new StandardDesDispatcher();
 

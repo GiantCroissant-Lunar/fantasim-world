@@ -61,7 +61,7 @@
   </ItemGroup>
 
   <!-- Architecture governance analyzers -->
-  <ItemGroup Condition="!$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\tools\architecture\'))">
+  <ItemGroup Condition="!$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\tools\\architecture\\'))">
     <ProjectReference Include="$(MSBuildThisFileDirectory)tools\architecture\Architecture.Analyzers\Architecture.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
