@@ -203,7 +203,7 @@ public sealed class DeformationSolver : IDeformationService
             {
                 DomainId = domain.DomainId,
                 PolicyHash = policy.ComputeHash(),
-                VelocityCoverageId = velocityCoverage.Provenance.GetHashCode().ToString(), // Simplified ID
+                VelocityCoverageId = $"{velocityCoverage.Provenance.DomainId}:{velocityCoverage.Provenance.FieldId}:{tick.Value}:{velocityCoverage.Provenance.PolicyHash}",
                 DifferentiationScheme = "central-difference-sphere-v1",
                 SourceTruthHashes = velocityCoverage.Provenance.SourceTruthHashes,
                 ComputedAt = DateTime.UtcNow
@@ -368,9 +368,7 @@ public sealed class DeformationSolver : IDeformationService
         {
             Domain = domain,
             Tick = tick,
-            FieldId = ScalarFieldId.SpeedMagnitude, // Note: Metadata hack as ScalarFieldId enum doesn't have deformation types yet?
-            // RFC says: "Sampling.Contracts currently defines ScalarFieldId as an enum; provenance carries the deformation field id string."
-            // But we need to put SOMETHING in FieldId. The stub used SpeedMagnitude. I'll stick with that.
+            FieldId = MapDeformationFieldIdToEnum(deformationFieldId),
             Values = values,
             Provenance = new CoverageProvenance
             {
@@ -383,24 +381,16 @@ public sealed class DeformationSolver : IDeformationService
         };
     }
 
-    private static bool TryGetLatitudeDeg(SamplingDomain domain, GridSpec grid, int nodeIndex, out double latDeg)
+    private static ScalarFieldId MapDeformationFieldIdToEnum(string deformationFieldId)
     {
-        latDeg = double.NaN;
-
-        if (grid.NLon <= 0 || grid.NLat <= 0)
-            return false;
-
-        var extent = domain.Extent ?? new LatLonExtent { MinLat = -90.0, MaxLat = 90.0, MinLon = -180.0, MaxLon = 180.0 };
-
-        int latIndex = nodeIndex / grid.NLon;
-        if ((uint)latIndex >= (uint)grid.NLat)
-            return false;
-
-        double startLat = grid.Registration == GridRegistration.Pixel
-            ? extent.MinLat + (grid.ResolutionDeg * 0.5)
-            : extent.MinLat;
-
-        latDeg = startLat + (latIndex * grid.ResolutionDeg);
-        return true;
+        return deformationFieldId switch
+        {
+            DeformationFieldId.Vorticity => ScalarFieldId.Vorticity,
+            DeformationFieldId.DilatationRate => ScalarFieldId.DilatationRate,
+            DeformationFieldId.SecondInvariant => ScalarFieldId.SecondInvariant,
+            DeformationFieldId.Divergence => ScalarFieldId.Divergence,
+            DeformationFieldId.Convergence => ScalarFieldId.Convergence,
+            _ => throw new ArgumentException($"Unknown deformation field ID: '{deformationFieldId}'")
+        };
     }
 }
