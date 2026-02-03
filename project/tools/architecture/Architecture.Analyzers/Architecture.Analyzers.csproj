@@ -5,6 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);MA0009</NoWarn>
+    <ArchitectureSkipAnalyzers>true</ArchitectureSkipAnalyzers>
+    <PackageId>GiantCroissant.FantaSim.Architecture.Analyzers</PackageId>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Roslyn analyzers for FantaSim architecture governance</Description>
+    <PackageTags>fantasim;architecture;analyzers;roslyn</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@ using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 using UnifyGeometry;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Serialization;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts;
 
@@ -28,6 +29,11 @@ public static class TopologySerializationOptions
         .WithResolver(CompositeResolver.Create(
             new IMessagePackFormatter[]
             {
+                new CanonicalTickFormatter(),
+                new DomainFormatter(),
+                new GeometryFormatter(),
+                new JunctionIdFormatter(),
+
                 // Geometry formatters
                 new Point2Formatter(),
                 new Segment2Formatter(),

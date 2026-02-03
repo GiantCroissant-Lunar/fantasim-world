@@ -18,6 +18,7 @@
 
     <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Contracts\ServiceArchi.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\service-archi\dotnet\ServiceArchi.Core\ServiceArchi.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-storage\dotnet\src\UnifyStorage.Abstractions\UnifyStorage.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

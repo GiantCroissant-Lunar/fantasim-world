@@ -60,6 +60,21 @@
     <ProjectReference Include="$(CrosscutFoundationRoot)\dotnet\src\UnifyDiagnostics.Generators\UnifyDiagnostics.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <!-- Architecture governance analyzers -->
+  <ItemGroup Condition="!$([System.String]::Copy('$(MSBuildProjectDirectory)').Contains('\\tools\\architecture\\'))">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)tools\architecture\Architecture.Analyzers\Architecture.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Architecture analyzer severity configuration -->
+  <PropertyGroup>
+    <!-- Constitutional rules: always Error -->
+    <WarningsAsErrors>$(WarningsAsErrors);FW1002;FW3201</WarningsAsErrors>
+    <!-- Suppress other rules for now -->
+    <NoWarn>$(NoWarn);FW1001;FW1003;FW1004</NoWarn>
+    <!-- PolicyHashIncomplete: Placeholder, keep suppressed -->
+    <NoWarn>$(NoWarn);FW3101</NoWarn>
+  </PropertyGroup>
+
   <Import Project="$(PlateSharedGenerators)\AutoToString.Local.props" Condition="Exists('$(PlateSharedGenerators)\AutoToString.Local.props')" />
   <Import Project="$(PlateSharedGenerators)\DisposePattern.Local.props" Condition="Exists('$(PlateSharedGenerators)\DisposePattern.Local.props')" />
   <Import Project="$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props" Condition="Exists('$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props')" />
