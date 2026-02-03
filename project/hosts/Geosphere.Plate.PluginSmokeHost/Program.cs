@@ -306,6 +306,13 @@ static void ValidateTopologyPipeline(IRegistry registry, ILogger logger)
         Domain: Domain.GeoPlatesTopology,
         Model: "M0");
 
+    var existingHead = store.GetHeadAsync(stream, CancellationToken.None).GetAwaiter().GetResult();
+    if (existingHead.Sequence > 0)
+    {
+        logger.LogInformation("Topology validation skipped; stream already contains data (Seq={Seq}).", existingHead.Sequence);
+        return;
+    }
+
     var evt = new PlateCreatedEvent(
         EventId: TopologyEventId.NewId().Value,
         PlateId: PlateId.NewId(),

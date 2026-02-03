@@ -73,7 +73,7 @@ public sealed class GeometryFormatter : IMessagePackFormatter<IGeometry?>
                 return;
 
             case Polyline3 polyline:
-                writer.WriteArrayHeader(1 + polyline.Count * 3);
+                writer.WriteArrayHeader(1 + polyline.PointCount * 3);
                 writer.Write((byte)GeometryType.Polyline3);
                 for (var i = 0; i < polyline.PointCount; i++)
                 {

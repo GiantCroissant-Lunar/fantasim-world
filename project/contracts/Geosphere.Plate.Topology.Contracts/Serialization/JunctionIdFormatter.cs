@@ -8,6 +8,12 @@ public sealed class JunctionIdFormatter : IMessagePackFormatter<JunctionId>
 {
     public void Serialize(ref MessagePackWriter writer, JunctionId value, MessagePackSerializerOptions options)
     {
+        if (value.IsEmpty)
+        {
+            writer.WriteNil();
+            return;
+        }
+
         var formatter = options.Resolver.GetFormatterWithVerify<Guid>();
         formatter.Serialize(ref writer, value.Value, options);
     }
