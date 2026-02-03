@@ -79,7 +79,9 @@ docs/_inbox/
 specs/
 
 ref-projects/
-*.DotSettings
+# ReSharper/Rider settings - allow solution-level, ignore user and project-level
+*.DotSettings.user
+**/*.csproj.DotSettings
 
 build_output*.txt
 TestResults/

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wpf:ResourceDictionary
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+
+  <!-- ============================= -->
+  <!-- C# FILE LAYOUT / TYPE PLACEMENT -->
+  <!-- ============================= -->
+
+  <!-- Place each top-level type in its own file -->
+  <s:String x:Key="/Default/CodeStyle/FileLayout/CSharp/PlaceEachTypeInSeparateFile/@EntryValue">
+    True
+  </s:String>
+
+  <!-- Allow nested types (do not force extraction) -->
+  <s:String x:Key="/Default/CodeStyle/FileLayout/CSharp/AllowNestedTypes/@EntryValue">
+    True
+  </s:String>
+
+  <!-- Do not reorder members aggressively -->
+  <s:String x:Key="/Default/CodeStyle/FileLayout/CSharp/ApplyFileLayout/@EntryValue">
+    True
+  </s:String>
+
+  <!-- ============================= -->
+  <!-- USING DIRECTIVES -->
+  <!-- ============================= -->
+
+  <!-- Remove unused usings -->
+  <s:String x:Key="/Default/CodeStyle/CSharp/Using/RemoveUnused/@EntryValue">
+    True
+  </s:String>
+
+  <!-- Sort usings -->
+  <s:String x:Key="/Default/CodeStyle/CSharp/Using/SortUsings/@EntryValue">
+    True
+  </s:String>
+
+  <!-- Prefer file-scoped namespaces (C# 10+) -->
+  <s:String x:Key="/Default/CodeStyle/CSharp/NamespaceDeclarations/@EntryValue">
+    FileScoped
+  </s:String>
+
+  <!-- ============================= -->
+  <!-- SAFETY: AVOID AGGRESSIVE REWRITES -->
+  <!-- ============================= -->
+
+  <!-- Do not convert to expression-bodied members -->
+  <s:String x:Key="/Default/CodeStyle/CSharp/ExpressionBodyMembers/@EntryValue">
+    Never
+  </s:String>
+
+  <!-- Do not force var usage -->
+  <s:String x:Key="/Default/CodeStyle/CSharp/VarUsage/@EntryValue">
+    Explicit
+  </s:String>
+
+  <!-- ============================= -->
+  <!-- CLEANUP SCOPE -->
+  <!-- ============================= -->
+
+  <!-- Only apply changes where safe -->
+  <s:String x:Key="/Default/CodeInspection/Cleanup/ApplyCodeStyle/@EntryValue">
+    True
+  </s:String>
+
+</wpf:ResourceDictionary>
