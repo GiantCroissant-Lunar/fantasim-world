@@ -37,6 +37,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     private const string MetaCapsKey = "Meta:Caps";
     private readonly IKeyValueStore _store;
     private readonly object _lock = new();
+    // Tri-state cache: -1 = false, 0 = unknown, 1 = true
+    private volatile int _supportsIterator;
+    private volatile int _supportsWriteBatch;
 
     /// <summary>
     /// Per-stream locks for optimistic concurrency control.
@@ -169,7 +172,19 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
                 }
             }
 
-            using var batch = _store.CreateWriteBatch();
+            IWriteBatch? batch = null;
+            if (_supportsWriteBatch != -1)
+            {
+                try
+                {
+                    batch = _store.CreateWriteBatch();
+                    _supportsWriteBatch = 1;
+                }
+                catch (Exception ex) when (ex is NotSupportedException or NotImplementedException)
+                {
+                    _supportsWriteBatch = -1;
+                }
+            }
 
             // Check if this is a genesis append (brand new stream)
             var isGenesisAppend = !StreamExists(prefix);
@@ -179,40 +194,81 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
             byte[] lastHash = previousHash;
             long lastTick = 0;
 
-            foreach (var evt in eventsList)
-            {
-                var eventKey = BuildEventKey(prefix, evt.Sequence);
-                var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
-
-                var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
-                // RFC-V2-0005: tick is hash-critical and must use the event's Tick, not Sequence
-                var tick = evt.Tick.Value;
-                var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
-                var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
-
-                batch.Put(eventKey, recordBytes);
-                previousHash = hash;
-                lastHash = hash;
-                lastTick = tick;
-            }
-
             // Update head metadata per RFC-V2-0004: {lastSeq, lastHash, lastTick}
             var headKey = BuildHeadKey(prefix);
             var lastSequence = eventsList[^1].Sequence;
-            var headBytes = HeadRecordSerializer.Serialize(lastSequence, lastHash, lastTick);
-            batch.Put(headKey, headBytes);
 
-            // For genesis appends with Reject policy, mark stream as tick-monotone
-            // This is the ONLY safe time to set this flag - at stream creation with strict policy
-            if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+            if (batch is not null)
             {
-                SetCapabilitiesInBatch(batch, prefix, StreamCapabilities.GenesisWithRejectPolicy);
+                using (batch)
+                {
+                    foreach (var evt in eventsList)
+                    {
+                        var eventKey = BuildEventKey(prefix, evt.Sequence);
+                        var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
+
+                        var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+                        // RFC-V2-0005: tick is hash-critical and must use the event's Tick, not Sequence
+                        var tick = evt.Tick.Value;
+                        var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
+                        var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
+
+                        batch.Put(eventKey, recordBytes);
+                        previousHash = hash;
+                        lastHash = hash;
+                        lastTick = tick;
+                    }
+
+                    var headBytes = HeadRecordSerializer.Serialize(lastSequence, lastHash, lastTick);
+                    batch.Put(headKey, headBytes);
+
+                    // For genesis appends with Reject policy, mark stream as tick-monotone
+                    // This is the ONLY safe time to set this flag - at stream creation with strict policy
+                    if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+                    {
+                        SetCapabilitiesInBatch(batch, prefix, StreamCapabilities.GenesisWithRejectPolicy);
+                    }
+
+                    // Write batch atomically
+                    lock (_lock)
+                    {
+                        _store.Write(batch);
+                    }
+                }
             }
-
-            // Write batch atomically
-            lock (_lock)
+            else
             {
-                _store.Write(batch);
+                // Fallback path for minimal IKeyValueStore backends that don't support
+                // iterators/batches (e.g., early host integrations).
+                //
+                // This is NOT crash-safe/atomic across the whole append like a real write batch,
+                // but it allows end-to-end persistence for single-writer MVP flows.
+                lock (_lock)
+                {
+                    foreach (var evt in eventsList)
+                    {
+                        var eventKey = BuildEventKey(prefix, evt.Sequence);
+                        var eventBytes = MessagePackEventSerializer.Serialize((IPlateTopologyEvent)evt);
+
+                        var schemaVersion = MessagePackEventRecordSerializer.SchemaVersionV1;
+                        var tick = evt.Tick.Value;
+                        var hash = MessagePackEventRecordSerializer.ComputeHashV1(schemaVersion, tick, previousHash, eventBytes);
+                        var recordBytes = MessagePackEventRecordSerializer.SerializeRecord(schemaVersion, tick, previousHash, hash, eventBytes);
+
+                        _store.Put(eventKey, recordBytes);
+                        previousHash = hash;
+                        lastHash = hash;
+                        lastTick = tick;
+                    }
+
+                    var headBytes = HeadRecordSerializer.Serialize(lastSequence, lastHash, lastTick);
+                    _store.Put(headKey, headBytes);
+
+                    if (isGenesisAppend && options.TickPolicy == TickMonotonicityPolicy.Reject)
+                    {
+                        SetCapabilitiesDirect(prefix, StreamCapabilities.GenesisWithRejectPolicy);
+                    }
+                }
             }
         }
         finally
@@ -290,15 +346,65 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         await Task.Yield(); // Ensure async pattern
 
         var bytesToYield = new List<byte[]>();
-        lock (_lock)
-        {
-            using var iterator = _store.CreateIterator();
-            iterator.Seek(firstKey);
 
-            while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
+        var useIterator = _supportsIterator != -1;
+        if (useIterator)
+        {
+            lock (_lock)
             {
-                bytesToYield.Add(iterator.Value.ToArray());
-                iterator.Next();
+                IKeyValueIterator? iterator = null;
+                try
+                {
+                    iterator = _store.CreateIterator();
+                    _supportsIterator = 1;
+                }
+                catch (Exception ex) when (ex is NotSupportedException or NotImplementedException)
+                {
+                    _supportsIterator = -1;
+                }
+
+                if (iterator is not null)
+                {
+                    using (iterator)
+                    {
+                        iterator.Seek(firstKey);
+
+                        while (iterator.Valid && HasStreamPrefix(iterator.Key, prefix))
+                        {
+                            bytesToYield.Add(iterator.Value.ToArray());
+                            iterator.Next();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (_supportsIterator == -1)
+        {
+            var head = GetHeadInternal(prefix);
+            var lastSequence = head.Sequence;
+            if (lastSequence >= fromSequenceInclusive)
+            {
+                for (var seq = fromSequenceInclusive; seq <= lastSequence; seq++)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var eventKey = BuildEventKey(prefix, seq);
+                    byte[]? recordBytes;
+                    lock (_lock)
+                    {
+                        recordBytes = ReadBytes(eventKey);
+                    }
+
+                    if (recordBytes == null || recordBytes.Length == 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"Missing event record at sequence {seq} for stream {stream}. " +
+                            "This suggests partial persistence or corruption.");
+                    }
+
+                    bytesToYield.Add(recordBytes);
+                }
             }
         }
 
@@ -540,22 +646,45 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
 
         byte[]? bytes = null;
 
+        if (_supportsIterator == -1)
+        {
+            return Task.FromResult<PlateTopologySnapshot?>(null);
+        }
+
         lock (_lock)
         {
-            using var iterator = _store.CreateIterator();
-            iterator.SeekForPrev(targetKey);
+            IKeyValueIterator? iterator = null;
+            try
+            {
+                iterator = _store.CreateIterator();
+                _supportsIterator = 1;
+            }
+            catch (Exception ex) when (ex is NotSupportedException or NotImplementedException)
+            {
+                _supportsIterator = -1;
+            }
 
-            if (!iterator.Valid)
+            if (iterator is null)
+            {
                 return Task.FromResult<PlateTopologySnapshot?>(null);
+            }
 
-            var foundKey = iterator.Key;
+            using (iterator)
+            {
+                iterator.SeekForPrev(targetKey);
 
-            // Check if the found key starts with our snapshot prefix
-            // (ensures we don't accidentally read a snapshot from another stream)
-            if (!foundKey.StartsWith(snapshotPrefix))
-                return Task.FromResult<PlateTopologySnapshot?>(null);
+                if (!iterator.Valid)
+                    return Task.FromResult<PlateTopologySnapshot?>(null);
 
-            bytes = iterator.Value.ToArray();
+                var foundKey = iterator.Key;
+
+                // Check if the found key starts with our snapshot prefix
+                // (ensures we don't accidentally read a snapshot from another stream)
+                if (!foundKey.StartsWith(snapshotPrefix))
+                    return Task.FromResult<PlateTopologySnapshot?>(null);
+
+                bytes = iterator.Value.ToArray();
+            }
         }
 
         if (bytes == null || bytes.Length == 0)
@@ -837,6 +966,13 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var capsKey = BuildMetaCapsKey(prefix);
         var capsBytes = caps.ToBytes();
         batch.Put(capsKey, capsBytes);
+    }
+
+    private void SetCapabilitiesDirect(byte[] prefix, StreamCapabilities caps)
+    {
+        var capsKey = BuildMetaCapsKey(prefix);
+        var capsBytes = caps.ToBytes();
+        _store.Put(capsKey, capsBytes);
     }
 
     /// <summary>
