@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Junction.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Junction.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Junction.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Junction contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;junction;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

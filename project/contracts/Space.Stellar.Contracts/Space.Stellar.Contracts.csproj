@@ -8,6 +8,10 @@
     <PackageId>GiantCroissant.FantaSim.Space.Stellar.Contracts</PackageId>
     <AssemblyName>Space.Stellar.Contracts</AssemblyName>
     <UnifySerializationTargets>MessagePack</UnifySerializationTargets>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Space stellar contracts for FantaSim</Description>
+    <PackageTags>fantasim;contracts;space;stellar</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

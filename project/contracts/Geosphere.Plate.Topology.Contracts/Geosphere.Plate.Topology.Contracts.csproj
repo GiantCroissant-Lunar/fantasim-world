@@ -8,6 +8,10 @@
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Topology.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Topology.Contracts</AssemblyName>
     <UnifySerializationTargets>MessagePack</UnifySerializationTargets>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Topology contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;topology;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

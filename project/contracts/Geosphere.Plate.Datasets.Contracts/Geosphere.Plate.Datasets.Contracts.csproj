@@ -8,6 +8,10 @@
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Datasets.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Datasets.Contracts</AssemblyName>
     <UnifySerializationTargets>MessagePack</UnifySerializationTargets>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Datasets contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;datasets;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

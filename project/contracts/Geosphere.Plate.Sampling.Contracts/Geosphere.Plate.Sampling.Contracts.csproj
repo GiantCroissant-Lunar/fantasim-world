@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Sampling.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Sampling.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Sampling.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Sampling contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;sampling;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

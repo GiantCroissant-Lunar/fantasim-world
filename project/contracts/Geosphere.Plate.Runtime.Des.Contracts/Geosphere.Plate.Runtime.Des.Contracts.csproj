@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Runtime.Des</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Runtime.Des.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Runtime.Des.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Runtime.Des contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;runtime;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

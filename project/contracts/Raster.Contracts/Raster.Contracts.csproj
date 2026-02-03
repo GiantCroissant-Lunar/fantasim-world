@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Raster.Contracts</RootNamespace>
     <PackageId>FantaSim.Raster.Contracts</PackageId>
     <AssemblyName>Raster.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Raster contracts for FantaSim</Description>
+    <PackageTags>fantasim;contracts;raster</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

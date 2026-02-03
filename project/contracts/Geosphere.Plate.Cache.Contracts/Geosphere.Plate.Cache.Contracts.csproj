@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Cache.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Cache.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Cache.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Cache contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;cache;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

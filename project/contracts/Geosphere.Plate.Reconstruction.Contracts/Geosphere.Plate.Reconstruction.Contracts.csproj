@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Reconstruction.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Reconstruction.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Reconstruction.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Reconstruction contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;reconstruction;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

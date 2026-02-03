@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Polygonization.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Polygonization.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Polygonization.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Polygonization contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;polygonization;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

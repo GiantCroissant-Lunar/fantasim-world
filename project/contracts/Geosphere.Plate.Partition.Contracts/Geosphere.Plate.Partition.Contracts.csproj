@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Partition.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Partition.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Partition.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Partition contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;partition;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Space.Region.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Space.Region.Contracts</PackageId>
     <AssemblyName>Space.Region.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Space region contracts for FantaSim</Description>
+    <PackageTags>fantasim;contracts;space;region</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

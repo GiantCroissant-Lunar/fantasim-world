@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Velocity.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Velocity.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Velocity.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Velocity contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;velocity;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

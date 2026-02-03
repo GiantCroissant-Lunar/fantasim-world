@@ -7,6 +7,10 @@
     <RootNamespace>FantaSim.Geosphere.Plate.Service.Contracts</RootNamespace>
     <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Service.Contracts</PackageId>
     <AssemblyName>Geosphere.Plate.Service.Contracts</AssemblyName>
+    <Version>$(Version)</Version>
+    <Authors>Lunar Horse</Authors>
+    <Description>Service contracts for FantaSim plate geosphere</Description>
+    <PackageTags>fantasim;contracts;plate;service;geosphere</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
