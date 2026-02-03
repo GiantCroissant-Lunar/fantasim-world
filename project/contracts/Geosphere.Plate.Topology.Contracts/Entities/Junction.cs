@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
+using UnifySerialization.Abstractions;
 
 namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 
@@ -17,6 +18,7 @@ namespace FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 /// and immutability. Arrays compare by reference which causes subtle bugs.
 /// </para>
 /// </remarks>
+[UnifyModel]
 public readonly record struct Junction(
     JunctionId JunctionId,
     ImmutableArray<BoundaryId> BoundaryIds,
