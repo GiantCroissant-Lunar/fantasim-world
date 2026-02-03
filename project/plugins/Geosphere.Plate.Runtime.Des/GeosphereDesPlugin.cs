@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FantaSim.Geosphere.Plate.Runtime.Des.Extensions;
-using FantaSim.Geosphere.Plate.Topology.Contracts.Determinism;
 using Microsoft.Extensions.DependencyInjection;
 using PluginArchi.Extensibility.Abstractions;
 using ServiceArchi.Contracts;
@@ -39,19 +38,10 @@ public sealed class GeosphereDesPlugin : ILifecyclePlugin
 
         _registry = registry;
 
-        // 2. Resolve dependencies required for our factory
-        var eventStore = context.Services.GetService<FantaSim.Geosphere.Plate.Topology.Contracts.Events.ITopologyEventStore>();
-        var timeline = context.Services.GetService<FantaSim.Geosphere.Plate.Topology.Materializer.PlateTopologyTimeline>();
-        var seedProvider = context.Services.GetService<ISolverSeedProvider>();
-
-        if (eventStore != null && timeline != null && seedProvider != null)
-        {
-            // 3. Create and register the DesRuntimeFactory with deterministic seed provider
-            _factory = new DesRuntimeFactory(eventStore, timeline, seedProvider);
-
-            // Register as the singleton factory
-            registry.Register<IDesRuntimeFactory>(_factory);
-        }
+        // 2. Register a factory that resolves dependencies lazily.
+        // This avoids plugin initialization-order coupling.
+        _factory = new RegistryBackedDesRuntimeFactory(registry, context.Services);
+        registry.Register<IDesRuntimeFactory>(_factory);
 
         return ValueTask.CompletedTask;
     }

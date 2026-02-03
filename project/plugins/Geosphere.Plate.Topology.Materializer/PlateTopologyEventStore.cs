@@ -352,25 +352,28 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         var prefix = BuildStreamPrefix(stream);
         var headKey = BuildHeadKey(prefix);
 
-        Span<byte> buffer = stackalloc byte[8];
-        int written;
-
+        byte[]? headBytes;
         lock (_lock)
         {
-            if (!_store.TryGet(headKey, buffer, out written))
-            {
-                return Task.FromResult<long?>(null);
-            }
+            headBytes = ReadBytes(headKey);
         }
 
-        if (written != 8)
+        if (headBytes == null || headBytes.Length == 0)
         {
-            throw new InvalidOperationException($"Head value must be 8 bytes, got {written}");
+            return Task.FromResult<long?>(null);
         }
 
-        // Decode big-endian uint64 to long
-        var value = BinaryPrimitives.ReadInt64BigEndian(buffer);
-        return Task.FromResult<long?>(value);
+        if (HeadRecordSerializer.IsLegacyFormat(headBytes))
+        {
+            return Task.FromResult<long?>(HeadRecordSerializer.ReadLegacySequence(headBytes));
+        }
+
+        if (HeadRecordSerializer.TryDeserialize(headBytes, out var lastSeq, out _, out _))
+        {
+            return Task.FromResult<long?>(lastSeq);
+        }
+
+        throw new InvalidOperationException("Head value is not a recognized head record format.");
     }
 
     /// <summary>
@@ -409,23 +412,30 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     {
         var headKey = BuildHeadKey(prefix);
 
-        Span<byte> headBuffer = stackalloc byte[8];
-        int headWritten;
-
+        byte[]? headBytes;
         lock (_lock)
         {
-            if (!_store.TryGet(headKey, headBuffer, out headWritten))
-            {
-                return StreamHead.Empty;
-            }
+            headBytes = ReadBytes(headKey);
         }
 
-        if (headWritten != 8)
+        if (headBytes == null || headBytes.Length == 0)
         {
-            throw new InvalidOperationException($"Head value must be 8 bytes, got {headWritten}");
+            return StreamHead.Empty;
         }
 
-        var lastSequence = BinaryPrimitives.ReadInt64BigEndian(headBuffer);
+        if (!HeadRecordSerializer.IsLegacyFormat(headBytes) &&
+            HeadRecordSerializer.TryDeserialize(headBytes, out var seq, out var hash, out var tick))
+        {
+            return new StreamHead(seq, hash, tick);
+        }
+
+        if (!HeadRecordSerializer.IsLegacyFormat(headBytes))
+        {
+            throw new InvalidOperationException("Head value is not a recognized head record format.");
+        }
+
+        var lastSequence = HeadRecordSerializer.ReadLegacySequence(headBytes);
+
         var lastEventKey = BuildEventKey(prefix, lastSequence);
 
         byte[]? lastValue;
@@ -569,23 +579,29 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
     {
         var headKey = BuildHeadKey(prefix);
 
-        Span<byte> headBuffer = stackalloc byte[8];
-        int headWritten;
-
+        byte[]? headBytes;
         lock (_lock)
         {
-            if (!_store.TryGet(headKey, headBuffer, out headWritten))
-            {
-                return MessagePackEventRecordSerializer.GetZeroHash();
-            }
+            headBytes = ReadBytes(headKey);
         }
 
-        if (headWritten != 8)
+        if (headBytes == null || headBytes.Length == 0)
         {
-            throw new InvalidOperationException($"Head value must be 8 bytes, got {headWritten}");
+            return MessagePackEventRecordSerializer.GetZeroHash();
         }
 
-        var lastSequence = BinaryPrimitives.ReadInt64BigEndian(headBuffer);
+        if (!HeadRecordSerializer.IsLegacyFormat(headBytes) &&
+            HeadRecordSerializer.TryDeserialize(headBytes, out _, out var lastHash, out _))
+        {
+            return lastHash;
+        }
+
+        if (!HeadRecordSerializer.IsLegacyFormat(headBytes))
+        {
+            throw new InvalidOperationException("Head value is not a recognized head record format.");
+        }
+
+        var lastSequence = HeadRecordSerializer.ReadLegacySequence(headBytes);
         var lastEventKey = BuildEventKey(prefix, lastSequence);
 
         byte[]? lastValue;
@@ -644,9 +660,9 @@ public sealed class PlateTopologyEventStore : ITopologyEventStore, IPlateTopolog
         }
 
         var evt = MessagePackEventSerializer.Deserialize(record.EventBytes);
-        if (evt.Sequence != record.Tick)
+        if (evt.Tick.Value != record.Tick)
         {
-            throw new InvalidOperationException("EventRecord tick does not match event payload sequence");
+            throw new InvalidOperationException("EventRecord tick does not match event payload tick");
         }
 
         return evt;

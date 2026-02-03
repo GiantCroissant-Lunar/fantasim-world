@@ -12,6 +12,11 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Threading;
+using UnifyStorage.Abstractions;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
+using Plate.TimeDete.Time.Primitives;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using TopologyEventId = FantaSim.Geosphere.Plate.Topology.Contracts.Events.EventId;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -31,7 +36,10 @@ var pluginDir = args.Length > 0 && !string.IsNullOrWhiteSpace(args[0])
 
 Directory.CreateDirectory(pluginDir);
 
-static bool TrySeedPluginDirectoryFromBuildOutput(string buildOutputDir, string pluginDir)
+static bool TrySeedPluginDirectoryFromBuildOutput(
+    string buildOutputDir,
+    string pluginDir,
+    ISet<string>? forceCopyFileNames = null)
 {
     if (!Directory.Exists(buildOutputDir))
     {
@@ -56,7 +64,7 @@ static bool TrySeedPluginDirectoryFromBuildOutput(string buildOutputDir, string 
     foreach (var file in files)
     {
         var fileName = Path.GetFileName(file);
-        if (hostFiles.Contains(fileName))
+        if (hostFiles.Contains(fileName) && (forceCopyFileNames == null || !forceCopyFileNames.Contains(fileName)))
         {
             continue;
         }
@@ -93,7 +101,13 @@ static bool TrySeedPluginDirectoryFromBuildOutputs(string projectDir, string plu
 
         foreach (var dir in candidateDirs)
         {
-            if (TrySeedPluginDirectoryFromBuildOutput(dir, pluginDir))
+            var forceCopy = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                name + ".dll",
+                name + ".deps.json"
+            };
+
+            if (TrySeedPluginDirectoryFromBuildOutput(dir, pluginDir, forceCopy))
             {
                 anySeeded = true;
                 break;
@@ -104,6 +118,49 @@ static bool TrySeedPluginDirectoryFromBuildOutputs(string projectDir, string plu
     return anySeeded;
 }
 
+static void PreloadSharedAssemblies(string pluginDir, ILogger logger)
+{
+    if (!Directory.Exists(pluginDir))
+    {
+        return;
+    }
+
+    static bool IsSharedByDefaultContext(string fileName)
+    {
+        return fileName.EndsWith(".Abstractions.dll", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith(".Contracts.dll", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith(".Primitives.dll", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith(".Shared.dll", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith(".Artifacts.dll", StringComparison.OrdinalIgnoreCase);
+    }
+
+    foreach (var path in Directory.GetFiles(pluginDir, "*.dll", SearchOption.TopDirectoryOnly))
+    {
+        var fileName = Path.GetFileName(path);
+        if (!IsSharedByDefaultContext(fileName))
+        {
+            continue;
+        }
+
+        var simpleName = Path.GetFileNameWithoutExtension(path);
+        var alreadyLoaded = AssemblyLoadContext.Default.Assemblies.Any(a =>
+            string.Equals(a.GetName().Name, simpleName, StringComparison.OrdinalIgnoreCase));
+        if (alreadyLoaded)
+        {
+            continue;
+        }
+
+        try
+        {
+            _ = Assembly.LoadFrom(path);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to preload shared assembly {AssemblyName} from {Path}", simpleName, path);
+        }
+    }
+}
+
 var registry = new ServiceArchi.Core.ServiceRegistry();
 
 // We'll recreate the ServiceCollection for each iteration while keeping the
@@ -111,10 +168,10 @@ var registry = new ServiceArchi.Core.ServiceRegistry();
 
 var projectDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 var seeded = TrySeedPluginDirectoryFromBuildOutputs(projectDir, pluginDir);
+PreloadSharedAssemblies(pluginDir, logger);
 
 Assembly.Load("Geosphere.Plate.Topology.Materializer");
 
-var allCollected = true;
 for (var i = 0; i < 5; i++)
 {
     logger.LogInformation("=== Iteration {Iteration}/5 ===", i + 1);
@@ -125,6 +182,7 @@ for (var i = 0; i < 5; i++)
 
     // Register the shared registry instance and other required services per-iteration
     services.AddSingleton<IRegistry>(registry);
+    services.AddSingleton<IKeyValueStore, InMemoryOrderedKeyValueStore>();
     services.AddSingleton<ITopologyEventStore, NullTopologyEventStore>();
     services.AddSingleton<IPlateTopologySnapshotStore, NullPlateTopologySnapshotStore>();
     services.AddSingleton<PlateTopologyTimeline>();
@@ -135,7 +193,6 @@ for (var i = 0; i < 5; i++)
     if (!collected)
     {
         Environment.ExitCode = 1;
-        allCollected = false;
         break;
     }
 }
@@ -209,6 +266,16 @@ static WeakReference RunPluginHostOnce(IServiceCollection services, ILogger logg
         logger.LogInformation("ReloadPluginsAsync result: {ReloadOk}", reloadOk);
     }
 
+    var validateTopology = string.Equals(
+        Environment.GetEnvironmentVariable("FANTASIM_SMOKE_VALIDATE_TOPOLOGY"),
+        "1",
+        StringComparison.OrdinalIgnoreCase);
+
+    if (validateTopology)
+    {
+        ValidateTopologyPipeline(registry, logger);
+    }
+
     var context = loader.Context;
     var weakRef = new WeakReference(context ?? throw new InvalidOperationException("Loader context is null after host initialization."));
     context = null;
@@ -221,6 +288,37 @@ static WeakReference RunPluginHostOnce(IServiceCollection services, ILogger logg
     {
         host.DisposeAsync().GetAwaiter().GetResult();
     }
+}
+
+static void ValidateTopologyPipeline(IRegistry registry, ILogger logger)
+{
+    var store = registry.TryGet<ITopologyEventStore>();
+    if (store is null)
+    {
+        logger.LogWarning("Topology event store not registered; skipping validation.");
+        return;
+    }
+
+    var stream = new TruthStreamIdentity(
+        VariantId: "main",
+        BranchId: "trunk",
+        LLevel: 0,
+        Domain: Domain.GeoPlatesTopology,
+        Model: "M0");
+
+    var evt = new PlateCreatedEvent(
+        EventId: TopologyEventId.NewId().Value,
+        PlateId: PlateId.NewId(),
+        Tick: new CanonicalTick(0),
+        Sequence: 1,
+        StreamIdentity: stream,
+        PreviousHash: ReadOnlyMemory<byte>.Empty,
+        Hash: ReadOnlyMemory<byte>.Empty);
+
+    store.AppendAsync(stream, new IPlateTopologyEvent[] { evt }, CancellationToken.None).GetAwaiter().GetResult();
+
+    var head = store.GetHeadAsync(stream, CancellationToken.None).GetAwaiter().GetResult();
+    logger.LogInformation("Topology validation append ok. Head: Seq={Seq}, Tick={Tick}", head.Sequence, head.LastTick);
 }
 
 static bool WaitForUnload(WeakReference weakRef)
