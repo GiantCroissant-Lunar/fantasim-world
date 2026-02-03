@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>FantaSim.Geosphere.Plate.Deformation.Solver</RootNamespace>
+    <PackageId>GiantCroissant.FantaSim.Geosphere.Plate.Deformation.Solver</PackageId>
+    <AssemblyName>Geosphere.Plate.Deformation.Solver</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Allow test project to access internal methods for RFC-V2-0054 test gates -->
+    <InternalsVisibleTo Include="Geosphere.Plate.Deformation.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Deformation.Contracts\Geosphere.Plate.Deformation.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Velocity.Contracts\Geosphere.Plate.Velocity.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Sampling.Contracts\Geosphere.Plate.Sampling.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Geosphere.Plate.Reconstruction.Contracts\Geosphere.Plate.Reconstruction.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

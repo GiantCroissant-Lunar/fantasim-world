@@ -43,6 +43,13 @@ public enum ScalarFieldId
     Age,
     SpeedMagnitude,
     PlateId,
+    
+    // Deformation fields
+    DilatationRate,
+    SecondInvariant,
+    Vorticity,
+    Divergence,
+    Convergence,
     // Add others as needed
 }
 
