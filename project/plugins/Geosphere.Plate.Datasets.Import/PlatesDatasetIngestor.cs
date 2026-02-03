@@ -11,27 +11,44 @@ using FantaSim.Geosphere.Plate.Kinematics.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Events;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
+using FantaSim.Geosphere.Plate.Topology.Contracts.Events;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using Plate.TimeDete.Time.Primitives;
 using Plate.TimeDete.Traceability.HashChain;
 using Plate.TimeDete.Traceability.Hashing;
+using UnifyGeometry;
 
 namespace FantaSim.Geosphere.Plate.Datasets.Import;
 
 public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
 {
     private readonly IPlatesDatasetLoader _loader;
+    private readonly ITopologyEventStore? _topologyEventStore;
     private readonly IKinematicsEventStore? _kinematicsEventStore;
 
-    public PlatesDatasetIngestor(IPlatesDatasetLoader loader, IKinematicsEventStore? kinematicsEventStore)
+    public PlatesDatasetIngestor(
+        IPlatesDatasetLoader loader,
+        ITopologyEventStore? topologyEventStore,
+        IKinematicsEventStore? kinematicsEventStore)
     {
         ArgumentNullException.ThrowIfNull(loader);
         _loader = loader;
+        _topologyEventStore = topologyEventStore;
         _kinematicsEventStore = kinematicsEventStore;
     }
 
+    public PlatesDatasetIngestor(IPlatesDatasetLoader loader, IKinematicsEventStore? kinematicsEventStore)
+        : this(loader, topologyEventStore: null, kinematicsEventStore)
+    {
+    }
+
+    public PlatesDatasetIngestor(ITopologyEventStore? topologyEventStore, IKinematicsEventStore? kinematicsEventStore)
+        : this(new JsonPlatesDatasetLoader(), topologyEventStore, kinematicsEventStore)
+    {
+    }
+
     public PlatesDatasetIngestor(IKinematicsEventStore? kinematicsEventStore)
-        : this(new JsonPlatesDatasetLoader(), kinematicsEventStore)
+        : this(new JsonPlatesDatasetLoader(), topologyEventStore: null, kinematicsEventStore)
     {
     }
 
@@ -87,7 +104,8 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
         var errors = new List<DatasetValidationError>();
         var producedStreams = new List<TruthStreamIdentity>();
 
-        var perStreamPlans = new Dictionary<TruthStreamIdentity, List<KinematicsEventPlan>>(new TruthStreamIdentityEqualityComparer());
+        var kinematicsPlansByStream = new Dictionary<TruthStreamIdentity, List<KinematicsEventPlan>>(new TruthStreamIdentityEqualityComparer());
+        var topologyPlansByStream = new Dictionary<TruthStreamIdentity, List<TopologyEventPlan>>(new TruthStreamIdentityEqualityComparer());
 
         var targets = spec.Targets ?? Array.Empty<PlatesAssetIngestTarget>();
         for (var i = 0; i < targets.Length; i++)
@@ -167,16 +185,67 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                         continue;
                     }
 
-                    if (!perStreamPlans.TryGetValue(t.StreamIdentity, out var streamPlans))
+                    if (!kinematicsPlansByStream.TryGetValue(t.StreamIdentity, out var streamPlans))
                     {
                         streamPlans = new List<KinematicsEventPlan>();
-                        perStreamPlans.Add(t.StreamIdentity, streamPlans);
+                        kinematicsPlansByStream.Add(t.StreamIdentity, streamPlans);
                     }
 
                     streamPlans.AddRange(plans);
                     break;
 
                 case PlatesAssetKind.FeatureSet:
+                    if (t.StreamIdentity.Domain != Domain.GeoPlatesTopology)
+                    {
+                        errors.Add(new DatasetValidationError(
+                            "ingest_target.domain.invalid",
+                            $"{basePath}.streamIdentity.domain",
+                            "Topology feature set targets must use domain geo.plates.topology."));
+                        continue;
+                    }
+
+                    if (_topologyEventStore is null)
+                    {
+                        errors.Add(new DatasetValidationError(
+                            "ingest.topology_store.required",
+                            "topologyEventStore",
+                            "A topology event store is required for ingest."));
+                        continue;
+                    }
+
+                    if (!string.Equals(resolved.Format, "topology-v1", StringComparison.OrdinalIgnoreCase))
+                    {
+                        errors.Add(new DatasetValidationError(
+                            "topology.format.unsupported",
+                            basePath,
+                            "Topology feature set format is not supported for ingest."));
+                        continue;
+                    }
+
+                    var topologyErrors = new List<DatasetValidationError>();
+                    var topoPlans = await TopologyV1FeatureSetParser.BuildTopologyPlansAsync(
+                        resolved.AbsolutePath,
+                        dataset.Manifest.DatasetId,
+                        resolved.AssetId,
+                        t.StreamIdentity,
+                        topologyErrors,
+                        cancellationToken).ConfigureAwait(false);
+
+                    if (topologyErrors.Count != 0)
+                    {
+                        errors.AddRange(topologyErrors.Select(e => e with { Path = $"{basePath}.{e.Path}" }));
+                        continue;
+                    }
+
+                    if (!topologyPlansByStream.TryGetValue(t.StreamIdentity, out var topoStreamPlans))
+                    {
+                        topoStreamPlans = new List<TopologyEventPlan>();
+                        topologyPlansByStream.Add(t.StreamIdentity, topoStreamPlans);
+                    }
+
+                    topoStreamPlans.AddRange(topoPlans);
+                    break;
+
                 case PlatesAssetKind.RasterSequence:
                 default:
                     errors.Add(new DatasetValidationError(
@@ -209,7 +278,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             return new PlatesDatasetIngestResult(dataset, producedStreams, audit, errors);
         }
 
-        if (_kinematicsEventStore is null)
+        if (_kinematicsEventStore is null && kinematicsPlansByStream.Count != 0)
         {
             var audit = BuildAudit(dataset, loadOptions.ManifestFileName, targets, streams: Array.Empty<PlatesDatasetIngestStreamAudit>());
             return new PlatesDatasetIngestResult(
@@ -219,17 +288,13 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 new[] { new DatasetValidationError("ingest.kinematics_store.required", "kinematicsEventStore", "A kinematics event store is required for ingest.") });
         }
 
-        var orderedStreams = perStreamPlans.Keys
-            .OrderBy(s => s.ToStreamKey(), StringComparer.Ordinal)
-            .ToList();
-
         var streamAudits = new List<PlatesDatasetIngestStreamAudit>();
 
-        foreach (var stream in orderedStreams)
+        foreach (var stream in kinematicsPlansByStream.Keys.OrderBy(s => s.ToStreamKey(), StringComparer.Ordinal))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var plans = perStreamPlans[stream];
+            var plans = kinematicsPlansByStream[stream];
             plans.Sort(KinematicsEventPlan.Compare);
 
             var lastSeq = await _kinematicsEventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
@@ -243,7 +308,7 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 events.Add(plans[i].Create(evtId, seq));
             }
 
-            var eventIdDigest = ComputeEventIdDigest(events);
+            var eventIdDigest = ComputeEventIdDigest(events, static e => e.Sequence, static e => e.EventId);
             streamAudits.Add(new PlatesDatasetIngestStreamAudit(
                 stream.ToStreamKey(),
                 events.Count,
@@ -252,6 +317,38 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 eventIdDigest));
 
             await _kinematicsEventStore.AppendAsync(stream, events, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (_topologyEventStore is not null)
+        {
+            foreach (var stream in topologyPlansByStream.Keys.OrderBy(s => s.ToStreamKey(), StringComparer.Ordinal))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var plans = topologyPlansByStream[stream];
+                plans.Sort(TopologyEventPlan.Compare);
+
+                var lastSeq = await _topologyEventStore.GetLastSequenceAsync(stream, cancellationToken).ConfigureAwait(false);
+                var nextSeq = lastSeq.HasValue ? lastSeq.Value + 1 : 0;
+
+                var events = new List<IPlateTopologyEvent>(plans.Count);
+                for (var i = 0; i < plans.Count; i++)
+                {
+                    var seq = nextSeq + i;
+                    var evtId = DeterministicIdPolicy.DeriveEventId(dataset.Manifest.DatasetId, plans[i].AssetId, seq);
+                    events.Add(plans[i].Create(evtId, seq));
+                }
+
+                var eventIdDigest = ComputeEventIdDigest(events, static e => e.Sequence, static e => e.EventId);
+                streamAudits.Add(new PlatesDatasetIngestStreamAudit(
+                    stream.ToStreamKey(),
+                    events.Count,
+                    events.Count == 0 ? -1 : events[0].Sequence,
+                    events.Count == 0 ? -1 : events[^1].Sequence,
+                    eventIdDigest));
+
+                await _topologyEventStore.AppendAsync(stream, events, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         streamAudits.Sort(static (a, b) => string.Compare(a.StreamKey, b.StreamKey, StringComparison.Ordinal));
@@ -445,14 +542,17 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
-    private static string ComputeEventIdDigest(IReadOnlyList<IPlateKinematicsEvent> events)
+    private static string ComputeEventIdDigest<TEvent>(
+        IReadOnlyList<TEvent> events,
+        Func<TEvent, long> getSequence,
+        Func<TEvent, Guid> getEventId)
     {
         var hasher = new Sha256HashChainHasher();
         string? previous = null;
 
         for (var i = 0; i < events.Count; i++)
         {
-            var payload = $"{events[i].Sequence}:{events[i].EventId:D}";
+            var payload = $"{getSequence(events[i])}:{getEventId(events[i]):D}";
             var bytes = Encoding.UTF8.GetBytes(payload);
             previous = HashChain.ComputeNextHash(hasher, bytes, previous);
         }
@@ -712,5 +812,275 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
             int AxisElevationMicroDeg,
             int AngleMicroDeg,
             string? SegmentId);
+    }
+
+    private sealed record TopologyEventPlan(
+        string AssetId,
+        int KindOrder,
+        string OrderKey,
+        Func<Guid, long, IPlateTopologyEvent> Create)
+    {
+        public static int Compare(TopologyEventPlan a, TopologyEventPlan b)
+        {
+            var c = a.KindOrder.CompareTo(b.KindOrder);
+            if (c != 0)
+                return c;
+
+            c = string.Compare(a.OrderKey, b.OrderKey, StringComparison.Ordinal);
+            if (c != 0)
+                return c;
+
+            return string.Compare(a.AssetId, b.AssetId, StringComparison.Ordinal);
+        }
+    }
+
+    private static class TopologyV1FeatureSetParser
+    {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = false,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        };
+
+        public static async Task<IReadOnlyList<TopologyEventPlan>> BuildTopologyPlansAsync(
+            string topologyPath,
+            string datasetId,
+            string assetId,
+            TruthStreamIdentity stream,
+            List<DatasetValidationError> errors,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(errors);
+
+            if (string.IsNullOrWhiteSpace(topologyPath))
+            {
+                errors.Add(new DatasetValidationError("topology.path.required", "topology.path", "Topology path is required."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            if (!File.Exists(topologyPath))
+            {
+                errors.Add(new DatasetValidationError("topology.file.missing", "topology.path", "Topology file does not exist."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            TopologyV1? doc;
+            try
+            {
+                await using var fs = File.OpenRead(topologyPath);
+                doc = await JsonSerializer.DeserializeAsync<TopologyV1>(fs, JsonOptions, cancellationToken).ConfigureAwait(false);
+            }
+            catch (JsonException)
+            {
+                errors.Add(new DatasetValidationError("topology.json.invalid", "topology.path", "Topology JSON is invalid."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+            catch (IOException)
+            {
+                errors.Add(new DatasetValidationError("topology.read_failed", "topology.path", "Failed to read topology file."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            if (doc is null)
+            {
+                errors.Add(new DatasetValidationError("topology.json.null", "topology.path", "Topology JSON deserialized to null."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            if (!string.Equals(doc.Schema, "topology-v1", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add(new DatasetValidationError("topology.schema.invalid", "schema", "Topology schema must be topology-v1."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            var platesRaw = doc.Plates ?? Array.Empty<TopologyPlateV1>();
+            var boundariesRaw = doc.Boundaries ?? Array.Empty<TopologyBoundaryV1>();
+
+            if (platesRaw.Length == 0)
+            {
+                errors.Add(new DatasetValidationError("topology.plates.required", "plates", "At least one plate is required."));
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            var platesByKey = new Dictionary<string, PlateId>(StringComparer.Ordinal);
+            foreach (var p in platesRaw)
+            {
+                if (p is null || string.IsNullOrWhiteSpace(p.PlateKey))
+                {
+                    errors.Add(new DatasetValidationError("topology.plate.key.required", "plates[].plateKey", "PlateKey is required."));
+                    continue;
+                }
+
+                if (platesByKey.ContainsKey(p.PlateKey))
+                {
+                    errors.Add(new DatasetValidationError("topology.plate.key.duplicate", $"plates[{p.PlateKey}]", "PlateKey must be unique."));
+                    continue;
+                }
+
+                var guid = TryParseGuid(p.PlateId) ?? DeterministicIdPolicy.DeriveStableId(datasetId, assetId, "plate", p.PlateKey);
+                platesByKey.Add(p.PlateKey, new PlateId(guid));
+            }
+
+            foreach (var b in boundariesRaw)
+            {
+                if (b is null)
+                {
+                    errors.Add(new DatasetValidationError("topology.boundary.required", "boundaries[]", "Boundary is required."));
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(b.BoundaryKey))
+                    errors.Add(new DatasetValidationError("topology.boundary.key.required", "boundaries[].boundaryKey", "BoundaryKey is required."));
+
+                if (string.IsNullOrWhiteSpace(b.LeftPlateKey))
+                    errors.Add(new DatasetValidationError("topology.boundary.left.required", "boundaries[].leftPlateKey", "LeftPlateKey is required."));
+
+                if (string.IsNullOrWhiteSpace(b.RightPlateKey))
+                    errors.Add(new DatasetValidationError("topology.boundary.right.required", "boundaries[].rightPlateKey", "RightPlateKey is required."));
+
+                if (b.Polyline is null || b.Polyline.Length < 2)
+                    errors.Add(new DatasetValidationError("topology.boundary.polyline.required", "boundaries[].polyline", "Polyline must have at least 2 points."));
+                else
+                {
+                    for (var pi = 0; pi < b.Polyline.Length; pi++)
+                    {
+                        var p = b.Polyline[pi];
+                        if (p is null || p.Length != 2)
+                        {
+                            errors.Add(new DatasetValidationError("topology.boundary.polyline.point.invalid", "boundaries[].polyline", "Polyline points must be [x,y]."));
+                            break;
+                        }
+                    }
+                }
+
+                if (b.Tick.HasValue && b.Tick.Value < 0)
+                    errors.Add(new DatasetValidationError("topology.boundary.tick.invalid", "boundaries[].tick", "Tick must be non-negative."));
+
+                if (!platesByKey.ContainsKey(b.LeftPlateKey))
+                    errors.Add(new DatasetValidationError("topology.boundary.left.unknown", "boundaries[].leftPlateKey", "LeftPlateKey does not exist in plates."));
+
+                if (!platesByKey.ContainsKey(b.RightPlateKey))
+                    errors.Add(new DatasetValidationError("topology.boundary.right.unknown", "boundaries[].rightPlateKey", "RightPlateKey does not exist in plates."));
+            }
+
+            if (errors.Count != 0)
+            {
+                errors.Sort(static (a, b) =>
+                {
+                    var c = string.Compare(a.Code, b.Code, StringComparison.Ordinal);
+                    if (c != 0)
+                        return c;
+                    c = string.Compare(a.Path, b.Path, StringComparison.Ordinal);
+                    if (c != 0)
+                        return c;
+                    return string.Compare(a.Message, b.Message, StringComparison.Ordinal);
+                });
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            var plans = new List<TopologyEventPlan>();
+
+            foreach (var plateKey in platesByKey.Keys.OrderBy(k => k, StringComparer.Ordinal))
+            {
+                var plateId = platesByKey[plateKey];
+                plans.Add(new TopologyEventPlan(
+                    assetId,
+                    KindOrder: 0,
+                    OrderKey: $"plate:{plateKey}",
+                    Create: (eventId, sequence) => new PlateCreatedEvent(
+                        eventId,
+                        plateId,
+                        new CanonicalTick(0),
+                        sequence,
+                        stream,
+                        ReadOnlyMemory<byte>.Empty,
+                        ReadOnlyMemory<byte>.Empty)));
+            }
+
+            var boundaryKeys = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var boundary in boundariesRaw.Where(b => b is not null).OrderBy(b => b!.BoundaryKey, StringComparer.Ordinal))
+            {
+                if (!boundaryKeys.Add(boundary!.BoundaryKey))
+                {
+                    errors.Add(new DatasetValidationError("topology.boundary.key.duplicate", "boundaries[].boundaryKey", "BoundaryKey must be unique."));
+                    continue;
+                }
+
+                var left = platesByKey[boundary.LeftPlateKey];
+                var right = platesByKey[boundary.RightPlateKey];
+
+                var boundaryGuid = TryParseGuid(boundary.BoundaryId)
+                    ?? DeterministicIdPolicy.DeriveStableId(datasetId, assetId, "boundary", boundary.BoundaryKey);
+                var boundaryId = new BoundaryId(boundaryGuid);
+
+                var points = boundary.Polyline!
+                    .Select(p => new Point2(p[0], p[1]))
+                    .ToArray();
+                IGeometry geometry = new Polyline2(points);
+
+                var tick = new CanonicalTick(boundary.Tick ?? 0);
+
+                plans.Add(new TopologyEventPlan(
+                    assetId,
+                    KindOrder: 1,
+                    OrderKey: $"b:{boundary.BoundaryKey}",
+                    Create: (eventId, sequence) => new BoundaryCreatedEvent(
+                        eventId,
+                        boundaryId,
+                        left,
+                        right,
+                        boundary.BoundaryType,
+                        geometry,
+                        tick,
+                        sequence,
+                        stream,
+                        ReadOnlyMemory<byte>.Empty,
+                        ReadOnlyMemory<byte>.Empty)));
+            }
+
+            if (errors.Count != 0)
+            {
+                errors.Sort(static (a, b) =>
+                {
+                    var c = string.Compare(a.Code, b.Code, StringComparison.Ordinal);
+                    if (c != 0)
+                        return c;
+                    c = string.Compare(a.Path, b.Path, StringComparison.Ordinal);
+                    if (c != 0)
+                        return c;
+                    return string.Compare(a.Message, b.Message, StringComparison.Ordinal);
+                });
+                return Array.Empty<TopologyEventPlan>();
+            }
+
+            plans.Sort(TopologyEventPlan.Compare);
+            return plans;
+        }
+
+        private static Guid? TryParseGuid(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            return Guid.TryParse(value, out var g) ? g : null;
+        }
+
+        private sealed record TopologyV1(
+            string Schema,
+            TopologyPlateV1[]? Plates,
+            TopologyBoundaryV1[]? Boundaries);
+
+        private sealed record TopologyPlateV1(
+            string PlateKey,
+            string? PlateId);
+
+        private sealed record TopologyBoundaryV1(
+            string BoundaryKey,
+            string? BoundaryId,
+            string LeftPlateKey,
+            string RightPlateKey,
+            BoundaryType BoundaryType,
+            double[][]? Polyline,
+            long? Tick);
     }
 }
