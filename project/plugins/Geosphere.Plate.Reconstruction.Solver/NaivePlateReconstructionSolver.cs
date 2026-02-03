@@ -2,6 +2,7 @@ using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Output;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
@@ -40,11 +41,18 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver,
     public IReadOnlyList<ReconstructedBoundary> ReconstructBoundaries(
         IPlateTopologyStateView topology,
         IPlateKinematicsStateView kinematics,
+        ReconstructionPolicy policy,
         CanonicalTick targetTick,
         ReconstructionOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(topology);
         ArgumentNullException.ThrowIfNull(kinematics);
+        ArgumentNullException.ThrowIfNull(policy);
+
+        // Extract policy fields per RFC-V2-0045 §3.1
+        var frame = policy.Frame;
+        var kinematicsModel = policy.KinematicsModel;
+        var strictness = policy.Strictness;
 
         var boundaries = topology.Boundaries.Values
             .Where(b => !b.IsRetired)
@@ -70,11 +78,18 @@ public sealed class NaivePlateReconstructionSolver : IPlateReconstructionSolver,
     public IReadOnlyList<ReconstructedFeature> ReconstructFeatures(
         IReadOnlyList<ReconstructableFeature> features,
         IPlateKinematicsStateView kinematics,
+        ReconstructionPolicy policy,
         CanonicalTick targetTick,
         ReconstructionOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(features);
         ArgumentNullException.ThrowIfNull(kinematics);
+        ArgumentNullException.ThrowIfNull(policy);
+
+        // Extract policy fields per RFC-V2-0045 §3.1
+        var frame = policy.Frame;
+        var kinematicsModel = policy.KinematicsModel;
+        var strictness = policy.Strictness;
 
         var reconstructed = features
             .Where(f => f.PlateIdProvenance.HasValue)
