@@ -20,6 +20,9 @@
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Abstractions\UnifySerialization.Abstractions.csproj" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-serialization\dotnet\src\UnifySerialization.Generators\UnifySerialization.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoToString.Set\General.AutoToString.Attributes\General.AutoToString.Attributes.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.DisposePattern.Set\General.DisposePattern.Attributes\General.DisposePattern.Attributes.csproj" />
+    <ProjectReference Include="..\..\..\..\..\plate-projects\plate-shared\dotnet\source-generators\General.AutoProperties.Set\General.AutoProperties.Attributes\General.AutoProperties.Attributes.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -42,6 +42,9 @@ public static class DesRuntimeServiceCollectionExtensions
         services.AddScoped<GeospherePlateDriver>();
         services.AddScoped<GeospherePlateTrigger>();
 
+        // Plate Solver Services (T1 Interfaces -> T3 Implementations)
+        services.AddPlateSolverServices();
+
         return services;
     }
 

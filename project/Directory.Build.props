@@ -64,6 +64,7 @@
   <Import Project="$(PlateSharedGenerators)\DisposePattern.Local.props" Condition="Exists('$(PlateSharedGenerators)\DisposePattern.Local.props')" />
   <Import Project="$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props" Condition="Exists('$(PlateSharedGenerators)\DI.ConstructorInjection.Local.props')" />
   <Import Project="$(PlateSharedGenerators)\AutoProperties.Local.props" Condition="Exists('$(PlateSharedGenerators)\AutoProperties.Local.props')" />
+  <Import Project="$(PlateSharedGenerators)\NamespaceUsingScope.Local.props" Condition="Exists('$(PlateSharedGenerators)\NamespaceUsingScope.Local.props')" />
 
   <ItemGroup>
     <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
