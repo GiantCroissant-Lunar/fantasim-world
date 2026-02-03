@@ -64,12 +64,11 @@ public sealed class FrameAwareKinematicsView : IFrameAwareKinematicsView
             _topology,
             _tpwModel);
 
-        // If the frame transform is invalid, we can still return a result but might want to consider
-        // this case - for now we proceed regardless
+        // If the frame transform is invalid, return null to avoid producing misleading results
+        // The caller should handle this as an unavailable rotation rather than using potentially incorrect data
         if (frameTransform.Validity == TransformValidity.Invalid)
         {
-            // Still compute but note that the result may be unreliable
-            // The caller can check frame validity separately if needed
+            return null;
         }
 
         // Compose: plate rotation in target frame = (mantle -> frame) ∘ (plate rotation in mantle)
@@ -94,6 +93,12 @@ public sealed class FrameAwareKinematicsView : IFrameAwareKinematicsView
             _kinematics,
             _topology,
             _tpwModel);
+
+        // If the frame transform is invalid, return an empty dictionary to avoid producing misleading results
+        if (frameTransform.Validity == TransformValidity.Invalid)
+        {
+            return new Dictionary<PlateId, FiniteRotation>();
+        }
 
         var result = new Dictionary<PlateId, FiniteRotation>();
 

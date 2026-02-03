@@ -960,10 +960,10 @@ public sealed class PlatesDatasetIngestor : IPlatesDatasetIngestor
                 if (b.Tick.HasValue && b.Tick.Value < 0)
                     errors.Add(new DatasetValidationError("topology.boundary.tick.invalid", "boundaries[].tick", "Tick must be non-negative."));
 
-                if (!platesByKey.ContainsKey(b.LeftPlateKey))
+                if (!string.IsNullOrWhiteSpace(b.LeftPlateKey) && !platesByKey.ContainsKey(b.LeftPlateKey))
                     errors.Add(new DatasetValidationError("topology.boundary.left.unknown", "boundaries[].leftPlateKey", "LeftPlateKey does not exist in plates."));
 
-                if (!platesByKey.ContainsKey(b.RightPlateKey))
+                if (!string.IsNullOrWhiteSpace(b.RightPlateKey) && !platesByKey.ContainsKey(b.RightPlateKey))
                     errors.Add(new DatasetValidationError("topology.boundary.right.unknown", "boundaries[].rightPlateKey", "RightPlateKey does not exist in plates."));
             }
 
