@@ -1,5 +1,6 @@
 using Plate.TimeDete.Time.Primitives;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Reconstruction.Solver;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
@@ -45,9 +46,11 @@ public sealed class ReconstructedBoundariesTests
             new[] { boundary1, boundary2 });
 
         var kin = new FakeKinematicsState();
+        var policy = CreatePolicy();
+        var targetTick = new CanonicalTick(10);
 
-        var r1 = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
-        var r2 = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        var r1 = solver.ReconstructBoundaries(topo, kin, policy, targetTick);
+        var r2 = solver.ReconstructBoundaries(topo, kin, policy, targetTick);
 
         Assert.Equal(r1, r2);
         Assert.Equal(2, r1.Count);
@@ -83,7 +86,7 @@ public sealed class ReconstructedBoundariesTests
         var rotation = Quaterniond.FromAxisAngle(Vector3d.UnitZ, Math.PI / 2d);
         var kin = new FakeKinematicsState(rotation);
 
-        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        var r = solver.ReconstructBoundaries(topo, kin, CreatePolicy(), new CanonicalTick(10));
         Assert.Single(r);
 
         var rotated = Assert.IsType<Point3>(r[0].Geometry);
@@ -120,7 +123,7 @@ public sealed class ReconstructedBoundariesTests
         // Kinematics returns false (no rotation data available)
         var kin = new FakeKinematicsState(returnsRotation: false);
 
-        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        var r = solver.ReconstructBoundaries(topo, kin, CreatePolicy(), new CanonicalTick(10));
         Assert.Single(r);
 
         // Geometry should be unchanged (identity rotation applied)
@@ -162,10 +165,20 @@ public sealed class ReconstructedBoundariesTests
         var topo = new FakeTopologyState(Domain.Parse("geo.plates"), new[] { activeBoundary, retiredBoundary });
         var kin = new FakeKinematicsState();
 
-        var r = solver.ReconstructBoundaries(topo, kin, new CanonicalTick(10));
+        var r = solver.ReconstructBoundaries(topo, kin, CreatePolicy(), new CanonicalTick(10));
 
         Assert.Single(r);
         Assert.Equal(activeBoundary.BoundaryId, r[0].BoundaryId);
+    }
+
+    private static ReconstructionPolicy CreatePolicy()
+    {
+        return new ReconstructionPolicy
+        {
+            Frame = FantaSim.Geosphere.Plate.Kinematics.Contracts.MantleFrame.Instance,
+            KinematicsModel = new ModelId(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+            PartitionTolerance = new FantaSim.Geosphere.Plate.Partition.Contracts.TolerancePolicy.StrictPolicy()
+        };
     }
 
     private sealed class FakeTopologyState : IPlateTopologyStateView

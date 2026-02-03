@@ -1,8 +1,7 @@
-using FsCheck.Xunit;
-using FsCheck;
 using Plate.TimeDete.Determinism.Pcg;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
-using FantaSim.Geosphere.Plate.Topology.Tests.Arbitraries;
+using FluentAssertions;
+using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Topology.Tests.Properties;
 
@@ -11,78 +10,84 @@ namespace FantaSim.Geosphere.Plate.Topology.Tests.Properties;
 /// </summary>
 public class DeterminismProperties
 {
-    public DeterminismProperties()
-    {
-        // Register custom arbitraries
-        Arb.Register<IdentityArbitrariesRegistration>();
-    }
-
     /// <summary>
     /// Property: Same seed must produce identical PlateId sequences.
     /// This is the core determinism guarantee for replayability.
     /// </summary>
-    [Property]
-    public Property SameSeedProducesIdenticalPlateIdSequences(ulong seed, int count)
+    [Fact]
+    public void SameSeedProducesIdenticalPlateIdSequences()
     {
-        // Constrain count to reasonable range for performance
-        var constrainedCount = Math.Max(1, Math.Min(count, 100));
+        var rng = new Random(12345);
 
-        var rng1 = new PcgSeededRngFactory().Create(seed);
-        var rng2 = new PcgSeededRngFactory().Create(seed);
+        for (var i = 0; i < 50; i++)
+        {
+            var seed = (ulong)rng.NextInt64();
+            var constrainedCount = rng.Next(1, 101);
 
-        var ids1 = Enumerable.Range(0, constrainedCount).Select(_ => PlateId.NewId(rng1));
-        var ids2 = Enumerable.Range(0, constrainedCount).Select(_ => PlateId.NewId(rng2));
+            var rng1 = new PcgSeededRngFactory().Create(seed);
+            var rng2 = new PcgSeededRngFactory().Create(seed);
 
-        return ids1.SequenceEqual(ids2).ToProperty();
+            var ids1 = Enumerable.Range(0, constrainedCount).Select(_ => PlateId.NewId(rng1));
+            var ids2 = Enumerable.Range(0, constrainedCount).Select(_ => PlateId.NewId(rng2));
+
+            ids1.SequenceEqual(ids2).Should().BeTrue();
+        }
     }
 
     /// <summary>
     /// Property: Same seed must produce identical BoundaryId sequences.
     /// </summary>
-    [Property]
-    public Property SameSeedProducesIdenticalBoundaryIdSequences(ulong seed, int count)
+    [Fact]
+    public void SameSeedProducesIdenticalBoundaryIdSequences()
     {
-        var constrainedCount = Math.Max(1, Math.Min(count, 100));
+        var rng = new Random(23456);
 
-        var rng1 = new PcgSeededRngFactory().Create(seed);
-        var rng2 = new PcgSeededRngFactory().Create(seed);
+        for (var i = 0; i < 50; i++)
+        {
+            var seed = (ulong)rng.NextInt64();
+            var constrainedCount = rng.Next(1, 101);
 
-        var ids1 = Enumerable.Range(0, constrainedCount).Select(_ => BoundaryId.NewId(rng1));
-        var ids2 = Enumerable.Range(0, constrainedCount).Select(_ => BoundaryId.NewId(rng2));
+            var rng1 = new PcgSeededRngFactory().Create(seed);
+            var rng2 = new PcgSeededRngFactory().Create(seed);
 
-        return ids1.SequenceEqual(ids2).ToProperty();
+            var ids1 = Enumerable.Range(0, constrainedCount).Select(_ => BoundaryId.NewId(rng1));
+            var ids2 = Enumerable.Range(0, constrainedCount).Select(_ => BoundaryId.NewId(rng2));
+
+            ids1.SequenceEqual(ids2).Should().BeTrue();
+        }
     }
 
     /// <summary>
     /// Property: PlateId round-trip through string representation preserves identity.
     /// </summary>
-    [Property]
-    public Property PlateIdRoundTripPreservation(PlateId original)
+    [Fact]
+    public void PlateIdRoundTripPreservation()
     {
-        var str = original.ToString();
-        var parsed = PlateId.Parse(str);
-        return (original == parsed).ToProperty();
+        var rng = new Random(34567);
+
+        for (var i = 0; i < 500; i++)
+        {
+            var original = new PlateId(Guid.NewGuid());
+            var str = original.ToString();
+            var parsed = PlateId.Parse(str);
+            parsed.Should().Be(original);
+        }
     }
 
     /// <summary>
     /// Property: BoundaryId round-trip through string representation preserves identity.
     /// </summary>
-    [Property]
-    public Property BoundaryIdRoundTripPreservation(BoundaryId original)
+    [Fact]
+    public void BoundaryIdRoundTripPreservation()
     {
-        var str = original.ToString();
-        var parsed = BoundaryId.Parse(str);
-        return (original == parsed).ToProperty();
-    }
-}
+        var rng = new Random(45678);
 
-/// <summary>
-/// Registration class for FsCheck arbitraries.
-/// </summary>
-public static class IdentityArbitrariesRegistration
-{
-    public static void Register()
-    {
-        Arb.Register<IdentityArbitraries>();
+        for (var i = 0; i < 500; i++)
+        {
+            var original = new BoundaryId(Guid.NewGuid());
+            var str = original.ToString();
+            var parsed = BoundaryId.Parse(str);
+            parsed.Should().Be(original);
+        }
     }
 }

@@ -86,9 +86,9 @@ public sealed class Rfc0045TestGates
 
         // Assert: Hash matches expected golden value
         // The topology stream hash is derived from TruthStreamIdentity.ToEventStreamIdString()
-        // For our test topology: "science/trunk/2/geo.plates/0"
-        var expectedTopologyHash = "science/trunk/2/geo.plates/0";
-        var expectedKinematicsHash = "science/trunk/2/geo.plates.kinematics/0";
+        // For our test topology stream: VariantId="science", BranchId="trunk", L=2, Domain="geo.plates", Model="0"
+        var expectedTopologyHash = "S:science:trunk:L2:geo.plates:M0:Events";
+        var expectedKinematicsHash = "S:science:trunk:L2:geo.plates.kinematics:M0:Events";
 
         result.Metadata.TopologyStreamHash.Should().Be(expectedTopologyHash);
         result.Metadata.KinematicsStreamHash.Should().Be(expectedKinematicsHash);

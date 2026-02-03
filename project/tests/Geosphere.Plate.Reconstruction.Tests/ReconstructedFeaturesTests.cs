@@ -2,6 +2,7 @@ using Plate.TimeDete.Time.Primitives;
 using FluentAssertions;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Derived;
 using FantaSim.Geosphere.Plate.Reconstruction.Contracts;
+using FantaSim.Geosphere.Plate.Reconstruction.Contracts.Policies;
 using FantaSim.Geosphere.Plate.Reconstruction.Solver;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Entities;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Identity;
@@ -30,7 +31,7 @@ public sealed class ReconstructedFeaturesTests
 
         var kin = new FakeKinematicsState();
 
-        var reconstructed = solver.ReconstructFeatures(features, kin, new CanonicalTick(10));
+        var reconstructed = solver.ReconstructFeatures(features, kin, CreatePolicy(), new CanonicalTick(10));
 
         reconstructed.Should().HaveCount(2);
         reconstructed.Select(x => x.FeatureId).Should().BeEquivalentTo(new[] { features[0].FeatureId, features[2].FeatureId });
@@ -49,8 +50,8 @@ public sealed class ReconstructedFeaturesTests
 
         var kin = new FakeKinematicsState();
 
-        var r1 = solver.ReconstructFeatures(new[] { f2, f1 }, kin, new CanonicalTick(10));
-        var r2 = solver.ReconstructFeatures(new[] { f2, f1 }, kin, new CanonicalTick(10));
+        var r1 = solver.ReconstructFeatures(new[] { f2, f1 }, kin, CreatePolicy(), new CanonicalTick(10));
+        var r2 = solver.ReconstructFeatures(new[] { f2, f1 }, kin, CreatePolicy(), new CanonicalTick(10));
 
         r1.Should().Equal(r2);
         r1.Should().HaveCount(2);
@@ -73,7 +74,7 @@ public sealed class ReconstructedFeaturesTests
         var rotation = Quaterniond.FromAxisAngle(Vector3d.UnitZ, Math.PI / 2d);
         var kin = new FakeKinematicsState(rotation);
 
-        var r = solver.ReconstructFeatures(new[] { feature }, kin, new CanonicalTick(10));
+        var r = solver.ReconstructFeatures(new[] { feature }, kin, CreatePolicy(), new CanonicalTick(10));
         r.Should().HaveCount(1);
 
         var rotated = r[0].Geometry.Should().BeOfType<Point3>().Subject;
@@ -105,5 +106,15 @@ public sealed class ReconstructedFeaturesTests
             rotation = _rotation;
             return true;
         }
+    }
+
+    private static ReconstructionPolicy CreatePolicy()
+    {
+        return new ReconstructionPolicy
+        {
+            Frame = FantaSim.Geosphere.Plate.Kinematics.Contracts.MantleFrame.Instance,
+            KinematicsModel = new ModelId(Guid.Parse("11111111-1111-1111-1111-111111111111")),
+            PartitionTolerance = new FantaSim.Geosphere.Plate.Partition.Contracts.TolerancePolicy.StrictPolicy()
+        };
     }
 }

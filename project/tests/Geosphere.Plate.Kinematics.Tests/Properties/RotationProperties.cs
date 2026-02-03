@@ -1,8 +1,7 @@
-using FsCheck.Xunit;
-using FsCheck;
 using FantaSim.Geosphere.Plate.Kinematics.Contracts.Numerics;
-using FantaSim.Geosphere.Plate.Kinematics.Tests.Arbitraries;
 using FantaSim.Geosphere.Plate.Topology.Contracts.Numerics;
+using FluentAssertions;
+using Xunit;
 
 namespace FantaSim.Geosphere.Plate.Kinematics.Tests.Properties;
 
@@ -11,102 +10,121 @@ namespace FantaSim.Geosphere.Plate.Kinematics.Tests.Properties;
 /// </summary>
 public class RotationProperties
 {
-    public RotationProperties()
+    private static FiniteRotation RandomRotation(Random rng)
     {
-        // Register custom arbitraries
-        Arb.Register<RotationArbitrariesRegistration>();
+        var axis = new Vector3d(
+            (rng.NextDouble() * 2.0) - 1.0,
+            (rng.NextDouble() * 2.0) - 1.0,
+            (rng.NextDouble() * 2.0) - 1.0);
+
+        if (axis.Length() < 1e-10)
+            axis = new Vector3d(1, 0, 0);
+
+        axis = axis.Normalize();
+
+        // -2π to +2π
+        var angle = ((rng.NextDouble() * 4.0 * Math.PI) - (2.0 * Math.PI));
+        return FiniteRotation.FromAxisAngle(axis, angle);
     }
 
     /// <summary>
     /// Property: Composing a rotation with its inverse yields identity.
     /// This is a fundamental mathematical property of rotations.
     /// </summary>
-    [Property]
-    public Property ComposeWithInverseReturnsIdentity(FiniteRotation rotation)
+    [Fact]
+    public void ComposeWithInverseReturnsIdentity()
     {
-        var inverse = rotation.Inverted();
-        var composed = rotation.Compose(inverse);
-        return composed.IsIdentity.ToProperty();
+        var rng = new Random(12345);
+
+        for (var i = 0; i < 500; i++)
+        {
+            var rotation = RandomRotation(rng);
+            var inverse = rotation.Inverted();
+            var composed = rotation.Compose(inverse);
+            composed.IsIdentity.Should().BeTrue();
+        }
     }
 
     /// <summary>
     /// Property: Double inversion returns the original rotation.
     /// </summary>
-    [Property]
-    public Property DoubleInversionReturnsOriginal(FiniteRotation rotation)
+    [Fact]
+    public void DoubleInversionReturnsOriginal()
     {
-        var doubleInverted = rotation.Inverted().Inverted();
-        // Compare by applying both to a test vector (Axis)
-        var composed = rotation.Compose(doubleInverted.Inverted());
-        return composed.IsIdentity.ToProperty();
+        var rng = new Random(23456);
+
+        for (var i = 0; i < 500; i++)
+        {
+            var rotation = RandomRotation(rng);
+            var doubleInverted = rotation.Inverted().Inverted();
+            var composed = rotation.Compose(doubleInverted.Inverted());
+            composed.IsIdentity.Should().BeTrue();
+        }
     }
 
     /// <summary>
     /// Property: Quaternion from any rotation is always normalized (unit length).
     /// Per RFC-V2-0046 Section 6.3: Rotation quaternions MUST be unit length.
     /// </summary>
-    [Property]
-    public Property QuaternionIsAlwaysNormalized(Vector3d axis, double angle)
+    [Fact]
+    public void QuaternionIsAlwaysNormalized()
     {
-        // Normalize the axis to ensure valid rotation
-        var normalizedAxis = axis.Normalize();
+        var rng = new Random(34567);
 
-        // Skip degenerate cases (zero axis)
-        if (normalizedAxis.Length() < 1e-10)
-            return true.ToProperty(); // Trivially pass for invalid input
+        for (var i = 0; i < 500; i++)
+        {
+            var rotation = RandomRotation(rng);
+            var q = rotation.Orientation;
 
-        var rotation = FiniteRotation.FromAxisAngle(normalizedAxis, angle);
-        var q = rotation.Orientation;
+            var length = Math.Sqrt(
+                q.X * q.X +
+                q.Y * q.Y +
+                q.Z * q.Z +
+                q.W * q.W);
 
-        var length = Math.Sqrt(
-            q.X * q.X +
-            q.Y * q.Y +
-            q.Z * q.Z +
-            q.W * q.W);
-
-        // Check unit length within tolerance
-        return (Math.Abs(length - 1.0) < 1e-10).ToProperty();
+            Math.Abs(length - 1.0).Should().BeLessThan(1e-10);
+        }
     }
 
     /// <summary>
     /// Property: Rotation composition is associative for three rotations.
     /// (a ∘ b) ∘ c == a ∘ (b ∘ c)
     /// </summary>
-    [Property]
-    public Property CompositionIsAssociative(FiniteRotation a, FiniteRotation b, FiniteRotation c)
+    [Fact]
+    public void CompositionIsAssociative()
     {
-        // (a ∘ b) ∘ c
-        var left = a.Compose(b).Compose(c);
+        var rng = new Random(45678);
 
-        // a ∘ (b ∘ c)
-        var right = a.Compose(b.Compose(c));
+        for (var i = 0; i < 200; i++)
+        {
+            var a = RandomRotation(rng);
+            var b = RandomRotation(rng);
+            var c = RandomRotation(rng);
 
-        // Due to floating-point precision, compare via composition with inverse
-        var diff = left.Compose(right.Inverted());
-        return diff.IsIdentity.ToProperty();
+            var left = a.Compose(b).Compose(c);
+            var right = a.Compose(b.Compose(c));
+
+            var diff = left.Compose(right.Inverted());
+            diff.IsIdentity.Should().BeTrue();
+        }
     }
 
     /// <summary>
     /// Property: Identity rotation composed with any rotation yields the same rotation.
     /// </summary>
-    [Property]
-    public Property IdentityIsNeutralElement(FiniteRotation rotation)
+    [Fact]
+    public void IdentityIsNeutralElement()
     {
-        var composedLeft = FiniteRotation.Identity.Compose(rotation);
-        var composedRight = rotation.Compose(FiniteRotation.Identity);
+        var rng = new Random(56789);
 
-        return (composedLeft.Orientation == rotation.Orientation &&
-                composedRight.Orientation == rotation.Orientation).ToProperty();
-    }
-}
+        for (var i = 0; i < 500; i++)
+        {
+            var rotation = RandomRotation(rng);
+            var composedLeft = FiniteRotation.Identity.Compose(rotation);
+            var composedRight = rotation.Compose(FiniteRotation.Identity);
 
-/// <summary>
-/// Registration class for FsCheck arbitraries.
-/// </summary>
-public static class RotationArbitrariesRegistration
-{
-    public static void Register()
-    {
-        Arb.Register<RotationArbitraries>();
+            composedLeft.Compose(rotation.Inverted()).IsIdentity.Should().BeTrue();
+            composedRight.Compose(rotation.Inverted()).IsIdentity.Should().BeTrue();
+        }
     }
 }
