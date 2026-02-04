@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/velocity3d/v1.schema.json",
+  "title": "Velocity3d",
+  "description": "Double-precision 3D velocity vector for plate motion in simulation units",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["x", "y", "z"],
+  "properties": {
+    "x": {
+      "type": "number",
+      "description": "X component of velocity vector"
+    },
+    "y": {
+      "type": "number",
+      "description": "Y component of velocity vector"
+    },
+"z": {
+          "type": "number",
+          "description": "Z component of velocity vector"
+        }
+  }
+}

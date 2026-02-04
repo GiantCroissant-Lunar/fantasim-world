@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/velocity-decomposition/v1.schema.json",
+  "title": "VelocityDecomposition",
+  "description": "Decomposition of velocity into rigid rotation and deformation components per RFC-V2-0045 section 3.3 and RFC-V2-0046 section 5.2",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["rigidRotationComponent", "relativeToFrame", "magnitude", "azimuth"],
+  "properties": {
+    "rigidRotationComponent": {
+      "$ref": "#/definitions/Velocity3d",
+      "description": "Velocity component due to rigid plate rotation"
+    },
+    "deformationComponent": {
+      "$ref": "#/definitions/Velocity3d",
+      "description": "Velocity component due to deformation (null if no deformation model applied)"
+    },
+    "relativeToFrame": {
+      "$ref": "#/definitions/ReferenceFrameId",
+      "description": "Reference frame for the velocity components"
+    },
+    "magnitude": {
+      "type": "number",
+      "description": "Total velocity magnitude (speed) in simulation units per tick"
+    },
+    "azimuth": {
+      "type": "number",
+      "description": "Azimuth angle of velocity direction (radians, clockwise from north)"
+    }
+  },
+  "definitions": {
+    "Velocity3d": {
+      "type": "object",
+      "description": "Double-precision 3D velocity vector",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X component of velocity"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y component of velocity"
+        },
+        "z": {
+          "type": "number",
+          "description": "Z component of velocity"
+        }
+      }
+    },
+    "ReferenceFrameId": {
+      "type": "object",
+      "description": "Discriminated union identifying a reference frame",
+      "oneOf": [
+        {
+          "type": "object",
+          "title": "MantleFrame",
+          "description": "A no-net-rotation frame relative to the mantle",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "mantle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "PlateAnchor",
+          "description": "A frame fixed to a specific plate",
+          "required": ["type", "plateId"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "plateAnchor"
+            },
+            "plateId": {
+              "type": "string",
+              "description": "The anchor plate identifier"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "AbsoluteFrame",
+          "description": "An absolute reference frame (e.g., relative to spin axis)",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "absolute"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "CustomFrame",
+          "description": "A user-defined custom reference frame",
+          "required": ["type", "definition"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "custom"
+            },
+            "definition": {
+              "$ref": "#/definitions/FrameDefinition"
+            }
+          }
+        }
+      ]
+    },
+    "FrameDefinition": {
+      "type": "object",
+      "description": "Defines a custom reference frame via a chain of transforms",
+      "required": ["name", "chain"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique name of this custom frame"
+        },
+        "chain": {
+          "type": "array",
+          "description": "Chain of transforms defining this frame",
+          "items": {
+            "$ref": "#/definitions/FrameChainLink"
+          }
+        },
+        "metadata": {
+          "$ref": "#/definitions/FrameDefinitionMetadata"
+        }
+      }
+    },
+    "FrameChainLink": {
+      "type": "object",
+      "description": "A single link in a frame transformation chain",
+      "required": ["baseFrame", "transform"],
+      "properties": {
+        "baseFrame": {
+          "$ref": "#/definitions/ReferenceFrameId",
+          "description": "The base reference frame this link transforms FROM"
+        },
+        "transform": {
+          "$ref": "#/definitions/FiniteRotation",
+          "description": "The fixed finite rotation transform (base -> this)"
+        },
+        "validityRange": {
+          "$ref": "#/definitions/CanonicalTickRange",
+          "description": "Optional validity range for this link"
+        },
+        "sequenceHint": {
+          "type": "integer",
+          "description": "Optional sequence hint for deterministic ordering"
+        }
+      }
+    },
+    "FiniteRotation": {
+      "type": "object",
+      "description": "Represents a finite rotation in 3D space as a quaternion",
+      "required": ["w", "x", "y", "z"],
+      "properties": {
+        "w": {
+          "type": "number",
+          "description": "Quaternion W component (real part)"
+        },
+        "x": {
+          "type": "number",
+          "description": "Quaternion X component (imaginary part)"
+        },
+        "y": {
+          "type": "number",
+          "description": "Quaternion Y component (imaginary part)"
+        },
+        "z": {
+          "type": "number",
+          "description": "Quaternion Z component (imaginary part)"
+        }
+      }
+    },
+    "CanonicalTickRange": {
+      "type": "object",
+      "description": "Inclusive validity range over canonical ticks",
+      "required": ["startTick", "endTick"],
+      "properties": {
+        "startTick": {
+          "type": "integer",
+          "description": "Starting tick of the range"
+        },
+        "endTick": {
+          "type": "integer",
+          "description": "Ending tick of the range"
+        }
+      }
+    },
+    "FrameDefinitionMetadata": {
+      "type": "object",
+      "description": "Metadata for a frame definition",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the frame"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author of the frame definition"
+        }
+      }
+    }
+  }
+}

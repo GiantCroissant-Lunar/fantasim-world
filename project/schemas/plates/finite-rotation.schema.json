@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/finite-rotation/v1.schema.json",
+  "title": "FiniteRotation",
+  "description": "Represents a finite rotation in 3D space as a unit quaternion",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["w", "x", "y", "z"],
+  "properties": {
+    "w": {
+      "type": "number",
+      "description": "Quaternion W component (real part, must satisfy w² + x² + y² + z² = 1)"
+    },
+    "x": {
+      "type": "number",
+      "description": "Quaternion X component (imaginary part)"
+    },
+    "y": {
+      "type": "number",
+      "description": "Quaternion Y component (imaginary part)"
+    },
+    "z": {
+      "type": "number",
+      "description": "Quaternion Z component (imaginary part)"
+    }
+  }
+}

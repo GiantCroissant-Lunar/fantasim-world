@@ -36,8 +36,10 @@ if (-not (Test-Path $schemasDir)) {
     exit 1
 }
 
-# Find all schema files
-$schemaFiles = Get-ChildItem -Path $schemasDir -Filter "*.schema.json" -Recurse
+# Find all schema files (only original schemas for DTO generation)
+$schemaFiles = Get-ChildItem -Path $schemasDir -Filter "*.schema.json" -Recurse | Where-Object {
+    $_.Name -eq "dataset-manifest.schema.json" -or $_.Name -eq "dataset-ingest-audit.schema.json"
+}
 
 if ($schemaFiles.Count -eq 0) {
     Write-Host "No schema files found in $schemasDir"
@@ -68,7 +70,7 @@ foreach ($file in $schemaFiles) {
     }
 
     $outputPath = Join-Path $OutputBase "$contractProject/Generated"
-    $outputFile = Join-Path $outputPath "$schemaNameDto.cs"
+    $outputFile = Join-Path $outputPath ($schemaName + "Dto.cs")
 
     Write-Host "Processing: $($file.FullName)"
     Write-Host "  Output: $outputFile"
@@ -85,10 +87,7 @@ foreach ($file in $schemaFiles) {
             "--src", $file.FullName,
             "--out", (Join-Path (Get-Location) $outputFile),
             "--namespace", "FantaSim.Geosphere.Plate.Datasets.Contracts.Generated",
-            "--csharp-version", "9",
-            "--type-style", "pascal",
-            "--property-style", "pascal",
-            "--use-system-text-json"
+            "--framework", "SystemTextJson"
         )
 
         # Generate DTO using QuickType

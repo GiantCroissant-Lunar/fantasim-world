@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/frame-transform/v1.schema.json",
+  "title": "FrameTransform",
+  "description": "Frame-to-frame transformation result with provenance information",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["transform", "provenance", "validity"],
+  "properties": {
+    "transform": {
+      "$ref": "#/definitions/FiniteRotation",
+      "description": "The computed finite rotation transform"
+    },
+    "provenance": {
+      "$ref": "#/definitions/FrameTransformProvenance",
+      "description": "Provenance information for this transform"
+    },
+    "validity": {
+      "$ref": "#/definitions/TransformValidity",
+      "description": "Validity status of the transform"
+    }
+  },
+  "definitions": {
+    "FiniteRotation": {
+      "type": "object",
+      "description": "Represents a finite rotation in 3D space as a quaternion",
+      "required": ["w", "x", "y", "z"],
+      "properties": {
+        "w": {
+          "type": "number",
+          "description": "Quaternion W component (real part)"
+        },
+        "x": {
+          "type": "number",
+          "description": "Quaternion X component"
+        },
+        "y": {
+          "type": "number",
+          "description": "Quaternion Y component"
+        },
+        "z": {
+          "type": "number",
+          "description": "Quaternion Z component"
+        }
+      }
+    },
+    "FrameTransformProvenance": {
+      "type": "object",
+      "description": "Provenance information for a frame transform",
+      "required": ["fromFrame", "toFrame", "evaluationChain", "kinematicsModelVersion"],
+      "properties": {
+        "fromFrame": {
+          "$ref": "#/definitions/ReferenceFrameId",
+          "description": "Source reference frame"
+        },
+        "toFrame": {
+          "$ref": "#/definitions/ReferenceFrameId",
+          "description": "Target reference frame"
+        },
+        "evaluationChain": {
+          "type": "array",
+          "description": "Chain of frame links evaluated to compute transform",
+          "items": {
+            "$ref": "#/definitions/FrameChainLink"
+          }
+        },
+        "kinematicsModelVersion": {
+          "type": "string",
+          "description": "Version of the kinematics model used"
+        }
+      }
+    },
+    "TransformValidity": {
+      "type": "string",
+      "description": "Validity status of a frame transform",
+      "enum": ["valid", "interpolated", "extrapolated", "invalid"]
+    },
+    "ReferenceFrameId": {
+      "type": "object",
+      "description": "Discriminated union identifying a reference frame",
+      "oneOf": [
+        {
+          "type": "object",
+          "title": "MantleFrame",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "mantle"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "PlateAnchor",
+          "required": ["type", "plateId"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "plateAnchor"
+            },
+            "plateId": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "AbsoluteFrame",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "absolute"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "title": "CustomFrame",
+          "required": ["type", "definition"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "custom"
+            },
+            "definition": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    "FrameChainLink": {
+      "type": "object",
+      "description": "A single link in a frame transformation chain",
+      "required": ["baseFrame", "transform"],
+      "properties": {
+        "baseFrame": {
+          "$ref": "#/definitions/ReferenceFrameId",
+          "description": "The base reference frame this link transforms FROM"
+        },
+        "transform": {
+          "$ref": "#/definitions/FiniteRotation",
+          "description": "The fixed finite rotation transform"
+        },
+        "validityRange": {
+          "$ref": "#/definitions/CanonicalTickRange",
+          "description": "Optional validity range for this link"
+        },
+        "sequenceHint": {
+          "type": "integer",
+          "description": "Optional sequence hint"
+        }
+      }
+    },
+    "CanonicalTickRange": {
+      "type": "object",
+      "description": "Inclusive validity range over canonical ticks",
+      "required": ["startTick", "endTick"],
+      "properties": {
+        "startTick": {
+          "type": "integer"
+        },
+        "endTick": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

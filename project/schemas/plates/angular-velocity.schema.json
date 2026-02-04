@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fantasim.world/schemas/plates/angular-velocity/v1.schema.json",
+  "title": "AngularVelocity3d",
+  "description": "Double-precision 3D angular velocity for plate rotation, represented as axis-angle",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["x", "y", "z"],
+  "properties": {
+    "x": {
+      "type": "number",
+      "description": "X component of angular velocity vector (rotation axis direction × rate)"
+    },
+    "y": {
+      "type": "number",
+      "description": "Y component of angular velocity vector"
+    },
+    "z": {
+      "type": "number",
+      "description": "Z component of angular velocity vector"
+    }
+  }
+}
