@@ -1,0 +1,111 @@
+name: sync-documentation
+description: Sync documentation system (validate, quality check, regenerate indexes)
+version: 1.0.0
+platforms:
+- claude
+- windsurf
+- copilot
+- cursor
+
+stages:
+- name: Validate
+  steps:
+  - name: Run validation
+    type: command
+    command: python scripts/validate-docs.py
+    description: Validate all documentation
+    auto_fix: false
+
+  - name: Check for issues
+    type: conditional
+    condition: validation_errors
+    action: |
+      Review validation errors
+      Fix front-matter issues
+      Correct doc_id conflicts
+      Re-run validation
+
+- name: Quality
+  steps:
+  - name: Generate quality report
+    type: command
+    command: python scripts/generate-quality-report.py
+    description: Analyze documentation quality
+    auto_fix: false
+
+  - name: Review low-quality docs
+    type: manual
+    description: |
+      Check docs/index/quality-report.md
+      Identify documents with score < 60
+      Plan improvements for low-quality docs
+
+- name: Sync
+  steps:
+  - name: Sync RFC status with tasks
+    type: command
+    command: python scripts/sync-tasks.py --apply
+    description: Update RFC implementation status from task-master
+    auto_fix: false
+
+  - name: Clean up inbox
+    type: command
+    command: python scripts/cleanup-inbox.py
+    description: Check for stale inbox documents (30+ days)
+    auto_fix: false
+
+- name: Regenerate
+  steps:
+  - name: Regenerate main index
+    type: command
+    command: python scripts/generate-index.py
+    description: Update docs/INDEX.md
+    auto_fix: false
+
+  - name: Regenerate dashboard
+    type: command
+    command: python scripts/generate-dashboard.py
+    description: Update docs/DASHBOARD.md
+    auto_fix: false
+
+  - name: Regenerate dependency graphs
+    type: command
+    command: python scripts/visualize-deps.py
+    description: Update docs/DEPENDENCIES.md
+    auto_fix: false
+
+- name: Report
+  steps:
+  - name: Show sync results
+    type: output
+    template: |
+      ✅ Documentation Sync Complete
+
+      📊 Statistics:
+      - Total documents: {{ total_docs }}
+      - Average quality: {{ avg_quality }}/100
+      - RFCs synced: {{ rfcs_synced }}
+      - Inbox files: {{ inbox_count }}
+
+      📈 Quality Breakdown:
+      - Excellent (≥90): {{ excellent_count }}
+      - Good (≥75): {{ good_count }}
+      - Acceptable (≥60): {{ acceptable_count }}
+      - Needs improvement (<60): {{ needs_improvement_count }}
+
+      ⚠️ Action Items:
+      {% if needs_improvement_count > 0 %}
+      - {{ needs_improvement_count }} docs need quality improvements
+      {% endif %}
+      {% if inbox_count > 5 %}
+      - {{ inbox_count }} files in inbox (consider cleanup)
+      {% endif %}
+      {% if validation_errors > 0 %}
+      - {{ validation_errors }} validation errors to fix
+      {% endif %}
+
+      📄 Updated Files:
+      - docs/INDEX.md
+      - docs/DASHBOARD.md
+      - docs/DEPENDENCIES.md
+      - docs/index/quality-report.md

@@ -1,6 +1,11 @@
 ---
 name: spec-kit-bridge
-description: Orchestrates spec-driven development using GitHub Spec Kit. Enforces one-feature-per-worktree, maps spec phases to domain skills, and ensures specs are structured for parallel agents.
+version: 0.1.0
+kind: composite
+description: "Orchestrates spec-driven development using GitHub Spec Kit. Enforces one-feature-per-worktree, maps spec phases to domain skills, and ensures specs are structured for parallel agents."
+contracts:
+  success: "Spec phases orchestrated correctly with proper skill delegation"
+  failure: "Phase mapping failed or worktree invariant violated"
 ---
 
 # Spec Kit Bridge

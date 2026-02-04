@@ -1,0 +1,52 @@
+name: CodingStandards
+description: Coding-specific policies and standards for .NET development
+version: 0.1.0
+
+dotnet:
+  style:
+  - Follow .editorconfig rules strictly
+  - Use dotnet-format before every commit
+  - PascalCase for public members
+  - camelCase for private fields (_camelCase for backing fields)
+  - Use explicit access modifiers
+
+  testing:
+  - All public APIs must have unit tests
+  - 'Test projects follow naming: {ProjectName}.Tests'
+  - Use xUnit/NUnit patterns consistently
+  - Aim for >70% code coverage on new code
+
+  documentation:
+  - XML docs for all public APIs
+  - Inline comments for complex logic (why, not what)
+  - Keep README.md updated with new features
+  - Update ARCHITECTURE.md when adding new components
+
+formatting:
+  tools:
+  - dotnet-format (C#)
+  - prettier (JSON, YAML, Markdown)
+
+  enforcement:
+  - Run pre-commit hooks before every commit
+  - CI must validate formatting on every PR
+  - Zero tolerance for formatting violations in main
+
+code_quality:
+  metrics:
+    cyclomatic_complexity:
+      max: 15
+      description: Maximum cyclomatic complexity per method
+    method_length:
+      max: 50
+      preferred: 20
+      description: Maximum lines per method (prefer shorter)
+    class_length:
+      max: 300
+      preferred: 200
+      description: Maximum lines per class (prefer shorter)
+
+  analysis:
+  - Enable all Roslyn analyzers
+  - Treat warnings as errors in Release builds
+  - Fix all critical/high severity issues before merge

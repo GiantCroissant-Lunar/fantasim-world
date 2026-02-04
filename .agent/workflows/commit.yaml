@@ -1,0 +1,90 @@
+name: commit
+description: Autonomous commit workflow with full verification
+version: 1.0.0
+platforms:
+- claude
+- windsurf
+- copilot
+- cursor
+
+stages:
+- name: Prepare
+  steps:
+  - name: Check status
+    type: command
+    command: git status
+
+  - name: Format code
+    type: command
+    command: task dotnet:format
+
+  - name: Run pre-commit hooks
+    type: command
+    command: pre-commit run --all-files
+    description: Fix any issues automatically
+
+- name: Verify
+  steps:
+  - name: Build
+    type: command
+    command: task game:build-console
+    auto_fix: true
+    description: Build and fix any errors
+
+  - name: Test
+    type: command
+    command: task dotnet:test
+    auto_fix: true
+    description: Run tests and fix any failures
+
+  - name: Run
+    type: command
+    command: task game:run-console
+    description: Verify application works
+
+- name: Commit
+  steps:
+  - name: Review changes
+    type: command
+    command: git diff
+
+  - name: Create commit message
+    type: manual
+    description: |
+      Analyze changes and create message using conventional commits:
+      - feat: new features
+      - fix: bug fixes
+      - refactor: code refactoring
+      - docs: documentation
+      - test: tests
+      - chore: maintenance
+
+      Format:
+      <type>: <brief description>
+
+      <detailed explanation>
+
+      Generated with {{ platform }}
+      Co-Authored-By: {{ platform }} <{{ email }}>
+
+  - name: Stage and commit
+    type: command
+    command: |
+      git add .
+      git commit -m "{{ commit_message }}"
+
+  - name: Verify commit
+    type: command
+    command: |
+      git log -1
+      git show HEAD
+
+- name: Report
+  steps:
+  - name: Summary
+    type: output
+    template: |
+      Committed: {{ commit_description }}
+      Files changed: {{ files_count }}
+      Hash: {{ commit_hash }}
+      Ready to push: yes

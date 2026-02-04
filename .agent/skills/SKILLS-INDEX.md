@@ -1,6 +1,6 @@
 # Skills Index
 
-This directory contains shared skills for the fantasim-world project, compatible with multiple AI coding assistants (Windsurf Cascade, Cline, etc.). Skills are structured guides that help agents handle complex, multi-step tasks correctly.
+This directory contains shared skills for the lunar-horse-agent-hub, compatible with multiple AI coding assistants. Skills are structured guides that help agents handle complex, multi-step tasks correctly.
 
 ## Supported Tools
 
@@ -25,6 +25,8 @@ task sync-skills
 
 ## Available Skills
 
+### Workflow Skills (10)
+
 | Skill | Description | When to Use |
 |-------|-------------|-------------|
 | `@spec-kit-bridge` | Spec-kit workflow orchestration | When starting or progressing a spec |
@@ -33,12 +35,20 @@ task sync-skills
 | `@self-critique` | Self-evaluation against specs and doctrine | After implementation, before marking complete |
 | `@code-review` | Architecture-focused code review | When reviewing PRs or code |
 | `@reflect` | Capture learnings after completion | After feature is merged |
-| `@persistence` | RocksDB + MessagePack patterns | When working with storage |
-| `@topology-first` | Plates domain truth boundaries | When working on plates code |
 | `@build` | Nuke build commands (auto-invoked) | When building, testing, or compiling |
 | `@changelog-generator` | Create user-friendly changelogs from git commits | When preparing release notes |
 | `@file-organizer` | Organize files and folders intelligently | When cleaning up directories |
 | `@skill-creator` | Guide for creating new skills | When building new agent skills |
+
+### Technical Skills (5)
+
+| Skill | Description | When to Use |
+|-------|-------------|-------------|
+| `@code-analyze` | Static analysis, security scan, dependency check | When analyzing code quality |
+| `@code-format` | Code formatting (dotnet, prettier) | When formatting code |
+| `@dotnet-build` | .NET build and restore | When building .NET projects |
+| `@dotnet-test` | .NET testing with coverage | When running tests |
+| `@nuke-build` | Nuke build system targets | When using Nuke build system |
 
 ## Skill Invocation
 
@@ -51,45 +61,39 @@ Agents analyze task requests and automatically invoke matching skills based on t
 Use `@skill-name` syntax to explicitly invoke a skill:
 
 ```
-@spec-first - Read the relevant RFCs before I implement the plate merger
-@topology-first - Review this plates code for truth boundary violations
+@spec-first - Read the relevant RFCs before I implement the feature
+@code-review - Review this code for architecture compliance
 ```
 
 ## Skill Dependencies
 
 ```text
 @spec-kit-bridge
-        ↓
+        |
 @spec-first
-        ↓
-@implement-feature ←→ @topology-first
-        ↓                      ↓
-@persistence          @persistence
-        ↓                      ↓
-@self-critique ←───────────────┘
-        ↓
-        ↓ (loop until pass)
-        ↓
+        |
+@implement-feature
+        |
+@self-critique <--- (loop until pass)
+        |
 @code-review
-        ↓
-@reflect → .agent/memory/reflections/
+        |
+@reflect --> .agent/memory/reflections/
 ```
 
 **Recommended workflow:**
 1. Start with `@spec-kit-bridge` for new specs (creates worktree)
 2. Use `@spec-first` during Specify/Clarify phases
-3. Use domain skills (`@topology-first`, `@persistence`) during Plan/Implement
+3. Use `@implement-feature` during implementation
 4. Run `@self-critique` to self-evaluate before requesting review
 5. Finish with `@code-review`
 6. Capture learnings with `@reflect` after merge
 
 ## Spec Kit Integration
 
-This project uses **GitHub Spec Kit** for spec-driven development.
+This hub supports **GitHub Spec Kit** for spec-driven development.
 
 ### Interfaces
-
-Spec Kit provides two interfaces (both produce the same artifacts):
 
 | Interface | When to Use |
 |-----------|-------------|
@@ -98,13 +102,13 @@ Spec Kit provides two interfaces (both produce the same artifacts):
 
 **Artifacts are the source of truth, not the interface used to create them.**
 
-### Phase → Skill Mapping
+### Phase -> Skill Mapping
 
 | Spec Kit Phase | Primary Skill | Output |
 |----------------|---------------|--------|
-| Constitution | — | `.specify/memory/constitution.md` |
+| Constitution | -- | `.specify/memory/constitution.md` |
 | Specify / Clarify | `@spec-first` | `specs/<feature>/spec.md` |
-| Plan | `@topology-first`, `@persistence` | `specs/<feature>/plan.md` |
+| Plan | `@implement-feature` | `specs/<feature>/plan.md` |
 | Tasks | `@spec-kit-bridge` | `specs/<feature>/tasks.md` |
 | Implement | `@implement-feature` | code + tests |
 | Self-Critique | `@self-critique` | critique report (iterates until pass) |
@@ -130,7 +134,7 @@ Spec work is never done directly on `main`. See `.agent/workflows/spec-kit-workt
 3. Add supporting files (templates, checklists, scripts)
 4. Update this index
 
-The skill will automatically be available to all supported tools via the junctions.
+The skill will automatically be available to all supported tools via the sync scripts.
 
 ## Skill Structure
 
@@ -149,44 +153,47 @@ The skill will automatically be available to all supported tools via the junctio
 │   │   └── SKILL.md
 │   ├── self-critique/           # Self-evaluation loop
 │   │   ├── SKILL.md
-│   │   └── rubric.yaml          # Configurable evaluation criteria
+│   │   └── rubric.yaml
 │   ├── code-review/
 │   │   ├── SKILL.md
 │   │   └── checklist.md
-│   ├── reflect/                 # Learning capture
+│   ├── reflect/
 │   │   └── SKILL.md
-│   ├── persistence/
+│   ├── build/
 │   │   └── SKILL.md
-│   ├── topology-first/
+│   ├── changelog-generator/
 │   │   └── SKILL.md
-│   ├── build/                   # Nuke build (auto-invoked)
+│   ├── file-organizer/
 │   │   └── SKILL.md
-│   ├── changelog-generator/     # Git changelog automation
-│   │   └── SKILL.md
-│   ├── file-organizer/          # File/folder organization
-│   │   └── SKILL.md
-│   └── skill-creator/           # Skill authoring guide
+│   ├── skill-creator/
+│   │   ├── SKILL.md
+│   │   ├── LICENSE.txt
+│   │   └── scripts/
+│   ├── code-analyze/            # Technical skills
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   └── references/
+│   ├── code-format/
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   └── references/
+│   ├── dotnet-build/
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   └── references/
+│   ├── dotnet-test/
+│   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   └── references/
+│   └── nuke-build/
 │       ├── SKILL.md
-│       ├── LICENSE.txt
-│       └── scripts/
-│           ├── init_skill.py
-│           ├── package_skill.py
-│           └── quick_validate.py
-├── memory/                      # Agent memory storage
-│   └── reflections/             # Feature learnings
-│       └── index.md             # Auto-maintained index
-└── workflows/                   # Reference docs (not skills)
+│       └── references/
+├── memory/
+│   └── reflections/
+│       └── index.md
+└── workflows/
     └── spec-kit-worktrees.md
 
-.claude/skills/                  # Stub files → .agent/skills
-.cline/skills/                   # Stub files → .agent/skills
-.codex/skills/                   # Stub files → .agent/skills
-.cursor/skills/                  # Stub files → .agent/skills
-.gemini/skills/                  # Stub files → .agent/skills
-.kilocode/skills/                # Stub files → .agent/skills
-.opencode/skills/                # Stub files → .agent/skills
-.windsurf/skills/                # Stub files → .agent/skills
-
 scripts/
-└── sync_skills.py               # Unified sync script (skills + rules + commands)
+└── sync_skills.py               # Unified sync script
 ```

@@ -55,7 +55,7 @@ skills:
 commands:
   enabled: true | false
   target: <path>
-  format: md | toml           # Output format
+  format: md                   # Output format
 
 workflows:
   enabled: true | false
@@ -130,7 +130,7 @@ python scripts/sync_skills.py --cleanup  # Run cleanups only
 ### Gemini
 
 - Supports `@` imports like Claude
-- Commands in TOML format
+- Commands in MD format
 
 ### Roo
 

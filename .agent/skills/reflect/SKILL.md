@@ -1,6 +1,11 @@
 ---
 name: reflect
-description: Captures learnings after feature completion for future agent reference
+version: 0.1.0
+kind: composite
+description: "Captures learnings after feature completion for future agent reference"
+contracts:
+  success: "Learnings captured in reflections directory with actionable insights"
+  failure: "Unable to identify or document meaningful learnings"
 ---
 
 # Reflect Skill

@@ -1,5 +1,5 @@
 # Self-Critique Evaluation Rubric
-# Project defaults for fantasim-world
+# Default criteria for agent hub consumers
 #
 # Override per-feature by creating specs/<feature>/critique.yaml
 # with `extends: default` and criterion overrides.
@@ -22,18 +22,15 @@ criteria:
       - "Acceptance criteria met"
       - "Edge cases from spec handled"
 
-  truth_boundary:
+  architecture_compliance:
     weight: 0.25
-    description: "No derived-as-truth violations per ADR-0003"
+    description: "Implementation follows project architecture doctrine"
     blocker: true  # Fails entire check if violated
     checks:
-      - "Derived data never used as truth input"
-      - "Spatial substrates are products, not sources"
-      - "Events don't depend on sampling products"
-      - "Topology is authoritative, not Voronoi/DGGS"
-    references:
-      - "../fantasim-hub/docs/adrs/ADR-0003-topology-first-truth-policy-plates.md"
-      - "../fantasim-hub/docs/rfcs/v2/plates/RFC-V2-0001-plate-topology-truth-slice.md"
+      - "Layer boundaries respected"
+      - "No unauthorized cross-layer dependencies"
+      - "Implementation details not leaked into public APIs"
+      - "Derived data does not become source-of-truth dependency"
 
   contract_stability:
     weight: 0.20
@@ -44,24 +41,21 @@ criteria:
       - "Algorithms are behind interfaces, not exposed"
       - "No breaking changes to existing contracts"
 
-  encoding:
+  convention_adherence:
     weight: 0.15
-    description: "Correct encoding per ADR-0005 and ADR-0006"
+    description: "Project coding conventions and patterns followed"
     checks:
-      - "MessagePack for RocksDB storage"
-      - "JSON only for export/import"
-      - "ModernSatsuma handles not leaked externally"
-      - "No graph engine internals in persisted state"
-    references:
-      - "../fantasim-hub/docs/adrs/ADR-0005-use-modern-rocksdb-for-db-first-persistence.md"
-      - "../fantasim-hub/docs/adrs/ADR-0006-use-messagepack-for-canonical-event-encoding.md"
+      - "Naming conventions followed"
+      - "Serialization patterns correct"
+      - "Error handling follows project standards"
+      - "No implementation details in persisted state"
 
   runnable:
     weight: 0.10
     description: "Code compiles and tests pass"
     blocker: true  # Fails entire check if violated
     checks:
-      - "TypeScript compiles without errors"
+      - "Code compiles without errors"
       - "All existing tests pass"
       - "No broken imports or dependencies"
       - "Each commit is independently runnable"

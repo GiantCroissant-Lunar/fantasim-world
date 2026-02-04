@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GiantCroissant-Lunar/pigeon-pea/schemas/subagent.schema.json",
+  "title": "Sub-Agent Definition Schema",
+  "description": "Validates sub-agent YAML manifests. Sub-agents are specialized actors that handle specific domains of work and delegate to skills.",
+  "type": "object",
+  "required": ["name", "description", "version", "skills", "goals"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "minLength": 2,
+      "maxLength": 50,
+      "description": "Sub-agent name in PascalCase format (starts with uppercase, no hyphens or underscores). Examples: 'DotNetBuildAgent', 'CodeReviewAgent', 'TestingAgent'.",
+      "examples": ["DotNetBuildAgent", "CodeReviewAgent", "TestingAgent", "OrchestratorAgent"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500,
+      "description": "Clear description of the sub-agent's responsibilities and domain expertise. Should explain what types of tasks this agent handles.",
+      "examples": [
+        "Handles .NET build, restore, compile, and packaging tasks",
+        "Handles code formatting, quality analysis, and static code review",
+        "Handles test execution, coverage generation, and benchmark runs"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "Semantic version following semver format (MAJOR.MINOR.PATCH). May include pre-release and build metadata.",
+      "examples": ["0.1.0", "1.0.0", "2.1.0-alpha.1"]
+    },
+    "skills": {
+      "type": "array",
+      "description": "List of skills this sub-agent can invoke. Skills should be defined in .agent/skills/ directory.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "description": "Skill name in kebab-case format. Must correspond to a skill directory in .agent/skills/."
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "examples": [
+        ["dotnet-build", "dotnet-restore"],
+        ["code-format", "code-analyze", "code-review"],
+        ["dotnet-test", "generate-coverage"]
+      ]
+    },
+    "goals": {
+      "type": "array",
+      "description": "What this agent aims to achieve. Describes the objectives and success outcomes.",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "examples": [
+        [
+          "Produce deterministic, reproducible builds",
+          "Ensure all dependencies restored correctly",
+          "Generate build artifacts (binaries, packages)",
+          "Report build warnings and errors clearly"
+        ]
+      ]
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Optional limitations and boundaries this agent must respect. Defines what the agent should NOT do or must avoid.",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "examples": [
+        [
+          "Work only within ./dotnet directory",
+          "Never commit build artifacts (bin/, obj/)",
+          "Report build warnings and errors with context",
+          "Ensure builds are idempotent"
+        ]
+      ]
+    },
+    "success_criteria": {
+      "type": "array",
+      "description": "Optional measurable criteria to determine if the agent completed its task successfully.",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "examples": [
+        [
+          "Build succeeds with zero errors",
+          "Artifacts generated in expected output path",
+          "Build logs attached with full context",
+          "Dependencies restored successfully"
+        ]
+      ]
+    },
+    "context": {
+      "type": "object",
+      "description": "Optional contextual information about the agent's operating environment.",
+      "properties": {
+        "working_directory": {
+          "type": "string",
+          "description": "Primary working directory for this agent's operations."
+        },
+        "environment": {
+          "type": "object",
+          "description": "Environment variables or settings specific to this agent.",
+          "additionalProperties": true
+        },
+        "tools": {
+          "type": "array",
+          "description": "Required tools or dependencies for this agent.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "delegation": {
+      "type": "object",
+      "description": "Optional rules for how this agent delegates to other agents or skills.",
+      "properties": {
+        "can_delegate_to": {
+          "type": "array",
+          "description": "List of other agents this agent can delegate tasks to.",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][a-zA-Z0-9]*$"
+          }
+        },
+        "delegation_strategy": {
+          "type": "string",
+          "enum": ["sequential", "parallel", "conditional"],
+          "description": "How this agent delegates to multiple skills or agents."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "name": "DotNetBuildAgent",
+      "description": "Handles .NET build, restore, compile, and packaging tasks",
+      "version": "0.1.0",
+      "skills": ["dotnet-build", "dotnet-restore"],
+      "goals": [
+        "Produce deterministic, reproducible builds",
+        "Ensure all dependencies restored correctly",
+        "Generate build artifacts (binaries, packages)",
+        "Report build warnings and errors clearly"
+      ],
+      "constraints": [
+        "Work only within ./dotnet directory",
+        "Never commit build artifacts (bin/, obj/)",
+        "Report build warnings and errors with context",
+        "Ensure builds are idempotent"
+      ],
+      "success_criteria": [
+        "Build succeeds with zero errors",
+        "Artifacts generated in expected output path",
+        "Build logs attached with full context",
+        "Dependencies restored successfully"
+      ]
+    }
+  ]
+}

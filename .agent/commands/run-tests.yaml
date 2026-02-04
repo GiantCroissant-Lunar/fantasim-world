@@ -1,0 +1,39 @@
+name: run-tests
+description: Run tests for the project across all supported languages
+version: 1.0.0
+
+steps:
+- name: Restore .NET dependencies
+  command: dotnet restore
+  working_directory: ./dotnet
+  condition: exists("./dotnet")
+
+- name: Run .NET tests
+  command: dotnet test
+  working_directory: ./dotnet
+  condition: exists("./dotnet")
+
+- name: Install Python dependencies
+  command: pip install -r requirements.txt
+  condition: exists("./requirements.txt")
+
+- name: Install Python dependencies (Poetry)
+  command: poetry install
+  condition: exists("./pyproject.toml") && exists("./poetry.lock")
+
+- name: Run Python tests
+  command: pytest
+  condition: exists("./tests") && (exists("./pytest.ini") || exists("./pyproject.toml"))
+
+- name: Install JavaScript dependencies
+  command: npm install
+  condition: exists("./package.json")
+
+- name: Run JavaScript tests
+  command: npm test
+  condition: exists("./package.json")
+
+options:
+  parallel: false
+  fail_fast: true
+  verbose: true

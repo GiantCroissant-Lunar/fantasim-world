@@ -1,6 +1,11 @@
 ---
 name: spec-first
-description: Ensures agents read and understand specifications before implementing any feature or change. Always start here.
+version: 0.1.0
+kind: composite
+description: "Ensures agents read and understand specifications before implementing any feature or change. Always start here."
+contracts:
+  success: "Specs read and understood; key requirements identified before implementation"
+  failure: "Unable to locate or parse specification documents"
 ---
 
 # Spec-First Skill

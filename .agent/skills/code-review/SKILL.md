@@ -1,6 +1,11 @@
 ---
 name: code-review
-description: Guides code review process with focus on architecture compliance, truth boundaries, and contract stability
+version: 0.1.0
+kind: composite
+description: "Guides code review process with focus on architecture compliance, truth boundaries, and contract stability"
+contracts:
+  success: "Review completed with findings documented and actionable"
+  failure: "Review incomplete or unable to access code for review"
 ---
 
 # Code Review Skill

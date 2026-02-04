@@ -1,7 +1,11 @@
 ---
 name: build
-description: Build, test, or compile the solution using Nuke. Use when asked to build, compile, run tests, clean, restore, or perform any .NET build operation.
-user-invocable: false
+version: 0.1.0
+kind: cli
+description: "Build, test, or compile the solution using Nuke. Use when asked to build, compile, run tests, clean, restore, or perform any .NET build operation."
+contracts:
+  success: "Build completes successfully with zero errors"
+  failure: "Build fails with compilation errors or missing dependencies"
 ---
 
 # Build Skill

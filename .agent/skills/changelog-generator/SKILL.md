@@ -1,11 +1,11 @@
 ---
 name: changelog-generator
-description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turns hours of manual changelog writing into minutes of automated generation.
-metadata:
-  category: development
-  source:
-    repository: https://github.com/ComposioHQ/awesome-claude-skills
-    path: changelog-generator
+version: 0.1.0
+kind: composite
+description: "Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turns hours of manual changelog writing into minutes of automated generation."
+contracts:
+  success: "Changelog generated with categorized, user-friendly entries"
+  failure: "Unable to parse commits or generate changelog"
 ---
 
 # Changelog Generator

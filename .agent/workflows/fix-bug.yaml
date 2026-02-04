@@ -1,0 +1,99 @@
+name: fix-bug
+description: Systematic bug investigation and fixing workflow
+version: 1.0.0
+platforms:
+- claude
+- windsurf
+- copilot
+- cursor
+
+stages:
+- name: Reproduce
+  steps:
+  - name: Build and run
+    type: command
+    command: task game:build-and-run-console
+
+  - name: Observe issue
+    type: manual
+    description: |
+      Reproduce the bug
+      Capture error messages, stack traces, or unexpected behavior
+      Note exact steps to reproduce
+
+- name: Investigate
+  steps:
+  - name: Analyze errors
+    type: manual
+    description: |
+      Read stack traces carefully
+      Identify failing component
+      Extract file paths and line numbers
+
+  - name: Read code
+    type: manual
+    description: |
+      Open files mentioned in errors
+      Read surrounding context
+      Understand code flow leading to bug
+
+  - name: Identify root cause
+    type: manual
+    description: |
+      Trace issue back to source
+      Distinguish symptoms from root cause
+      Check for related issues
+
+- name: Fix
+  steps:
+  - name: Implement fix
+    type: manual
+    description: |
+      Make minimal, targeted changes
+      Fix root cause, not symptoms
+      Ensure fix doesn't introduce new issues
+
+  - name: Add regression test
+    type: manual
+    description: |
+      Create test that would catch this bug
+      Verify test fails before fix
+      Verify test passes after fix
+
+- name: Verify
+  steps:
+  - name: Rebuild
+    type: command
+    command: task game:build-console
+
+  - name: Run tests
+    type: command
+    command: task dotnet:test
+
+  - name: Run application
+    type: command
+    command: task game:run-console
+    description: Verify bug is fixed
+
+- name: Finalize
+  steps:
+  - name: Quality checks
+    type: command
+    command: |
+      task dotnet:format
+      pre-commit run --all-files
+
+  - name: Commit fix
+    type: command
+    command: |
+      git add .
+      git commit -m "fix: {{ bug_description }}"
+
+  - name: Report
+    type: output
+    template: |
+      Bug: {{ bug_description }}
+      Root cause: {{ root_cause }}
+      Fix: {{ fix_description }}
+      Files changed: {{ files_changed }}
+      Test added: {{ regression_test }}

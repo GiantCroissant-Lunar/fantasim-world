@@ -1,6 +1,11 @@
 ---
 name: self-critique
-description: Self-evaluation loop that reviews implementation against specs and doctrine before marking complete
+version: 0.1.0
+kind: composite
+description: "Self-evaluation loop that reviews implementation against specs and doctrine before marking complete"
+contracts:
+  success: "Implementation passes all evaluation criteria above threshold"
+  failure: "Implementation fails blockers or score below threshold after max iterations"
 ---
 
 # Self-Critique Skill
@@ -37,8 +42,8 @@ Create `specs/<feature>/critique.yaml` to override defaults:
 extends: default
 threshold: 0.9  # Stricter for this feature
 criteria:
-  truth_boundary:
-    weight: 0.35  # Higher weight for plates domain
+  architecture_compliance:
+    weight: 0.30  # Higher weight for architecture-sensitive features
 ```
 
 ### Runtime Override
@@ -85,20 +90,20 @@ For each criterion in the rubric:
    - Check all acceptance criteria are met
    - Verify edge cases are handled
 
-2. **Truth Boundary Compliance** (default 25%, blocker)
-   - No derived data used as truth input
-   - Spatial substrates are products, not sources
-   - Events don't depend on sampling products
+2. **Architecture Compliance** (default 25%, blocker)
+   - Implementation follows project architecture doctrine
+   - Layer boundaries are respected
+   - No unauthorized cross-layer dependencies
 
 3. **Contract Stability** (default 20%)
    - IDs are stable and immutable
    - Event schemas are backwards-compatible
    - Algorithms are behind contracts, not in them
 
-4. **Encoding Correctness** (default 15%)
-   - MessagePack for RocksDB storage
-   - JSON only for export/import
-   - ModernSatsuma handles not leaked
+4. **Convention Adherence** (default 15%)
+   - Project coding conventions followed
+   - Naming standards met
+   - Persistence and serialization patterns correct
 
 5. **Runnable State** (default 10%, blocker)
    - Code compiles without errors
@@ -136,16 +141,16 @@ return NEEDS_IMPROVEMENT, sorted_violations_by_impact
 | Criterion | Score | Weight | Weighted | Status |
 |-----------|-------|--------|----------|--------|
 | Spec Alignment | 0.85 | 0.30 | 0.255 | PASS |
-| Truth Boundary | 1.00 | 0.25 | 0.250 | PASS |
+| Architecture Compliance | 1.00 | 0.25 | 0.250 | PASS |
 | Contract Stability | 0.70 | 0.20 | 0.140 | NEEDS WORK |
-| Encoding | 1.00 | 0.15 | 0.150 | PASS |
+| Convention Adherence | 1.00 | 0.15 | 0.150 | PASS |
 | Runnable | 1.00 | 0.10 | 0.100 | PASS |
 
 **Total Score: 0.895** (threshold: 0.80)
 
 ### Violations Found
 1. [Contract Stability] Event schema missing `readonly` on `eventId`
-   - Location: `src/plates/events.ts:45`
+   - Location: `src/events.ts:45`
    - Fix: Add `readonly` modifier
 
 ### Result: PASS
@@ -155,7 +160,7 @@ return NEEDS_IMPROVEMENT, sorted_violations_by_impact
 
 Before marking complete:
 
-- [ ] All blockers resolved (truth boundary, runnable)
+- [ ] All blockers resolved (architecture compliance, runnable)
 - [ ] Total score >= threshold
 - [ ] Violations documented (even if minor)
 - [ ] Report saved for code review reference

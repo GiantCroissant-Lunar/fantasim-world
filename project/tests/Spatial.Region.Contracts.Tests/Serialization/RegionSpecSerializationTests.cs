@@ -1,4 +1,5 @@
 using FantaSim.Spatial.Region.Contracts;
+using MessagePack;
 
 namespace FantaSim.Spatial.Region.Contracts.Tests.Serialization;
 

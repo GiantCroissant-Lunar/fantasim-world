@@ -1,0 +1,67 @@
+name: DefaultPolicies
+description: General guardrails for all agents
+version: 0.1.0
+
+rate_limits:
+  max_tool_calls_per_session: 1000
+  max_file_edits_per_session: 100
+  max_file_reads_per_session: 500
+
+safety:
+  never_commit:
+  - bin/
+  - obj/
+  - '*.exe'
+  - '*.dll'
+  - '*.user'
+  - '*.suo'
+  - node_modules/
+  - .vs/
+
+  never_delete:
+  - .git/
+  - .agent/
+  - '*.sln'
+  - '*.csproj'
+  - README.md
+  - LICENSE
+
+  never_expose:
+    keywords:
+    - secrets
+    - credentials
+    - API keys
+    - connection strings
+    - authentication tokens
+    patterns:
+    - pattern: (?i)(api[_-]?key|apikey)
+      description: API key identifiers
+    - pattern: (?i)(secret|password|passwd|pwd)
+      description: Secret and password keywords
+    - pattern: (?i)(token|auth[_-]?token)
+      description: Authentication tokens
+    - pattern: (?i)(connection[_-]?string|conn[_-]?str)
+      description: Connection strings
+    - pattern: '[A-Za-z0-9+/]{40,}={0,2}'
+      description: Base64-encoded secrets (40+ chars)
+    - pattern: ghp_[A-Za-z0-9]{36}
+      description: GitHub Personal Access Token
+    - pattern: gho_[A-Za-z0-9]{36}
+      description: GitHub OAuth Token
+    - pattern: AKIA[0-9A-Z]{16}
+      description: AWS Access Key ID
+
+repository_boundaries:
+  allowed_directories:
+  - ./src
+  - ./tests
+  - ./docs
+  - ./.agent
+  - ./.github
+
+  forbidden_directories:
+  - ./bin
+  - ./obj
+  - ./packages
+  - ./.vs
+  - ./node_modules

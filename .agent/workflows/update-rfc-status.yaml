@@ -1,0 +1,102 @@
+name: update-rfc-status
+description: Update RFC implementation status and sync with task-master
+version: 1.0.0
+platforms:
+- claude
+- windsurf
+- copilot
+- cursor
+
+stages:
+- name: Identify
+  steps:
+  - name: Locate RFC
+    type: manual
+    description: |
+      Find RFC file in docs/rfcs/
+      Note the doc_id (e.g., RFC-00042)
+
+  - name: Check current status
+    type: manual
+    description: |
+      Read RFC front-matter
+      Note current implementation.status and completion %
+
+- name: Update
+  steps:
+  - name: Update implementation fields
+    type: manual
+    description: |
+      Edit RFC front-matter:
+
+      implementation:
+        status: 'in-progress'  # not-started | in-progress | completed | blocked | deferred
+        completion: 50         # 0-100 percentage
+        tasks: ['task-456']    # Task IDs from task-master
+        issues: [123]          # GitHub issue numbers (optional)
+        started: 'YYYY-MM-DD'  # When implementation started
+        completed: null        # When implementation completed (if done)
+
+  - name: Update dependencies if needed
+    type: manual
+    description: |
+      If RFC is blocked, update:
+
+      dependencies:
+        rfcs: ['RFC-00013']    # RFCs this depends on
+        blocks: ['RFC-00050']  # RFCs blocked by this one
+
+- name: Sync
+  steps:
+  - name: Sync with task-master
+    type: command
+    command: python scripts/sync-tasks.py --apply
+    description: Sync RFC status with task-master tasks
+    auto_fix: false
+
+  - name: Regenerate dashboard
+    type: command
+    command: python scripts/generate-dashboard.py
+    description: Update implementation dashboard
+    auto_fix: false
+
+- name: Validate
+  steps:
+  - name: Run validation
+    type: command
+    command: python scripts/validate-docs.py
+    description: Ensure front-matter is valid
+    auto_fix: false
+
+  - name: Fix validation errors
+    type: conditional
+    condition: validation_failed
+    action: |
+      Read validation errors
+      Fix YAML syntax if needed
+      Correct field values
+      Re-run validation
+
+- name: Report
+  steps:
+  - name: Show updated status
+    type: output
+    template: |
+      ✅ RFC Status Updated: {{ doc_id }}
+
+      Status: {{ status }}
+      Completion: {{ completion }}%
+      Tasks: {{ task_count }}
+
+      Dashboard updated: docs/DASHBOARD.md
+
+      Next steps:
+      {% if status == 'blocked' %}
+      - Resolve blocking dependencies: {{ blocking_rfcs }}
+      {% elif status == 'in-progress' %}
+      - Continue implementation
+      - Update completion % as tasks complete
+      {% elif status == 'completed' %}
+      - Update documentation
+      - Close related tasks
+      {% endif %}

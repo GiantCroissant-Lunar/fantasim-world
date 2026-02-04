@@ -1,0 +1,113 @@
+name: build
+description: DEPRECATED – Build and publish are now handled by the unify-build repository's build system
+version: 1.0.0
+
+# This command enforces using the NUKE build system which:
+# - Uses GitVersion for semantic versioning
+# - Publishes to build/_artifacts/{version}
+# - Maintains build/_artifacts/latest symlink for convenience
+# - Handles plugin copying correctly
+# - Creates build logs at build/_artifacts/{version}/build-logs
+
+steps:
+- name: Clean old plugin binaries to avoid stale DLLs
+  command: |
+    if (Test-Path "projects/dungeon/dotnet/console-app/core/src/PigeonPea.Console/bin") {
+      Remove-Item -Recurse -Force "projects/dungeon/dotnet/console-app/core/src/PigeonPea.Console/bin/Debug/net9.0/plugins" -ErrorAction SilentlyContinue
+      Write-Host "Cleaned old plugin binaries"
+    }
+  working_directory: .
+  shell: powershell
+
+- name: Build and publish players using NUKE
+  command: ./build/nuke/build.ps1 PublishPlayers
+  working_directory: .
+  description: |
+    Runs the NUKE build system to:
+    1. Restore all dependencies
+    2. Compile all projects
+    3. Publish console and Windows apps to build/_artifacts/{version}
+    4. Copy plugins to build/_artifacts/{version}/plugins
+    5. Update build/_artifacts/latest with the current build
+
+- name: Display artifact locations
+  command: |
+    $version = & dotnet gitversion /showvariable SemVer
+    Write-Host ""
+    Write-Host "Build artifacts published to:" -ForegroundColor Green
+    Write-Host "  Versioned: build/_artifacts/$version" -ForegroundColor Cyan
+    Write-Host "  Latest:    build/_artifacts/latest" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Executables:" -ForegroundColor Green
+    Write-Host "  Console: build/_artifacts/$version/PigeonPea.Console/PigeonPea.Console.exe" -ForegroundColor Cyan
+    Write-Host "  Windows: build/_artifacts/$version/PigeonPea.Windows/PigeonPea.Windows.exe" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Plugins: build/_artifacts/$version/plugins" -ForegroundColor Green
+    Write-Host "Build logs: build/_artifacts/$version/build-logs" -ForegroundColor Green
+  working_directory: .
+  shell: powershell
+
+options:
+  parallel: false
+  fail_fast: true
+  verbose: true
+
+notes: |
+  ## Status
+
+  This build command is deprecated in `lunar-horse-agent-hub`. Use the shared `unify-build` repository for all build and publish operations.
+
+  ## Why Use This Command?
+
+  This command enforces the proper build process that:
+  - Outputs to **versioned artifacts** at `build/_artifacts/{version}`
+  - Prevents namespace conflicts from stale plugin DLLs
+  - Ensures clean builds with proper dependency resolution
+  - Maintains reproducible builds via GitVersion
+  - Creates build logs for troubleshooting
+
+  ## Running the Built Executables
+
+  After building, run from versioned artifacts:
+
+  ```powershell
+  # Run console app from latest
+  ./build/_artifacts/latest/PigeonPea.Console/PigeonPea.Console.exe
+
+  # Run Windows app from latest
+  ./build/_artifacts/latest/PigeonPea.Windows/PigeonPea.Windows.exe
+
+  # Run console app from specific version
+  ./build/_artifacts/0.1.0-alpha.42/PigeonPea.Console/PigeonPea.Console.exe
+  ```
+
+  ## Using the NUKE 'Task' Target
+
+  The NUKE build system also provides a 'Task' target that builds, publishes, AND runs:
+
+  ```powershell
+  # Build and run console app
+  ./build/nuke/build.ps1 Task
+
+  # Build and run Windows app
+  ./build/nuke/build.ps1 Task --player windows
+
+  # Build and run with arguments
+  ./build/nuke/build.ps1 Task --player-args "--debug --level 5"
+  ```
+
+  ## Troubleshooting Plugin Loading Issues
+
+  If you encounter "Could not load type" errors:
+  1. Old plugin DLLs may have been built with old namespaces
+  2. This command cleans the plugin directory before building
+  3. After build, plugins are copied to build/_artifacts/{version}/plugins
+  4. The published executables reference plugins from the artifacts directory
+
+  ## Architecture Compliance
+
+  This build process enforces:
+  - ✅ Tiered architecture (see .agent/rules/dotnet-architecture.md)
+  - ✅ Plugin isolation (plugins never depend on other plugins)
+  - ✅ Clean plugin loading (no ALC type identity issues)
+  - ✅ Reproducible builds (GitVersion semantic versioning)

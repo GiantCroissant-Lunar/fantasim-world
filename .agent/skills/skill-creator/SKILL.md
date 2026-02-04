@@ -1,12 +1,11 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends the agent's capabilities with specialized knowledge, workflows, or tool integrations.
-license: Complete terms in LICENSE.txt
-metadata:
-  category: development
-  source:
-    repository: https://github.com/ComposioHQ/awesome-claude-skills
-    path: skill-creator
+version: 0.1.0
+kind: composite
+description: "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends the agent's capabilities with specialized knowledge, workflows, or tool integrations."
+contracts:
+  success: "New skill created with valid schema, SKILL.md, and supporting files"
+  failure: "Skill creation failed validation or missing required components"
 ---
 
 # Skill Creator

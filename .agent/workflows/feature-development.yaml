@@ -1,0 +1,80 @@
+name: feature-development
+description: Standard workflow for developing a new feature
+version: 1.0.0
+
+stages:
+- name: Planning
+  steps:
+  - name: Analyze requirements
+    type: manual
+    description: Review and understand the feature requirements
+  - name: Review existing code
+    type: manual
+    description: Examine relevant existing code and architecture
+  - name: Create task breakdown
+    type: manual
+    description: Break down the feature into implementable tasks
+  - name: Identify potential risks
+    type: manual
+    description: Consider edge cases, dependencies, and potential issues
+
+- name: Implementation
+  steps:
+  - name: Create feature branch
+    type: command
+    command: git checkout -b claude/<description>-<session-id>
+  - name: Implement core functionality
+    type: manual
+    description: Write the core code for the feature
+  - name: Write unit tests
+    type: manual
+    description: Create tests for the new functionality
+  - name: Update documentation
+    type: manual
+    description: Update relevant documentation files
+
+- name: Quality Checks
+  steps:
+  - name: Run pre-commit hooks
+    type: command
+    command: pre-commit run --all-files
+  - name: Execute test suite
+    type: command
+    command: run-tests
+  - name: Perform code review
+    type: manual
+    description: Perform a self-review of the changes or request a peer review
+  - name: Check security implications
+    type: manual
+    description: Review changes for security vulnerabilities
+
+- name: Integration
+  steps:
+  - name: Merge latest changes from main
+    type: command
+    command: git fetch origin main && git merge origin/main
+  - name: Resolve conflicts if any
+    type: manual
+    description: Resolve any merge conflicts that arise
+  - name: Run integration tests
+    type: command
+    command: run-tests
+  - name: Create pull request
+    type: command
+    command: gh pr create --title "<title>" --body "<body>"
+
+- name: Completion
+  steps:
+  - name: Address review feedback
+    type: manual
+    description: Make changes based on code review feedback
+  - name: Ensure CI/CD passes
+    type: manual
+    description: Verify all CI/CD checks are passing
+  - name: Merge to main branch
+    type: manual
+    description: Merge the pull request (requires approval)
+  - name: Tag release if applicable
+    type: command
+    command: git tag -a v<version> -m "<message>"
+    condition: is_release

@@ -1,0 +1,122 @@
+{
+    "skills": {
+        "build": {
+            "category": "build",
+            "tags": [
+                "dotnet",
+                "nuke"
+            ],
+            "description": "Build, test, or compile the solution using Nuke"
+        },
+        "changelog-generator": {
+            "category": "automation",
+            "tags": [
+                "git",
+                "release"
+            ],
+            "description": "Create user-facing changelogs from git commits"
+        },
+        "code-analyze": {
+            "category": "quality",
+            "tags": [
+                "dotnet",
+                "security"
+            ],
+            "description": "Run static analysis and security scans"
+        },
+        "code-format": {
+            "category": "quality",
+            "tags": [
+                "formatting"
+            ],
+            "description": "Format code using dotnet format, prettier, etc."
+        },
+        "code-review": {
+            "category": "quality",
+            "tags": [
+                "review"
+            ],
+            "description": "Guide code review with architecture compliance focus"
+        },
+        "dotnet-build": {
+            "category": "build",
+            "tags": [
+                "dotnet"
+            ],
+            "description": "Build .NET solution/projects using dotnet CLI"
+        },
+        "dotnet-test": {
+            "category": "build",
+            "tags": [
+                "dotnet",
+                "testing"
+            ],
+            "description": "Run .NET tests and generate coverage reports"
+        },
+        "file-organizer": {
+            "category": "automation",
+            "tags": [
+                "files"
+            ],
+            "description": "Intelligently organize files and folders"
+        },
+        "implement-feature": {
+            "category": "workflow",
+            "tags": [
+                "development"
+            ],
+            "description": "Guide incremental feature implementation"
+        },
+        "nuke-build": {
+            "category": "build",
+            "tags": [
+                "dotnet",
+                "nuke"
+            ],
+            "description": "Build using Nuke build system"
+        },
+        "reflect": {
+            "category": "workflow",
+            "description": "Capture learnings after feature completion"
+        },
+        "self-critique": {
+            "category": "quality",
+            "description": "Self-evaluation loop against specs and doctrine"
+        },
+        "skill-creator": {
+            "category": "meta",
+            "description": "Guide for creating new skills"
+        },
+        "spec-first": {
+            "category": "workflow",
+            "required": true,
+            "description": "Ensures specs are read before implementing features"
+        },
+        "spec-kit-bridge": {
+            "category": "workflow",
+            "tags": [
+                "spec-kit"
+            ],
+            "description": "Orchestrates spec-driven development using GitHub Spec Kit"
+        }
+    },
+    "bundles": {
+        "dotnet-full": [
+            "dotnet-build",
+            "dotnet-test",
+            "nuke-build",
+            "build"
+        ],
+        "code-quality": [
+            "code-review",
+            "code-analyze",
+            "code-format"
+        ],
+        "workflow-core": [
+            "spec-first",
+            "implement-feature",
+            "self-critique",
+            "reflect"
+        ]
+    }
+}

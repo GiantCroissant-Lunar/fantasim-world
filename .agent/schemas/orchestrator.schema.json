@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GiantCroissant-Lunar/pigeon-pea/schemas/orchestrator.schema.json",
+  "title": "Orchestrator Agent Schema",
+  "description": "Validates orchestrator agent YAML manifests. The orchestrator routes user requests to appropriate sub-agents based on task intent.",
+  "type": "object",
+  "required": ["name", "description", "version", "subagents", "routing"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Z][a-zA-Z0-9]*$",
+      "minLength": 2,
+      "maxLength": 50,
+      "description": "Orchestrator name in PascalCase format. Typically 'Orchestrator' or 'OrchestratorAgent'.",
+      "examples": ["Orchestrator", "OrchestratorAgent", "MainOrchestrator"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500,
+      "description": "Clear description of the orchestrator's role. Should explain how it routes requests to sub-agents.",
+      "examples": [
+        "Top-level router that delegates to sub-agents based on task intent",
+        "Main orchestrator that analyzes user requests and routes them to specialized sub-agents"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "Semantic version following semver format (MAJOR.MINOR.PATCH). May include pre-release and build metadata.",
+      "examples": ["0.1.0", "1.0.0", "2.0.0-beta.1"]
+    },
+    "subagents": {
+      "type": "array",
+      "description": "List of sub-agents this orchestrator can delegate to. Names should match sub-agent definitions in .agent/agents/.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][a-zA-Z0-9]*$",
+        "description": "Sub-agent name in PascalCase format."
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "examples": [["DotNetBuildAgent", "CodeReviewAgent", "TestingAgent"]]
+    },
+    "routing": {
+      "type": "object",
+      "required": ["rules"],
+      "description": "Routing configuration that determines how the orchestrator delegates tasks to sub-agents.",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "Ordered list of routing rules. Rules are evaluated in order, first match wins.",
+          "items": {
+            "type": "object",
+            "required": ["if", "to"],
+            "properties": {
+              "if": {
+                "type": "string",
+                "minLength": 5,
+                "description": "Condition describing when this rule applies. Can use keywords like 'contains', 'matches', logical operators 'or', 'and'.",
+                "examples": [
+                  "task contains 'build' or 'compile' or 'restore' or 'nuke'",
+                  "task contains 'test' or 'coverage' or 'benchmark'",
+                  "task contains 'format' or 'analyze' or 'review' or 'quality'"
+                ]
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[A-Z][a-zA-Z0-9]*$",
+                "description": "Sub-agent to delegate to when condition matches. Must be in the subagents list.",
+                "examples": ["DotNetBuildAgent", "TestingAgent", "CodeReviewAgent"]
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Optional priority for this rule. Higher values are checked first. Default is based on rule order."
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional human-readable description of what this rule does."
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "fallback": {
+          "type": "string",
+          "pattern": "^[A-Z][a-zA-Z0-9]*$",
+          "description": "Optional default sub-agent to use if no routing rules match."
+        },
+        "fallback_behavior": {
+          "type": "string",
+          "enum": ["error", "default_agent", "prompt_user"],
+          "description": "What to do when no routing rule matches and no default is set."
+        }
+      },
+      "additionalProperties": false
+    },
+    "goals": {
+      "type": "array",
+      "description": "Optional high-level goals for the orchestrator.",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "examples": [
+        [
+          "Route requests to most appropriate sub-agent",
+          "Handle requests that span multiple domains",
+          "Provide clear feedback on task delegation"
+        ]
+      ]
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Optional constraints the orchestrator must respect.",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "examples": [
+        [
+          "Never execute tasks directly - always delegate",
+          "Ensure sub-agent exists before delegating",
+          "Log all routing decisions for audit"
+        ]
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata about the orchestrator.",
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "Author or team responsible for this orchestrator."
+        },
+        "created": {
+          "type": "string",
+          "format": "date",
+          "description": "Creation date in ISO 8601 format."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date",
+          "description": "Last update date in ISO 8601 format."
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "Repository URL where this orchestrator is defined."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "name": "Orchestrator",
+      "description": "Top-level router that delegates to sub-agents based on task intent",
+      "version": "0.1.0",
+      "subagents": ["DotNetBuildAgent", "CodeReviewAgent", "TestingAgent"],
+      "routing": {
+        "rules": [
+          {
+            "if": "task contains 'build' or 'compile' or 'restore' or 'nuke'",
+            "to": "DotNetBuildAgent",
+            "description": "Handle all build-related tasks"
+          },
+          {
+            "if": "task contains 'test' or 'coverage' or 'benchmark'",
+            "to": "TestingAgent",
+            "description": "Handle all testing and coverage tasks"
+          },
+          {
+            "if": "task contains 'format' or 'analyze' or 'review' or 'quality'",
+            "to": "CodeReviewAgent",
+            "description": "Handle code quality and formatting tasks"
+          }
+        ],
+        "fallback_behavior": "error"
+      },
+      "goals": [
+        "Route requests to most appropriate sub-agent",
+        "Handle requests that span multiple domains",
+        "Provide clear feedback on task delegation"
+      ]
+    }
+  ]
+}

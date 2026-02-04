@@ -1,0 +1,120 @@
+name: create-rfc
+description: Create new RFC with validation and quality checks
+version: 1.0.0
+platforms:
+- claude
+- windsurf
+- copilot
+- cursor
+
+stages:
+- name: Research
+  steps:
+  - name: Check for existing documentation
+    type: command
+    command: python scripts/validate-docs.py
+    description: Search registry for existing docs on this topic
+    auto_fix: false
+
+  - name: Review related RFCs
+    type: manual
+    description: |
+      1. Check docs/index/registry.json for related topics
+      2. Review similar RFCs to avoid duplication
+      3. Identify dependencies on other RFCs
+
+- name: Setup
+  steps:
+  - name: Find next RFC number
+    type: command
+    command: ls docs/rfcs/*.md | grep -E '^[0-9]' | sort -n | tail -1
+    description: Determine next available RFC number
+
+  - name: Create draft in inbox
+    type: manual
+    description: |
+      Create file: docs/_inbox/NNN-rfc-title.md
+      Use next available number from previous step
+
+- name: Write
+  steps:
+  - name: Add front-matter
+    type: manual
+    description: |
+      Add YAML front-matter with:
+      ---
+      doc_id: 'RFC-NNNNN'  # 5 digits, no year
+      title: 'RFC Title'
+      doc_type: 'rfc'
+      status: 'draft'
+      canonical: true
+      created: 'YYYY-MM-DD'
+      tags: ['tag1', 'tag2']
+      summary: 'One sentence description (50-200 chars)'
+      implements: 'PRD-NNNNN'  # If implementing a PRD
+      dependencies:
+        rfcs: []  # Other RFCs this depends on
+      ---
+
+  - name: Write RFC content
+    type: manual
+    description: |
+      Include standard RFC sections:
+      1. Summary - Brief overview
+      2. Motivation - Why this is needed
+      3. Proposed Solution - How to implement
+      4. Alternatives Considered - Other approaches
+      5. Implementation Plan - Steps to execute
+      6. Success Criteria - How to measure success
+
+- name: Validate
+  steps:
+  - name: Run validation
+    type: command
+    command: python scripts/validate-docs.py
+    description: Validate front-matter and check for duplicates
+    auto_fix: false
+
+  - name: Check quality score
+    type: command
+    command: python scripts/generate-quality-report.py
+    description: Ensure quality score ≥ 60/100
+    auto_fix: false
+
+  - name: Fix validation errors
+    type: conditional
+    condition: validation_failed
+    action: |
+      Read validation errors
+      Fix front-matter issues
+      Correct doc_id format if needed
+      Re-run validation
+
+- name: Finalize
+  steps:
+  - name: Move to rfcs directory
+    type: manual
+    description: |
+      Move from docs/_inbox/NNN-title.md to docs/rfcs/NNN-title.md
+      Only after validation passes and quality ≥ 60
+
+  - name: Regenerate indexes
+    type: command
+    command: |
+      python scripts/generate-index.py
+      python scripts/generate-dashboard.py
+    description: Update documentation indexes
+    auto_fix: false
+
+  - name: Report results
+    type: output
+    template: |
+      ✅ RFC Created: {{ doc_id }}
+      📄 File: docs/rfcs/{{ filename }}
+      📊 Quality Score: {{ quality_score }}/100
+      🔗 Related RFCs: {{ related_count }}
+
+      Next steps:
+      1. Request review from team
+      2. Address feedback
+      3. Update status to 'active' when approved

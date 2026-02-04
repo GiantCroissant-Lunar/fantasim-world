@@ -1,6 +1,11 @@
 ---
 name: implement-feature
-description: Guides incremental feature implementation with stable contracts and runnable state at each step
+version: 0.1.0
+kind: composite
+description: "Guides incremental feature implementation with stable contracts and runnable state at each step"
+contracts:
+  success: "Feature implemented incrementally with stable contracts and passing tests"
+  failure: "Implementation incomplete, tests failing, or contracts broken"
 ---
 
 # Implement Feature Skill
@@ -27,7 +32,7 @@ Before implementation, define stable interfaces:
 
 ```typescript
 // Define the contract/interface FIRST
-interface PlateEvent {
+interface DomainEvent {
   readonly eventId: string;
   readonly timestamp: number;
   // ... stable fields
@@ -85,34 +90,22 @@ Co-Authored-By: <agent>
 - Shows progress to other agents/humans
 - Prevents loss of work
 
-### Step 3: Respect Truth Boundaries
+### Step 3: Respect Architecture Boundaries
 
-For the plates domain specifically:
+Follow your project's architecture doctrine:
 
-| Truth (Authoritative) | Derived (Products) |
-|-----------------------|--------------------|
-| Plate Topology | Voronoi meshes |
-| Boundary graph | Cell assignments |
-| Events | Spatial substrates |
+- Keep contracts and interfaces stable
+- Don't let implementation details leak into public APIs
+- Derived/computed data should not become source-of-truth dependencies
 
-**Never** let derived data become a truth dependency.
+### Step 4: Follow Project Conventions
 
-### Step 4: Encoding and Persistence
+When persisting data or choosing patterns, follow your project's established conventions for:
 
-When persisting data:
-
-- **Canonical encoding**: MessagePack (for RocksDB storage)
-- **Export/Import only**: JSON
-- **In-memory graphs**: ModernSatsuma (internal detail, not exposed)
-
-```typescript
-// Good: MessagePack for storage
-const encoded = msgpack.encode(event);
-await db.put(key, encoded);
-
-// Bad: JSON for storage
-await db.put(key, JSON.stringify(event)); // NO!
-```
+- Serialization format
+- Storage backend
+- Naming conventions
+- Error handling patterns
 
 ## Checklist
 
@@ -121,9 +114,8 @@ await db.put(key, JSON.stringify(event)); // NO!
 - [ ] Committing after each logical change (not batching)
 - [ ] Each commit is runnable
 - [ ] Commit messages reference task IDs (if applicable)
-- [ ] No truth/derived violations
-- [ ] MessagePack for persistence
-- [ ] ModernSatsuma handles not leaked
+- [ ] Architecture boundaries respected
+- [ ] Project conventions followed
 
 ## Templates
 
