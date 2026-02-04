@@ -3,6 +3,7 @@
 [![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/GiantCroissant-Lunar/fantasim-world)](https://coderabbit.ai)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CSharp](https://img.shields.io/badge/language-C%23-512BD4.svg)](https://learn.microsoft.com/en-us/dotnet/csharp)
+[![Codecov](https://img.shields.io/badge/Codecov-coverage-8A2BE2?logo=codecov&logoColor=white)](https://about.codecov.io/resource/what-is-code-coverage/)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/apprenticegc)
 
 This repository implements a modern simulation framework with:

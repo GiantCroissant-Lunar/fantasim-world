@@ -1,0 +1,36 @@
+name: Coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore project/FantaSim.World.sln
+
+      - name: Test with coverage
+        run: dotnet test project/FantaSim.World.sln --collect:"XPlat Code Coverage" --no-restore
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: '**/TestResults/**/coverage.cobertura.xml'
+          fail_ci_if_error: true
+          verbose: true
+
+        # NOTE: Configure CODECOV_TOKEN in repository secrets.

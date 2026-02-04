@@ -1,0 +1,27 @@
+codecov:
+  require_ci_to_pass: true
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  - "**/bin/**"
+  - "**/obj/**"
+  - "**/*.g.cs"
+  - "**/*.g.i.cs"
+  - "**/*Designer.cs"
+  - "**/*Generated*.cs"
+  - "**/TestResults/**"
