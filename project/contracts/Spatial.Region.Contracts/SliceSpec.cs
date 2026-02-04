@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// A dimensional reduction applied to a RegionSpec, producing a 2D cell complex.

@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts.Hashing;
+namespace FantaSim.Spatial.Region.Contracts.Hashing;
 
 /// <summary>
 /// Computes canonical SHA-256 hashes for RegionSpec.

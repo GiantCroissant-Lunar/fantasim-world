@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <RootNamespace>FantaSim.Space.Region.Contracts.Tests</RootNamespace>
-    <AssemblyName>Space.Region.Contracts.Tests</AssemblyName>
+    <RootNamespace>FantaSim.Spatial.Region.Contracts.Tests</RootNamespace>
+    <AssemblyName>Spatial.Region.Contracts.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\contracts\Space.Region.Contracts\Space.Region.Contracts.csproj" />
+    <ProjectReference Include="..\..\contracts\Spatial.Region.Contracts\Spatial.Region.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

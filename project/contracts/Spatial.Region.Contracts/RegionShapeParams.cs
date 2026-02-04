@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// Planet surface as a thin shell.

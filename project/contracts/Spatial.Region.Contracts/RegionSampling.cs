@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// Discretization policy for derived products that need to materialize region contents.

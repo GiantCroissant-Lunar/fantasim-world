@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts.Hashing;
+namespace FantaSim.Spatial.Region.Contracts.Hashing;
 
 /// <summary>
 /// Canonical MessagePack encoder for region contracts.

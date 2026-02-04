@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// Spatial indexing strategy hint for discretizing <c>RegionSpec</c>.

@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// A derived intermediate that decomposes a <see cref="RegionSpec"/> into non-overlapping work chunks.

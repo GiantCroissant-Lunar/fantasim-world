@@ -1,4 +1,4 @@
-namespace FantaSim.Space.Region.Contracts;
+namespace FantaSim.Spatial.Region.Contracts;
 
 /// <summary>
 /// Utilities for decomposing a <see cref="RegionSpec"/> into a <see cref="WorkPlan"/>.

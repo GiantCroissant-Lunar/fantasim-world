@@ -1,6 +1,6 @@
-using FantaSim.Space.Region.Contracts;
+using FantaSim.Spatial.Region.Contracts;
 
-namespace FantaSim.Space.Region.Contracts.Tests.Factories;
+namespace FantaSim.Spatial.Region.Contracts.Tests.Factories;
 
 /// <summary>
 /// Tests for factory methods.

@@ -1,7 +1,7 @@
-using FantaSim.Space.Region.Contracts;
-using FantaSim.Space.Region.Contracts.Hashing;
+using FantaSim.Spatial.Region.Contracts;
+using FantaSim.Spatial.Region.Contracts.Hashing;
 
-namespace FantaSim.Space.Region.Contracts.Tests.Hashing;
+namespace FantaSim.Spatial.Region.Contracts.Tests.Hashing;
 
 /// <summary>
 /// Tests for RegionSpec canonical hash determinism.

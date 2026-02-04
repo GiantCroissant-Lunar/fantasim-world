@@ -1,7 +1,6 @@
-using FantaSim.Space.Region.Contracts;
-using MessagePack;
+using FantaSim.Spatial.Region.Contracts;
 
-namespace FantaSim.Space.Region.Contracts.Tests.Serialization;
+namespace FantaSim.Spatial.Region.Contracts.Tests.Serialization;
 
 /// <summary>
 /// Tests for MessagePack serialization round-trips.
