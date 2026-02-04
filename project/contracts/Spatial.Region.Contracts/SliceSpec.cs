@@ -1,4 +1,5 @@
 using MessagePack;
+using UnifyGeometry;
 
 namespace FantaSim.Spatial.Region.Contracts;
 
@@ -116,15 +117,6 @@ public record ChartMapping
     /// </summary>
     public static ChartMapping Orthographic(double scale = 1.0) => new() { Type = "orthographic", Scale = scale };
 }
-
-/// <summary>
-/// 2D point.
-/// </summary>
-[MessagePackObject]
-public readonly record struct Point2(
-    [property: Key(0)] double X,
-    [property: Key(1)] double Y
-);
 
 /// <summary>
 /// 2D clip in chart space.

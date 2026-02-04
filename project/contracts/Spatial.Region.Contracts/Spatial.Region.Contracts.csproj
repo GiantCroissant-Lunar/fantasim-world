@@ -17,4 +17,8 @@
     <PackageReference Include="MessagePack" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\plate-projects\unify-maths\dotnet\src\UnifyGeometry.Primitives\UnifyGeometry.Primitives.csproj" />
+  </ItemGroup>
+
 </Project>

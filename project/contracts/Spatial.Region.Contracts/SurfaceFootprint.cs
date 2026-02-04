@@ -1,4 +1,5 @@
 using MessagePack;
+using UnifyGeometry;
 
 namespace FantaSim.Spatial.Region.Contracts;
 

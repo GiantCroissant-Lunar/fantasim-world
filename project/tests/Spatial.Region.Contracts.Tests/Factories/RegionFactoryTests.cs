@@ -1,4 +1,5 @@
 using FantaSim.Spatial.Region.Contracts;
+using UnifyGeometry;
 
 namespace FantaSim.Spatial.Region.Contracts.Tests.Factories;
 

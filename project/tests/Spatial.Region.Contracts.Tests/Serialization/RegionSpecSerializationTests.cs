@@ -1,5 +1,6 @@
 using FantaSim.Spatial.Region.Contracts;
 using MessagePack;
+using UnifyGeometry;
 
 namespace FantaSim.Spatial.Region.Contracts.Tests.Serialization;
 
@@ -13,8 +14,8 @@ public class RegionSpecSerializationTests
     {
         var original = RegionSpec.Surface(thicknessM: 100.0);
 
-        var bytes = MessagePackSerializer.Serialize(original);
-        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes);
+        var bytes = MessagePackSerializer.Serialize(original, RegionSerializationOptions.Options);
+        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes, RegionSerializationOptions.Options);
 
         Assert.Equal(original.Version, restored.Version);
         Assert.Equal(original.Space, restored.Space);
@@ -30,8 +31,8 @@ public class RegionSpecSerializationTests
             rMaxM: 6451000.0,
             angularClip: AngularClip.CapClip(new Point3(0, 0, 1), Math.PI / 4));
 
-        var bytes = MessagePackSerializer.Serialize(original);
-        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes);
+        var bytes = MessagePackSerializer.Serialize(original, RegionSerializationOptions.Options);
+        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes, RegionSerializationOptions.Options);
 
         Assert.Equal(original.Shape.SphericalShell!.RMinM, restored.Shape.SphericalShell!.RMinM);
         Assert.Equal(original.Shape.SphericalShell!.RMaxM, restored.Shape.SphericalShell!.RMaxM);
@@ -44,8 +45,8 @@ public class RegionSpecSerializationTests
     {
         var original = RegionFrame.PlanetCenter();
 
-        var bytes = MessagePackSerializer.Serialize(original);
-        var restored = MessagePackSerializer.Deserialize<RegionFrame>(bytes);
+        var bytes = MessagePackSerializer.Serialize(original, RegionSerializationOptions.Options);
+        var restored = MessagePackSerializer.Deserialize<RegionFrame>(bytes, RegionSerializationOptions.Options);
 
         Assert.Equal("planet_center", restored.Anchor.Type);
         Assert.Equal("planet_fixed", restored.Basis.Type);
@@ -63,8 +64,8 @@ public class RegionSpecSerializationTests
             Sampling = RegionSampling.S2(level: 12, zLayers: 5, toleranceM: 100.0)
         };
 
-        var bytes = MessagePackSerializer.Serialize(original);
-        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes);
+        var bytes = MessagePackSerializer.Serialize(original, RegionSerializationOptions.Options);
+        var restored = MessagePackSerializer.Deserialize<RegionSpec>(bytes, RegionSerializationOptions.Options);
 
         Assert.NotNull(restored.Sampling);
         Assert.Equal("s2", restored.Sampling!.IndexKind);
@@ -86,8 +87,8 @@ public class RegionSpecSerializationTests
             Clip2D = null
         };
 
-        var bytes = MessagePackSerializer.Serialize(original);
-        var restored = MessagePackSerializer.Deserialize<SliceSpec>(bytes);
+        var bytes = MessagePackSerializer.Serialize(original, RegionSerializationOptions.Options);
+        var restored = MessagePackSerializer.Deserialize<SliceSpec>(bytes, RegionSerializationOptions.Options);
 
         Assert.Equal(original.Mode, restored.Mode);
         Assert.Equal(original.RegionSpecHash, restored.RegionSpecHash);
